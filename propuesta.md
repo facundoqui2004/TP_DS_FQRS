@@ -20,7 +20,7 @@
 
 El Super Gestor es una plataforma web integral que centraliza y digitaliza todos los trámites, multas y permisos relacionados con superpoderes. Diseñada para héroes, villanos y autoridades reguladoras, ofrece un sistema seguro, eficiente y transparente para mantener el orden en la comunidad metahumana.
 
-Que ofrece Super Gestor
+#### Que ofrece Super Gestor?
 
 Para Todos los Metahumanos:
 
