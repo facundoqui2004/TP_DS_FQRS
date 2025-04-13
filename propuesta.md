@@ -42,14 +42,14 @@ Para Burocratas/Gobierno:
 
 ### Modelo
 [Ver diagrama de modelo entidad-relación](https://drive.google.com/file/d/1F-fTBAHzt2ekTFDbE0UKQskchshvuiEb/view?usp=drive_link)
-![image](https://github.com/user-attachments/assets/3afb7b01-b2d4-43af-9694-116cb93bfb8f)
+
+![image](https://github.com/user-attachments/assets/53a5a83b-2492-43b2-8558-0bfb7ac2bdc1)
 
 
 ## Alcance Funcional
 
 ### Alcance Mínimo
 ![image](https://github.com/user-attachments/assets/53a5a83b-2492-43b2-8558-0bfb7ac2bdc1)
-
 
 
 Adicionales para Aprobación:
