@@ -48,7 +48,8 @@ Para Burocratas/Gobierno:
 ## Alcance Funcional
 
 ### Alcance Mínimo
-![image](https://github.com/user-attachments/assets/7d2c3f62-f746-443b-9c0a-23fb472d1711)
+![image](https://github.com/user-attachments/assets/53a5a83b-2492-43b2-8558-0bfb7ac2bdc1)
+
 
 
 Adicionales para Aprobación:
