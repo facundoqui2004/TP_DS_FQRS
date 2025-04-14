@@ -9,6 +9,7 @@
 - 52875 - Quiñonez, Facundo
 - 53251 - Ferrari, Enzo
 - 52322 - Ruiz, Ignacio
+- 53021 - Szalich, tomas
 
 ### Repositorios
 
