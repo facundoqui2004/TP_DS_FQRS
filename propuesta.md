@@ -45,8 +45,7 @@ Para Burócratas/Gobierno:
 ### Modelo
 [Ver diagrama de modelo entidad-relación](https://drive.google.com/file/d/1F-fTBAHzt2ekTFDbE0UKQskchshvuiEb/view?usp=drive_link)
 
-[image](https://github.com/user-attachments/assets/53a5a83b-2492-43b2-8558-0bfb7ac2bdc1)
-![image](https://github.com/user-attachments/assets/d93f9c3e-a890-448a-a09c-96338aea7442)
+![image](https://github.com/user-attachments/assets/395fc54b-2fe2-4f42-acf4-15ff5e47c523)
 
 
 ## Alcance Funcional
