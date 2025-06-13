@@ -1,0 +1,2 @@
+// quiero obtener una lista de los metahumanos disponibles
+GET http://localhost:3000/metahumanos/
