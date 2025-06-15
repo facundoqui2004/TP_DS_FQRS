@@ -1,12 +1,14 @@
 import express from 'express';
 import metahumanoRoutes from './routes/meta.routes.js';
-import  poderRoutes  from './routes/poder.routes.js';
+import poderRoutes from './routes/poder.routes.js';
+import solicitudesRoutes from './routes/solicitudes.routes.js';
 
 const app = express();
 app.use(express.json());
 
 app.use("/metahumanos", metahumanoRoutes);
 app.use("/poderes", poderRoutes);
+app.use("/solicitudes", solicitudesRoutes);
 
 app.get("/", (req, res) => res.send("Hello World"));
 
