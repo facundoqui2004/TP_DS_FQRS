@@ -1,5 +1,5 @@
-import { Poder } from "../models/poder.model.js";
-import { PoderRepository } from "./poder.repository.js";
+import { Poder } from "../models/poder.model";
+import { PoderRepository } from "./poder.repository";
 
 export class InMemoryPoderRepository implements PoderRepository {
   private poderes: Poder[] = [];

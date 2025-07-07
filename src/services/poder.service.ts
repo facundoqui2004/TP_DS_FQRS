@@ -1,5 +1,5 @@
-import { Poder } from "../models/poder.model.js";
-import { PoderRepository } from "../repositories/poder.repository.js";
+import { Poder } from "../models/poder.model";
+import { PoderRepository } from "../repositories/poder.repository";
 
 export class PoderService {
   constructor(private repository: PoderRepository) {}
