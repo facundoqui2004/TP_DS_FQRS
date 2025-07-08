@@ -1,69 +1,31 @@
-import express from 'express';
-import metahumanoRoutes from './routes/meta.routes.js';
-import poderRoutes from './routes/poder.routes.js';
+import 'reflect-metadata'
+import express from 'express'
+import { RequestContext } from '@mikro-orm/core'
+import { orm, syncSchema } from './shared/db/orm.js'
 
-const app = express();
-app.use(express.json());
+import metahumanosRoutes from './metahumano/metahumano.routes.js'
+import poderesRoutes from './metahumano/poder.routes.js'
 
-app.use("/metahumanos", metahumanoRoutes);
-app.use("/poderes", poderRoutes);
+const app = express()
+app.use(express.json())
 
-app.get("/", (req, res) => res.send("Hello World"));
+// Contexto de EntityManager por request
+app.use((req, res, next) => {
+  RequestContext.create(orm.em, next)
+})
+
+// Rutas
+app.use('/api/metahumanos', metahumanosRoutes)
+app.use('/api/poderes', poderesRoutes)
+
+// 404 handler
+app.use((_, res) => {
+  return res.status(404).send({ message: 'Resource not found' })
+})
+
+// Sincronizar base de datos (dev only)
+await syncSchema()
 
 app.listen(3000, () => {
-    console.log("Server running on http://localhost:3000");
-});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-// /src/app.ts
-import express, { NextFunction, Request, Response } from 'express';
-
-import { Metahumano } from './models/metahumano.model.js';
-import metahumanoRoutes from './routes/meta.routes.js';
-
-export const app = express();
-app.use(express.json());
-
-
-// Monta las rutas
-app.use("/metahumanos", metahumanoRoutes);
-
-
-// Ruta raíz
-app.get("/", (req, res) => {
-    res.send("Hello World");
-});
-
-// Escucha
-app.listen(3000, () => {
-    console.log("Server running on http://localhost:3000");
-});*/
+  console.log('Server running on http://localhost:3000/')
+})

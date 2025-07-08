@@ -1,0 +1,36 @@
+### GET all metahumanos
+GET http://localhost:3000/api/metahumanos
+
+### POST a metahumano
+# @name createMetahumano
+POST http://localhost:3000/api/metahumanos
+Content-Type: application/json
+
+{
+  "nombre": "Jean Grey",
+  "alias": "Phoenix",
+  "origen": "X-Men",
+  "telefono": "555-1234",
+  "mail": "jean@xmen.com"
+}
+
+### ID
+@id = {{createMetahumano.response.body.data.id}}
+
+### GET one metahumano
+GET http://localhost:3000/api/metahumanos/{{id}}
+
+### PUT a metahumano
+PUT http://localhost:3000/api/metahumanos/{{id}}
+Content-Type: application/json
+
+{
+  "nombre": "Jean Grey",
+  "alias": "Dark Phoenix",
+  "origen": "Krakoa",
+  "telefono": "555-4321",
+  "mail": "phoenix@xmen.com"
+}
+
+### DELETE a metahumano
+DELETE http://localhost:3000/api/metahumanos/{{id}}
