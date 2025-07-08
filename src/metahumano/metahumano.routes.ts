@@ -9,7 +9,8 @@ import {
 } from './metahumano.controller.js'
 import {
   findAllForMetahumano,
-  sanitizeMetaPoderInput
+  sanitizeMetaPoderInput,
+  assignPoderToMetahumano
 } from './metaPoder.controller.js'
 
 const router = express.Router()
@@ -23,6 +24,6 @@ router.delete('/:id', remove)
 
 // MetaPoder relacionado al metahumano
 router.get('/:id/metapoder', findAllForMetahumano)
-router.get('/:id/metapoder', findAllForMetahumano)
-// router.post('/:id/metapoder', sanitizeMetaPoderInput, assignPoderToMetahumano)
+router.post('/:id/metapoder', sanitizeMetaPoderInput, assignPoderToMetahumano)
+
 export default router

@@ -14,6 +14,19 @@ Content-Type: application/json
   "categoria": "Psiquico",
   "costoMulta": 3000
 }
+### POST a poder
+# @name createPoder
+POST http://localhost:3000/api/poderes
+Content-Type: application/json
+
+{
+  "nomPoder": "Regeneración",
+  "debilidad": "Fuego intenso",
+  "descPoder": "Regenera heridas rápidamente",
+  "descDebilidad": "El fuego intenso lo debilita",
+  "categoria": "Fisico",
+  "costoMulta": 2000
+}
 
 ### ID del poder
 @poderId = {{createPoder.response.body.data.id}}
