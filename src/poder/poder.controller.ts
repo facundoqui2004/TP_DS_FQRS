@@ -1,5 +1,6 @@
  import { Request, Response } from "express";
-import { PoderService } from "../services/poder.service";
+import { PoderService } from './poder.service.js';
+
 
 export class PoderController {
   constructor(private readonly service: PoderService) {}

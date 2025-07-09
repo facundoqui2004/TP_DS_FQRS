@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { PoderController } from "../controller/poder.controller.js";
-import { PoderService } from "../services/poder.service.js";
-import { InMemoryPoderRepository } from "../repositories/in-memory-poder.repository.js";
+import { PoderController } from "./poder.controller.js";
+import { PoderService } from "./poder.service.js";
+import { InMemoryPoderRepository } from "./in-memory-poder.repository.js";
 
 const router = Router();
 

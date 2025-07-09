@@ -1,4 +1,4 @@
-import { Poder } from "../models/poder.model.js";
+import { Poder } from "./poder.model.js";
 
 export interface PoderRepository {
   getAll(): Promise<Poder[]>;

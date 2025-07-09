@@ -1,4 +1,4 @@
-import { Repository } from "../shared/repository";
+import { Repository } from "../shared2/repository";
 import{Burocrata} from "./Burocrata.entity.js"; 
 
 const Burocratas = [
