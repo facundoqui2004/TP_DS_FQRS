@@ -1,0 +1,48 @@
+###Obtener una multa
+GET http://localhost:3000/api/Multas
+
+
+
+### Obtener una multa por id
+GET http://localhost:3000/api/Multas/3e545ce4-511a-473e-82ed-594785e9634e
+### Crear una nueva multa
+POST http://localhost:3000/api/Multas
+Content-Type: application/json
+
+{
+  "motivoMulta":"pajaaaaaaaaaaaaaaaaaaaa",
+  "lugarDePago":"tu casaaaaaaaaaaaaaaaaaaaa",
+  "fechaEmision":"acaaaaaaaaaaaaaaaaa",
+  "estado":"muerto",
+  "fechaVencimiento":"aaaaaaaaaaaaaaaaaaa"
+}
+
+###Actualiza la multa
+
+PUT http://localhost:3000/api/Multas/e0d6d666-6607-41cd-8dc3-a507208b759d
+Content-Type: application/json
+
+{
+  "motivoMulta":"pajaaaaaaa",
+  "LugarDePago":"tu casaaaaaa",
+  "fechaEmision":"acaaaaaa",
+  "estado":"muertaaaaao",
+  "fechaVencimiento":"aaaaaaaaaa"
+}
+
+
+### Actualizar solo algunos datos
+PATCH http://localhost:3000/api/Multas/e0d6d666-6607-41cd-8dc3-a507208b759d
+Content-Type: application/json
+
+{
+  "motivoMulta":"paja",
+  "LugarDePago":"tu casa",
+  "fechaEmision":"aca",
+  "estado":"muerto",
+  "fechaVencimiento":"aaaaa"
+}
+
+
+### Eliminar una multa
+DELETE http://localhost:3000/api/Multas/e0d6d666-6607-41cd-8dc3-a507208b759d

@@ -1,0 +1,53 @@
+### GET all metahumanos
+GET http://localhost:3000/api/metahumanos
+
+### POST a metahumano
+# @name createMetahumano
+POST http://localhost:3000/api/metahumanos
+Content-Type: application/json
+
+{
+  "nombre": "Wolverine",
+  "alias": "Logan",
+  "origen": "Canadá",
+  "telefono": "555-111",
+  "mail": "wolverine@xmen.com"
+}
+
+### ID
+@id = {{createMetahumano.response.body.data.id}}
+
+### GET one metahumano
+GET http://localhost:3000/api/metahumanos/{{id}}
+
+### GET one metahumano
+GET http://localhost:3000/api/metahumanos/2
+
+###POST
+### POST metapoder (asignar poder a metahumano)
+POST http://localhost:3000/api/metahumanos/2/metapoder
+Content-Type: application/json
+
+{
+  "estado": "activo",
+  "fechaSolicitud": "2025-07-08",
+  "fechaRespuesta": "2025-07-08",
+  "certificado": "archivo.pdf",
+  "poderId": 2
+}
+
+### PUT a metahumano
+PUT http://localhost:3000/api/metahumanos/{{id}}
+Content-Type: application/json
+
+{
+  "nombre": "Jean Grey",
+  "alias": "Dark Phoenix",
+  "origen": "Krakoa",
+  "telefono": "555-4321",
+  "mail": "phoenix@xmen.com"
+}
+
+### DELETE a metahumano
+DELETE http://localhost:3000/api/metahumanos/{{id}}
+

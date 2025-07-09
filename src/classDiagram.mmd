@@ -1,0 +1,32 @@
+classDiagram
+
+class Metahumano {
+    +int id_meta
+    +string nombre
+    +string alias
+    +string origen
+    +string telefono
+    +string mail
+}
+
+class Poder {
+    +int id_Poder
+    +string nom_poder
+    +string debilidad
+    +string desc_poder
+    +string desc_debilidad
+    +string categoria
+    +float costoMulta
+}
+
+class MetaPoder {
+    +estado: string
+    +fecha_solicitud: Date
+    +fecha_respuesta: Date
+    +certificado: string
+}
+
+Metahumano "1" --> "0..1" MetaPoder : posee
+Poder "1" --> "1..*" MetaPoder : pertenece
+MetaPoder --> Metahumano
+MetaPoder --> Poder

@@ -1,0 +1,42 @@
+### Obtener todos los burocratas
+GET http://localhost:3000/api/Burocratas
+
+
+### Obtener un burocrata por id
+GET http://localhost:3000/api/Burocratas/f2f20b73-e3db-46cd-a8fc-76464d373c0a
+
+### Crear un nuevo caracter
+POST http://localhost:3000/api/Burocratas
+Content-Type: application/json
+
+{
+  "passwordHash":"estoEsLaContraseña2",
+  "fechaRegistro":"2005/13/11",
+  "direccion":"tucasapa"
+}
+
+
+###Actualiza el burocrata
+PUT http://localhost:3000/api/Burocratas/e0d6d666-6607-41cd-8dc3-a507208b759d
+Content-Type: application/json
+
+{
+  "passwordHash":"hackeado",
+  "fechaRegistro":"valida que soy una fecha vago",
+  "direccion":"doxeado"
+}
+
+
+### Actualizar solo algunos datos
+PATCH http://localhost:3000/api/Burocratas/e0d6d666-6607-41cd-8dc3-a507208b759d
+Content-Type: application/json
+
+{
+  "passwordHash":"hackeado",
+  "fechaRegistro":"valida que soy una fecha vago",
+  "direccion":"doxeado"
+}
+
+
+### Eliminar un burocrata
+DELETE http://localhost:3000/api/Burocratas/e0d6d666-6607-41cd-8dc3-a507208b759d
