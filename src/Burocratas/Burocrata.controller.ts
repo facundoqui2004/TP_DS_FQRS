@@ -1,6 +1,7 @@
 import { BurocrataRepository } from "./Burocrata.repository.js";
 import { Request, Response, NextFunction } from "express";
 import { Burocrata } from "./Burocrata.entity.js";
+console.log('banana');
 
 const repository = new BurocrataRepository();
 
