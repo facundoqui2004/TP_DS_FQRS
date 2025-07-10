@@ -1,44 +1,19 @@
-import { Router } from "express";
-import { PoderController } from "./poder.controller.js";
-import { PoderService } from "./poder.service.js";
-import { InMemoryPoderRepository } from "./in-memory-poder.repository.js";
-
-const router = Router();
-
-const repository = new InMemoryPoderRepository();
-const service = new PoderService(repository);
-const controller = new PoderController(service);
-
-// Define las rutas para los poderes
-router.get("/", controller.getPoderes);
-router.get("/:id", controller.getPoder);
-router.post("/", controller.createPoder);
-router.put("/:id", controller.updatePoder);
-router.delete("/:id", controller.deletePoder);
-
-export default router;
-
-
-/*import { Router } from "express";
+import express from 'express'
 import {
-    getPoderes,
-    getPoder,
-    createPoder,
-    updatePoder,
-    deletePoder
-} from "../controller/poder.controller.js";
-const router = Router();
+  sanitizePoderInput,
+  findAll,
+  findOne,
+  add,
+  update,
+  remove
+} from './poder.controller.js'
 
-const repository = new InMemoryPoderRepository();
-const service = new PoderService(repository);
-const controller = new PoderController(service);
+const router = express.Router()
 
-// Define las rutas para los poderes
-router.get("/", controller.getPoderes);
-router.get("/:id", controller.getPoder);
-router.post("/", controller.createPoder);
-router.put("/:id", controller.updatePoder);
-router.delete("/:id", controller.deletePoder);
+router.get('/', findAll)
+router.get('/:id', findOne)
+router.post('/', sanitizePoderInput, add)
+router.put('/:id', sanitizePoderInput, update)
+router.delete('/:id', remove)
 
-export default router;
-*/
+export default router

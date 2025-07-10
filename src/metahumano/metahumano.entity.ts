@@ -6,7 +6,7 @@ import {
   Collection,
 } from '@mikro-orm/core'
 import { BaseEntity } from '../shared/db/baseEntity.entity.js'
-import { MetaPoder } from  './metaPoder.entity.js'
+import { MetaPoder } from  '../metaPoder/metaPoder.entity.js'
 
 @Entity()
 export class Metahumano extends BaseEntity {
