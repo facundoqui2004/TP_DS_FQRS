@@ -6,7 +6,7 @@ export const orm = await MikroORM.init({
   entitiesTs: ['src/**/*.entity.ts'],
   dbName: 'metahumano',
   type: 'mysql',
-  clientUrl: 'mysql://dsw:dsw@localhost:3308/metahumano',
+  clientUrl: 'mysql://dsw:dsw@localhost:3306/metahumano',
   highlighter: new SqlHighlighter(),
   debug: true,
   schemaGenerator: {

@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
 import { MetaPoder } from './metaPoder.entity.js'
-import { Metahumano } from './metahumano.entity.js'
-import { Poder } from './poder.entity.js'
+import { Metahumano } from '../metahumano/metahumano.entity.js'
+import { Poder } from '../poder/poder.entity.js'
 import { orm } from '../shared/db/orm.js'
 
 const em = orm.em
