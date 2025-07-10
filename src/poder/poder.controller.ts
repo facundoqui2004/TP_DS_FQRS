@@ -1,121 +1,85 @@
- import { Request, Response } from "express";
-import { PoderService } from "../services/poder.service";
+import { Request, Response } from 'express'
+import { Poder } from './poder.entity.js'
+import { orm } from '../shared/db/orm.js'
 
-export class PoderController {
-  constructor(private readonly service: PoderService) {}
+const em = orm.em
 
-  getPoderes = async (req: Request, res: Response): Promise<void> => {
-    const poderes = await this.service.getAll();
-    res.json({ data: poderes });
-  };
+function sanitizePoderInput(req: Request, res: Response, next: Function) {
+  req.body.sanitizedInput = {
+    nomPoder: req.body.nomPoder,
+    debilidad: req.body.debilidad,
+    descPoder: req.body.descPoder,
+    descDebilidad: req.body.descDebilidad,
+    categoria: req.body.categoria,
+    costoMulta: req.body.costoMulta,
+  }
 
-  getPoder = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const poder = await this.service.getById(req.params.id);
-      res.json({ data: poder });
-    } catch {
-      res.status(404).json({ error: "No encontrado" });
+  Object.keys(req.body.sanitizedInput).forEach((key) => {
+    if (req.body.sanitizedInput[key] === undefined) {
+      delete req.body.sanitizedInput[key]
     }
-  };
+  })
 
-  createPoder = async (req: Request, res: Response): Promise<void> => {
-    if (!req.body.nom_poder || !req.body.debilidad) {
-      res.status(400).json({ error: "nom_poder y debilidad son requeridos" });
-      return;
-    }
-    const nuevo = await this.service.create(req.body);
-    res.status(201).json({ message: "Poder creado", data: nuevo });
-  };
-
-  updatePoder = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const actualizado = await this.service.update(req.params.id, req.body);
-      res.json({ message: "Poder actualizado", data: actualizado });
-    } catch {
-      res.status(404).json({ error: "No encontrado" });
-    }
-  };
-
-  deletePoder = async (req: Request, res: Response): Promise<void> => {
-    try {
-      await this.service.delete(req.params.id);
-      res.json({ message: "Poder eliminado" });
-    } catch {
-      res.status(404).json({ error: "No encontrado" });
-    }
-  };
+  next()
 }
 
-
-
-/*/ import { Request, Response } from "express";
-import { Poder } from "../models/poder.model.js";
-
-const poderes: Poder[] = [];
-//Obtener todos los poderes
-export const getPoderes = (req: Request, res: Response) => {
-    res.json({ data: poderes });
+async function findAll(req: Request, res: Response) {
+  try {
+    const poderes = await em.find(Poder, {})
+    res.status(200).json({ message: 'found all poderes', data: poderes })
+  } catch (error: any) {
+    res.status(500).json({ message: error.message })
+  }
 }
-//Obtener un poder por id
-export const getPoder = (req: Request, res: Response) => {
-    const id = req.params.id;
-    const poder = poderes.find(p => p.id_Poder === id);
-    if (!poder) {
-        return res.status(404).json({ error: "No encontrado" });
-    }
-    res.json({ data: poder });
-}
-//Crear un poder
-export const createPoder = (req: Request, res: Response) => {
-    console.log('BODY RECIBIDO:', req.body);
-    
-    // Validación
-    if (!req.body.nom_poder || !req.body.debilidad) {
-        return res.status(400).json({ error: "nom_poder y debilidad son requeridos" });
-    }
-    // Instancia nueva
-    const nuevo = new Poder(
-        undefined,
-        req.body.nom_poder,
-        req.body.debilidad,
-        req.body.desc_poder,
-        req.body.desc_debilidad,
-        req.body.categoria,
-        req.body.costoMulta
-    );
-    poderes.push(nuevo);
 
-    res.status(201).json({ message: "Poder creado", data: nuevo });
+async function findOne(req: Request, res: Response) {
+  try {
+    const id = Number.parseInt(req.params.id)
+    const poder = await em.findOneOrFail(Poder, { id })
+    res.status(200).json({ message: 'found poder', data: poder })
+  } catch (error: any) {
+    res.status(500).json({ message: error.message })
+  }
 }
-// Actualizar un poder
-export const updatePoder = (req: Request, res: Response) => {
-    const id = req.params.id;
-    const index = poderes.findIndex(p => p.id_Poder === id);
-    if (index === -1) {
-        return res.status(404).json({ error: "No encontrado" });
-    }
-    
-    // Actualiza los campos del poder
-    poderes[index].nom_poder = req.body.nom_poder ?? poderes[index].nom_poder;
-    poderes[index].debilidad = req.body.debilidad ?? poderes[index].debilidad;
-    poderes[index].desc_poder = req.body.desc_poder ?? poderes[index].desc_poder;
-    poderes[index].desc_debilidad = req.body.desc_debilidad ?? poderes[index].desc_debilidad;
-    poderes[index].categoria = req.body.categoria ?? poderes[index].categoria;
-    poderes[index].costoMulta = req.body.costoMulta ?? poderes[index].costoMulta;
 
-    res.json({ message: "Poder actualizado", data: poderes[index] });
+async function add(req: Request, res: Response) {
+  try {
+    const poder = em.create(Poder, req.body.sanitizedInput)
+    await em.flush()
+    res.status(201).json({ message: 'poder created', data: poder })
+  } catch (error: any) {
+    res.status(500).json({ message: error.message })
+  }
 }
-// Eliminar un poder
-export const deletePoder = (req: Request, res: Response) => {
-    const id = req.params.id;
-    const index = poderes.findIndex(p => p.id_Poder === id);
-    if (index === -1) {
-        return res.status(404).json({ error: "No encontrado" });
-    }
-    
-    // Elimina el poder
-    poderes.splice(index, 1);
-    
-    res.json({ message: "Poder eliminado" });
+
+async function update(req: Request, res: Response) {
+  try {
+    const id = Number.parseInt(req.params.id)
+    const poderToUpdate = await em.findOneOrFail(Poder, { id })
+    em.assign(poderToUpdate, req.body.sanitizedInput)
+    await em.flush()
+    res.status(200).json({ message: 'poder updated', data: poderToUpdate })
+  } catch (error: any) {
+    res.status(500).json({ message: error.message })
+  }
 }
-*/
+
+async function remove(req: Request, res: Response) {
+  try {
+    const id = Number.parseInt(req.params.id)
+    const poder = em.getReference(Poder, id)
+    await em.removeAndFlush(poder)
+    res.status(200).json({ message: 'poder deleted' })
+  } catch (error: any) {
+    res.status(500).json({ message: error.message })
+  }
+}
+
+export {
+  sanitizePoderInput,
+  findAll,
+  findOne,
+  add,
+  update,
+  remove
+}

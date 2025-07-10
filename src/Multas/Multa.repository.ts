@@ -1,5 +1,5 @@
-import { Multa } from "./Multa.entity";
-import { Repository } from "../shared/repository";
+import { Multa } from "./Multa.entity.js";
+import { Repository } from "../shared2/repository.js";
 import crypto from 'node:crypto'
 const Multas =  [
   new Multa(
