@@ -5,12 +5,14 @@ export const orm = await MikroORM.init({
   entities: ['dist/**/*.entity.js'],
   entitiesTs: ['src/**/*.entity.ts'],
   dbName: 'metahumano',
+  password: 'dsw',
+  user: 'dsw',
   type: 'mysql',
-  clientUrl: 'mysql://dsw:dsw@localhost:3306/metahumano',
+  clientUrl: 'mysql://dsw:dsw@127.0.0.1:3308/metahumano', // 👈 CORREGIDO
   highlighter: new SqlHighlighter(),
   debug: true,
   schemaGenerator: {
-    //never in production
+    // nunca en producción
     disableForeignKeys: true,
     createForeignKeyConstraints: true,
     ignoreSchema: [],

@@ -8,16 +8,21 @@ import poderesRoutes from './poder/poder.routes.js'
 import metaPoderesRoutes from './metaPoder/metaPoder.routes.js'
 import { burocratasRouter } from './Burocratas/Burocrata.routes.js'
 import { multasRouter } from './Multas/Multa.routes.js'
+import usuarioRoutes from './auth/usuario.routes.js' // 🚀 NUEVO
+import cookieParser from 'cookie-parser' // 🚀 NUEVO
+import cors from 'cors' // 🚀 NUEVO
 
 const app = express()
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://localhost:3000']
+}))
 app.use(express.json())
-
+app.use(cookieParser()) // habilita uso de cookies
 
 // Contexto de EntityManager por request
 app.use((req, res, next) => {
   RequestContext.create(orm.em, next)
 })
-
 
 // Rutas
 app.use('/api/metahumanos', metahumanosRoutes)
@@ -25,7 +30,7 @@ app.use('/api/poderes', poderesRoutes)
 app.use('/api/metapoderes', metaPoderesRoutes)
 app.use('/api/Burocratas', burocratasRouter)
 app.use('/api/Multas', multasRouter)
-
+app.use('/api/usuarios', usuarioRoutes) // 🚀 NUEVO
 
 // 404 handler
 app.use((_, res) => {
