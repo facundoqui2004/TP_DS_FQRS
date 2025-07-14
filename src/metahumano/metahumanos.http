@@ -7,11 +7,11 @@ POST http://localhost:3000/api/metahumanos
 Content-Type: application/json
 
 {
-  "nombre": "Wolverine",
-  "alias": "Logan",
-  "origen": "Canadá",
+  "nombre": "Enzo Ferrari",
+  "alias": "sangre",
+  "origen": "las pajeras",
   "telefono": "555-111",
-  "mail": "wolverine@xmen.com"
+  "mail": "elenzo@xmen.com"
 }
 
 ### ID
@@ -25,7 +25,7 @@ GET http://localhost:3000/api/metahumanos/2
 
 ###POST
 ### POST metapoder (asignar poder a metahumano)
-POST http://localhost:3000/api/metahumanos/2/metapoder
+POST http://localhost:3000/api/metahumanos/3/metapoder
 Content-Type: application/json
 
 {
@@ -33,7 +33,7 @@ Content-Type: application/json
   "fechaSolicitud": "2025-07-08",
   "fechaRespuesta": "2025-07-08",
   "certificado": "archivo.pdf",
-  "poderId": 2
+  "poderId": 1
 }
 
 ### PUT a metahumano

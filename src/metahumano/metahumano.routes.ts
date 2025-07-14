@@ -11,7 +11,7 @@ import {
   findAllForMetahumano,
   sanitizeMetaPoderInput,
   assignPoderToMetahumano
-} from './metaPoder.controller.js'
+} from '../metaPoder/metaPoder.controller.js'
 
 const router = express.Router()
 

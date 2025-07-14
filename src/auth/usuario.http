@@ -1,0 +1,32 @@
+### Registro de nuevo usuario
+# @name registerUser
+POST http://localhost:3000/api/usuarios/register
+Content-Type: application/json
+
+{
+  "nomUsuario": "admin123",
+  "mail": "admin123@ejemplo.com",
+  "contrasena": "supersegura",
+  "rol": "admin",
+  "idMeta": null,
+  "idBurocrata": null
+}
+
+
+### Login del usuario
+# @name loginUser
+POST http://localhost:3000/api/usuarios/login
+Content-Type: application/json
+
+{
+  "nomUsuario": "admin123",
+  "contrasena": "supersegura"
+}
+
+
+### Obtener usuario actual (requiere cookie con token)
+GET http://localhost:3000/api/usuarios/me
+
+
+### Logout del usuario (borra la cookie)
+POST http://localhost:3000/api/usuarios/logout

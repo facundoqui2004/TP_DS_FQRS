@@ -5,8 +5,8 @@ import {
   Rel,
 } from '@mikro-orm/core'
 import { BaseEntity } from '../shared/db/baseEntity.entity.js'
-import { Metahumano } from './metahumano.entity.js'
-import { Poder } from './poder.entity.js'
+import { Metahumano } from '../metahumano/metahumano.entity.js'
+import { Poder } from '../poder/poder.entity.js'
 
 @Entity()
 export class MetaPoder extends BaseEntity {

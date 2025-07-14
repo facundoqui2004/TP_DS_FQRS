@@ -51,6 +51,14 @@ docker ps
 
 ![alt text](image.png)
 
+docker start ps8-metahumano
+ps8-metahumano
+
+docker ps
+CONTAINER ID   IMAGE                    COMMAND                  CREATED      STATUS         PORTS                                                    NAMES
+db9440c3ca5f   percona/percona-server   "/docker-entrypoint.…"   3 days ago   Up 4 seconds   33060/tcp, 0.0.0.0:3308->3306/tcp, [::]:3308->3306/tcp   ps8-metahumano
+
+
 
 
 
