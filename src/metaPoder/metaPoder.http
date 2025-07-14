@@ -1,0 +1,22 @@
+### GET all MetaPoder (relaciones)
+GET http://localhost:3000/api/metapoder
+
+### POST asignar poder a metahumano
+# @name asignarPoder
+POST http://localhost:3000/api/metapoder
+Content-Type: application/json
+
+{
+  "estado": "aprobado",
+  "fechaSolicitud": "2025-07-08",
+  "fechaRespuesta": "2025-07-09",
+  "certificado": "certificado-001.pdf",
+ //   "metahumanoId": {{createMetahumano.response.body.data.id}},
+ //   "poderId": {{createPoder.response.body.data.id}}
+}
+
+### ID de MetaPoder
+@metaPoderId = {{asignarPoder.response.body.data.id}}
+
+### DELETE una relación MetaPoder
+DELETE http://localhost:3000/api/metapoder/{{metaPoderId}}

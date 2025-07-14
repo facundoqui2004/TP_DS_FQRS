@@ -1,0 +1,47 @@
+### GET all poderes
+GET http://localhost:3000/api/poderes
+
+### POST a poder
+# @name createPoder
+POST http://localhost:3000/api/poderes
+Content-Type: application/json
+
+{
+  "nomPoder": "Telepatía",
+  "debilidad": "Ruido psíquico",
+  "descPoder": "Lee y controla la mente",
+  "descDebilidad": "La sobrecarga mental lo incapacita",
+  "categoria": "Psiquico",
+  "costoMulta": 3000
+}
+### POST a poder
+# @name createPoder
+POST http://localhost:3000/api/poderes
+Content-Type: application/json
+
+{
+  "nomPoder": "Regeneración",
+  "debilidad": "Fuego intenso",
+  "descPoder": "Regenera heridas rápidamente",
+  "descDebilidad": "El fuego intenso lo debilita",
+  "categoria": "Fisico",
+  "costoMulta": 2000
+}
+
+### ID del poder
+@poderId = {{createPoder.response.body.data.id}}
+
+### GET one poder
+GET http://localhost:3000/api/poderes/{{poderId}}
+
+### PUT poder
+PUT http://localhost:3000/api/poderes/{{poderId}}
+Content-Type: application/json
+
+{
+  "descPoder": "Control mental avanzado",
+  "categoria": "Psiquico"
+}
+
+### DELETE poder
+DELETE http://localhost:3000/api/poderes/{{poderId}}
