@@ -7,7 +7,13 @@
   "scripts": {
     "start:dev": "tsc-watch --noClear -p ./tsconfig.json --onSuccess \"node ./dist/app.js\"",
     "build": "tsc",
-    "start": "node dist/app.js"
+    "start": "node dist/app.js",
+    "docker:dev": "cd docker && ./start-dev.sh",
+    "docker:stop": "cd docker && ./stop-dev.sh",
+    "docker:check": "cd docker && ./check-health.sh",
+    "docker:test": "cd docker && ./test-api.sh",
+    "docker:logs": "cd docker && docker-compose logs -f",
+    "docker:mysql": "cd docker && docker-compose exec mysql mysql -u dsw -pdsw metahumano"
   },
   "keywords": [],
   "author": "",
