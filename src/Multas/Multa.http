@@ -4,26 +4,32 @@ GET http://localhost:3000/api/Multas
 
 
 ### Obtener una multa por id
-GET http://localhost:3000/api/Multas/3e545ce4-511a-473e-82ed-594785e9634e
+GET http://localhost:3000/api/Multas/3
+
 ### Crear una nueva multa
+#  @name createMulta
 POST http://localhost:3000/api/Multas
 Content-Type: application/json
 
 {
   "motivoMulta":"pajaaaaaaaaaaaaaaaaaaaa",
+  "montoMulta":69,
   "lugarDePago":"tu casaaaaaaaaaaaaaaaaaaaa",
   "fechaEmision":"acaaaaaaaaaaaaaaaaa",
   "estado":"muerto",
   "fechaVencimiento":"aaaaaaaaaaaaaaaaaaa"
 }
+###ID
+@id = {{createMulta.response.body.data.id}}
 
 ###Actualiza la multa
 
-PUT http://localhost:3000/api/Multas/e0d6d666-6607-41cd-8dc3-a507208b759d
+PUT http://localhost:3000/api/Multas/3
 Content-Type: application/json
 
 {
   "motivoMulta":"pajaaaaaaa",
+  "montoMulta":6969,
   "LugarDePago":"tu casaaaaaa",
   "fechaEmision":"acaaaaaa",
   "estado":"muertaaaaao",
@@ -32,11 +38,12 @@ Content-Type: application/json
 
 
 ### Actualizar solo algunos datos
-PATCH http://localhost:3000/api/Multas/e0d6d666-6607-41cd-8dc3-a507208b759d
+PATCH http://localhost:3000/api/Multas/3
 Content-Type: application/json
 
 {
   "motivoMulta":"paja",
+  "montoMulta" : "696969",
   "LugarDePago":"tu casa",
   "fechaEmision":"aca",
   "estado":"muerto",
@@ -45,4 +52,4 @@ Content-Type: application/json
 
 
 ### Eliminar una multa
-DELETE http://localhost:3000/api/Multas/e0d6d666-6607-41cd-8dc3-a507208b759d
+DELETE http://localhost:3000/api/Multas/3
