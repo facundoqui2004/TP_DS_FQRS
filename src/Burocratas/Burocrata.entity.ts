@@ -1,10 +1,28 @@
-import crypto from "node:crypto";
 
-export class Burocrata {
-  constructor(
-    public idUsuario = crypto.randomUUID(),
-    public passwordHash:string,
-    public fechaRegistro:string,
-    public direccion:string
-  ){}
-};
+import { Carpeta } from "../carpeta/carpeta.entity.js";
+import { BaseEntity } from "../shared/db/baseEntity.entity.js";
+import { Cascade, Collection, Entity, OneToMany, Property,Rel } from "@mikro-orm/core";
+
+@Entity()
+export class Burocrata extends BaseEntity{
+  @Property({nullable:false})
+  nombreBuro!:string
+
+  @Property({nullable:false})
+  aliasBuro!:string
+
+  @Property({nullable:false})
+  origenBuro!:string
+
+  @Property({nullable:false})
+  telefono!:string
+
+  @Property({nullable:false})
+  mailBuro!:string
+  
+  @OneToMany(()=>Carpeta, carpeta => carpeta.burocrata,{
+  cascade : [Cascade.ALL]
+  })
+  carpetas = new Collection<Carpeta>(this)
+  
+}

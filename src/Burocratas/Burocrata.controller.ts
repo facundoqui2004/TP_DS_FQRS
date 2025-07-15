@@ -1,14 +1,20 @@
-import { BurocrataRepository } from "./Burocrata.repository.js";
+
 import { Request, Response, NextFunction } from "express";
 import { Burocrata } from "./Burocrata.entity.js";
+import { orm } from "../shared/db/orm.js";
 
-const repository = new BurocrataRepository();
+
+
+const em = orm.em
+
 
 function sanitizeBurocratasInput(req:Request , res:Response, next:NextFunction){
     req.body.sanitizedInput = {
-        passwordHash: req.body.passwordHash,
-        fechaRegistro:req.body.fechaRegistro,
-        direccion:req.body.direccion
+       nombreBuro:req.body.nombreBuro,
+       aliasBuro:req.body.aliasBuro,
+       origenBuro:req.body.origenBuro,
+       telefonoBuro:req.body.telefonoBuro,
+       mailBuro:req.body.mailBuro
     }
 
     Object.keys(req.body.sanitizedInput).forEach(key=>{
@@ -19,49 +25,58 @@ function sanitizeBurocratasInput(req:Request , res:Response, next:NextFunction){
         next()
 }
 
-function findAll(req:Request, res:Response){
-  res.json({data : repository.findAll()})
-}
-
-function findOne(req:Request,res:Response){
-  const burocrata =  repository.findOne({id:req.params.id})
-  if(!burocrata){
-      return res.status(404).send({message: "Burocrata no encontrado"})
+async function findAll(req:Request, res:Response){
+  try{
+    const burocratas = await em.find(Burocrata, {})//cuando se agregue carpetas , { populate : ['carpetas']}
+    res.status(200).send({message : "find all burocratas",data : burocratas })
+  } catch(error : any){
+    res.status(500).json({message : error.message})
   }
-  res.json({data:burocrata})
 }
 
-function add(req:Request,res:Response){
-    const input = req.body.sanitizedInput
-    const burocrataInput = new Burocrata(
-        input.idUsuario=crypto.randomUUID(),
-        input.passwordHash,
-        input.fechaRegistro,
-        input.direccion
-    )
-
-    const character = repository.add(burocrataInput)
-    return res.status(201).send({message:'burocrata creado correctamente', data:burocrataInput})
+async function findOne(req:Request,res:Response){
+    try {
+        const id = Number.parseInt(req.params.id)
+        const burocrata = await em.findOneOrFail(Burocrata, { id })//cuando se cree Carpeta , {populate: ['carpetas'],}
+        res.status(200).json({ message: 'find one burocrata', data: burocrata })
+      } catch (error: any) {
+        res.status(500).json({ message: error.message })
+      }
 }
 
-function update(req:Request,res:Response){
-  req.body.sanitizedInput.idUsuario = req.params.id
-  const burocrata = repository.update(req.body.sanitizedInput)
-  if(!burocrata){
-      return res.status(404).send({message:'burocrata no encontrado'})
-  }
-  return res.status(200).send({message:'se modifico correctamente el burocrata'})
+async function add(req:Request,res:Response){
+    try{
+        const burocrata = em.create(Burocrata, req.body.sanitizedInput)
+        await em.flush()
+        res.status(201).json({ message: 'burocrata created', data: burocrata })
+    } catch (error: any) {
+     res.status(500).json({ message: error.message })
+}
+}
+
+async function update(req:Request,res:Response){
+    try {
+        const id = Number.parseInt(req.params.id)
+        const burocrataToUpdate = await em.findOneOrFail(Burocrata, { id })
+        em.assign(burocrataToUpdate, req.body.sanitizedInput)
+        await em.flush()
+        res.status(200).json({ message: 'burocrata updated', data: burocrataToUpdate })
+      } catch (error: any) {
+        res.status(500).json({ message: error.message })
+      }
 }
 
 
-function remove(req:Request,res:Response){
-  const id = req.params.id
-  const burocrata = repository.delete({id})
-  if (!burocrata){
-      res.status(404).send({message:'burocrata no encontrado'})
-  }else {
-      res.status(200).send({message:'burocrata eliminado correctamente'}) 
-  }
+
+async function remove(req:Request,res:Response){
+     try {
+        const id = Number.parseInt(req.params.id)
+        const burocatra = em.getReference(Burocrata, id)
+        await em.removeAndFlush(burocatra)
+        res.status(200).json({ message: 'burocrata deleted' })
+      } catch (error: any) {
+        res.status(500).json({ message: error.message })
+      }
 }
 
 
