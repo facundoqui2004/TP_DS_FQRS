@@ -1,5 +1,5 @@
 
-import { Collection, Entity, ManyToOne, Property, Rel } from '@mikro-orm/core';
+import {  Entity, ManyToOne, Property, Rel } from '@mikro-orm/core';
 import { BaseEntity } from '../shared/db/baseEntity.entity.js';
 import { Evidencia } from '../evidencia/evidencia.entity.js';
 
