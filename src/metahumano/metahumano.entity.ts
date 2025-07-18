@@ -9,7 +9,14 @@ import { BaseEntity } from '../shared/db/baseEntity.entity.js'
 import { MetaPoder } from  '../metaPoder/metaPoder.entity.js'
 import { Carpeta } from '../carpeta/carpeta.entity.js'
 
-@Entity()
+@Entity({
+  discriminatorColumn: 'tipo_meta',
+  discriminatorMap: {
+    'metahumano': 'Metahumano',
+    'villano': 'Villano',
+    'heroe': 'Heroe'
+  }
+}) //PARA QUE VILLANO HEREDE DE ,METAHUMANO LOS ATRIBUTOS
 export class Metahumano extends BaseEntity {
   @Property({ nullable: false })
   nombre!: string
@@ -35,4 +42,14 @@ export class Metahumano extends BaseEntity {
     cascade: [Cascade.ALL],
   })
   poderes = new Collection<MetaPoder>(this)
+
+  // Getter para acceder al tipo de metahumano
+  get tipoMeta(): string {
+    return this.constructor.name.toLowerCase()
+  }
+
+  constructor() {
+    super()
+    // El discriminator se maneja automáticamente por MikroORM
+  }
 }

@@ -1,0 +1,76 @@
+### GET todos los villanos
+GET http://localhost:3000/api/villanos
+
+### GET un villano específico
+GET http://localhost:3000/api/villanos/1
+
+### POST crear un villano
+# @name createVillano
+POST http://localhost:3000/api/villanos
+Content-Type: application/json
+
+{
+  "nombre": "Victor Von Doom",
+  "alias": "Doctor Doom",
+  "origen": "Latveria",
+  "telefono": "+1-555-0123",
+  "mail": "doom@latveria.com",
+  "nivelPeligrosidad": "Alto",
+  "motivacion": "Dominio mundial y venganza contra Reed Richards",
+  "estado": "activo",
+  "recompensa": 10000000
+}
+
+### POST otro villano
+# @name createVillano2
+POST http://localhost:3000/api/villanos
+Content-Type: application/json
+
+{
+  "nombre": "Norman Osborn",
+  "alias": "Duende Verde",
+  "origen": "Nueva York",
+  "telefono": "+1-555-0456",
+  "mail": "nosborn@oscorp.com",
+  "nivelPeligrosidad": "Medio",
+  "motivacion": "Venganza contra Spider-Man",
+  "estado": "fugitivo",
+  "recompensa": 5000000
+}
+
+### ID del villano creado
+@villanoId = {{createVillano.response.body.data.id}}
+
+### PUT actualizar villano
+PUT http://localhost:3000/api/villanos/{{villanoId}}
+Content-Type: application/json
+
+{
+  "nombre": "Victor Von Doom",
+  "alias": "Doctor Doom",
+  "origen": "Latveria",
+  "telefono": "+1-555-0123",
+  "mail": "doom@latveria.com",
+  "nivelPeligrosidad": "Alto",
+  "motivacion": "Dominio mundial y venganza contra Reed Richards",
+  "estado": "activo",
+  "recompensa": 15000000
+}
+
+### PATCH capturar villano
+PATCH http://localhost:3000/api/villanos/{{villanoId}}/capturar
+
+### PATCH rehabilitar villano
+PATCH http://localhost:3000/api/villanos/{{villanoId}}/rehabilitar
+
+### PATCH marcar como fugitivo
+PATCH http://localhost:3000/api/villanos/{{villanoId}}/fugitivo
+
+### GET villanos por nivel de peligrosidad
+GET http://localhost:3000/api/villanos/nivel/Alto
+
+### GET villanos por estado
+GET http://localhost:3000/api/villanos/estado/activo
+
+### DELETE villano
+DELETE http://localhost:3000/api/villanos/{{villanoId}}
