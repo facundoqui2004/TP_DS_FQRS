@@ -9,6 +9,7 @@ import metaPoderesRoutes from './metaPoder/metaPoder.routes.js'
 import { burocratasRouter } from './Burocratas/Burocrata.routes.js'
 import { multasRouter } from './Multas/Multa.routes.js'
 import usuarioRoutes from './auth/usuario.routes.js' // 🚀 NUEVO
+import villanoRoutes from './villano/villano.routes.js' // 🚀 NUEVO
 import cookieParser from 'cookie-parser' // 🚀 NUEVO
 import cors from 'cors' // 🚀 NUEVO
 
@@ -31,6 +32,7 @@ app.use('/api/metapoderes', metaPoderesRoutes)
 app.use('/api/Burocratas', burocratasRouter)
 app.use('/api/Multas', multasRouter)
 app.use('/api/usuarios', usuarioRoutes) // 🚀 NUEVO
+app.use('/api/villanos', villanoRoutes) // 🚀 NUEVO
 
 // 404 handler
 app.use((_, res) => {

@@ -17,13 +17,13 @@ export class Multa extends BaseEntity{
   lugarDePago!:string
 
   @Property({nullable:false})
-  fechaEmision!:string
+  fechaEmision!:Date
 
   @Property({nullable:true})
   estado!:string
 
   @Property({nullable:false})
-  fechaVencimiento!:string
+  fechaVencimiento!:Date
 
   
   @ManyToOne(()=>Evidencia)

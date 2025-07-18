@@ -14,8 +14,6 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-    networks:
-      - metahumano-network
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       timeout: 20s
@@ -43,17 +41,9 @@ services:
     volumes:
       - ..:/app
       - /app/node_modules
-    networks:
-      - metahumano-network
     command: npm run start:dev
     tty: true
     stdin_open: true
 
 volumes:
   mysql_data:
-
-networks:
-  metahumano-network:
-    driver: bridge
-    driver_opts:
-      com.docker.network.bridge.name: metahumano-br
