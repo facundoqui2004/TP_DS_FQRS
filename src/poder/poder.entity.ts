@@ -25,7 +25,7 @@ export class Poder extends BaseEntity {
   @Property({ nullable: false })
   categoria!: string
 
-  @Property({ nullable: false })
+  @Property({ nullable: true})
   costoMulta!: number // ← corregido de "float" a "number"
 
   @OneToMany(() => MetaPoder, (metaPoder) => metaPoder.poder)
