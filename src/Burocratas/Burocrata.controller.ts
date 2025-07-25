@@ -13,7 +13,7 @@ function sanitizeBurocratasInput(req:Request , res:Response, next:NextFunction){
        nombreBuro:req.body.nombreBuro,
        aliasBuro:req.body.aliasBuro,
        origenBuro:req.body.origenBuro,
-       telefonoBuro:req.body.telefonoBuro,
+       telefono:req.body.telefono,
        mailBuro:req.body.mailBuro
     }
 

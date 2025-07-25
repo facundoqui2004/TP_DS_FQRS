@@ -26,6 +26,6 @@ export class Multa extends BaseEntity{
   fechaVencimiento!:Date
 
   
-  @ManyToOne(()=>Evidencia)
+  @ManyToOne(()=>Evidencia, {nullable:true})
   evidencia!:Rel<Evidencia>
 }
