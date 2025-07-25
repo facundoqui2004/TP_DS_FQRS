@@ -1,4 +1,4 @@
-import { Collection, Entity, ManyToOne, OneToMany, PrimaryKey, Property, Rel } from '@mikro-orm/core';
+import { Collection, Entity, ManyToOne, OneToMany, Property, Rel } from '@mikro-orm/core';
 import { Multa } from '../Multas/Multa.entity.js';
 import { Carpeta } from '../carpeta/carpeta.entity.js';
 import { BaseEntity } from '../shared/db/baseEntity.entity.js';
