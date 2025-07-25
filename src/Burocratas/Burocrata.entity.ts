@@ -14,7 +14,7 @@ export class Burocrata extends BaseEntity{
   @Property({nullable:false})
   origenBuro!:string
 
-  @Property({nullable:false})
+  @Property({nullable:true})
   telefono!:string
 
   @Property({nullable:false})

@@ -12,9 +12,11 @@ POST http://localhost:3000/api/Burocratas
 Content-Type: application/json
 
 {
-  "passwordHash":"estoEsLaContraseña2",
-  "fechaRegistro":"2005/13/11",
-  "direccion":"tucasapa"
+  "nombreBuro": "Tomás",
+  "aliasBuro": "elGordo",
+  "origenBuro": "miCasa",
+  "telefono": "12345",
+  "mailBuro": "hola"
 }
 ### ID
 @id = {{createBurocrata.response.body.data.id}}
@@ -28,7 +30,7 @@ Content-Type: application/json
        "nombreBuro":"Tomas",
        "aliasBuro":"elGordo",
        "origenBuro":"miCasa",
-       "telefonoBuro":"12345",
+       "telefono":"12345",
        "mailBuro:":"tommyszalich@gmail.com"
 }
 
@@ -41,10 +43,10 @@ Content-Type: application/json
        "nombreBuro":"Tomassssss",
        "aliasBuro":"elGordoooooo",
        "origenBuro":"miCasaaaaaa",
-       "telefonoBuro":"1234555555",
+       "telefono":"1234555555",
        "mailBuro:":"tommyszalichhh@gmail.com"
 }
 
 
 ### Eliminar un burocrata
-DELETE http://localhost:3000/api/Burocratas/5
+DELETE http://localhost:3000/api/Burocratas/3

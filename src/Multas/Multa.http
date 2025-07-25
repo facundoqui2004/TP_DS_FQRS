@@ -1,4 +1,4 @@
-###Obtener una multa
+###Obtener todas las multas
 GET http://localhost:3000/api/Multas
 
 
@@ -15,12 +15,13 @@ Content-Type: application/json
   "motivoMulta":"pajaaaaaaaaaaaaaaaaaaaa",
   "montoMulta":69,
   "lugarDePago":"tu casaaaaaaaaaaaaaaaaaaaa",
-  "fechaEmision":"acaaaaaaaaaaaaaaaaa",
+  "fechaEmision":"2025-07-25T12:00:00Z",
   "estado":"muerto",
-  "fechaVencimiento":"aaaaaaaaaaaaaaaaaaa"
+  "fechaVencimiento":"2025-07-25T12:00:01Z"
 }
 ###ID
-@id = {{createMulta.response.body.data.id}}
+
+
 
 ###Actualiza la multa
 
@@ -31,9 +32,9 @@ Content-Type: application/json
   "motivoMulta":"pajaaaaaaa",
   "montoMulta":6969,
   "LugarDePago":"tu casaaaaaa",
-  "fechaEmision":"acaaaaaa",
+  "fechaEmision":"2025-07-25T12:00:04Z",
   "estado":"muertaaaaao",
-  "fechaVencimiento":"aaaaaaaaaa"
+  "fechaVencimiento":"2025-07-25T12:00:06Z"
 }
 
 
@@ -45,9 +46,9 @@ Content-Type: application/json
   "motivoMulta":"paja",
   "montoMulta" : "696969",
   "LugarDePago":"tu casa",
-  "fechaEmision":"aca",
+  "fechaEmision":"2025-07-25T12:00:08Z",
   "estado":"muerto",
-  "fechaVencimiento":"aaaaa"
+  "fechaVencimiento":"2025-07-25T12:00:10Z"
 }
 
 
