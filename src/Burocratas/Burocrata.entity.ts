@@ -17,7 +17,7 @@ export class Burocrata extends BaseEntity{
   @Property({nullable:true})
   telefono!:string
 
-  @Property({nullable:false})
+  @Property({nullable:true})
   mailBuro!:string
   
   @OneToMany(()=>Carpeta, carpeta => carpeta.burocrata,{
