@@ -1,5 +1,8 @@
+## Obtener todos los usuarios
+GET  http://localhost:3000/api/usuarios
+
 ### Registro de nuevo usuario
-# @name registerUser
+# @name registerUseradmin123
 POST http://localhost:3000/api/usuarios/register
 Content-Type: application/json
 
@@ -8,6 +11,21 @@ Content-Type: application/json
   "mail": "admin123@ejemplo.com",
   "contrasena": "supersegura",
   "rol": "admin",
+  "idMeta": null,
+  "idBurocrata": null
+}
+
+
+### Registro de nuevo usuario (burocrata)
+
+POST http://localhost:3000/api/usuarios/register
+Content-Type: application/json
+
+{
+  "nomUsuario": "3123ASD",
+  "mail": "admi3123n123@ejemplo.com",
+  "contrasena": "supersegura",
+  "rol": "BUROCRATA",
   "idMeta": null,
   "idBurocrata": null
 }
