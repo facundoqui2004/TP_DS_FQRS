@@ -189,3 +189,11 @@ export async function getCurrentUser(req: Request, res: Response) {
   }
 }
 
+export async function getAllUsers(req: Request, res: Response) {
+  try {
+    const usuarios = await em.find(Usuario, {})
+    res.status(200).json({ data: usuarios })
+  } catch (error: any) {
+    res.status(500).json({ message: error.message })
+  }
+}
