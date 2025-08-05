@@ -24,7 +24,7 @@ function sanitizeMultasInput(req:Request , res:Response, next:NextFunction){
 
 async function findAll(req:Request, res:Response){
     try {
-        const multas = await em.find(Multa , {})//cuando se agrege Evidencia ,{ populate : ['evidencia']}
+        const multas = await em.find(Multa , {})
         res.status(500).json({message : "find all multas" , data : multas})
     } catch(error : any){
         res.status(500).json({message : error.message})
@@ -35,7 +35,7 @@ async function findAll(req:Request, res:Response){
 async function findOne(req:Request,res:Response){
     try {
         const id = Number.parseInt(req.params.id)
-        const multa = await em.findOneOrFail(Multa, { id })//cuando se cree Carpeta , {populate: ['evidencia'],}
+        const multa = await em.findOneOrFail(Multa, { id })
         res.status(200).json({ message: 'find one multa', data: multa })
       } catch (error: any) {
         res.status(500).json({ message: error.message })

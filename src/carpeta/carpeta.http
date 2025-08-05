@@ -1,0 +1,16 @@
+### Obtener todas las carpetas
+GET http://localhost:3000/api/carpetas
+
+
+### Obtener una carpeta por id
+GET http://localhost:3000/api/carpetas/1
+
+
+### Crear una nueva carpeta
+POST http://localhost:3000/api/carpetas
+Content-Type: application/json
+
+
+
+### Eliminar una carpeta
+DELETE http://localhost:3000/api/carpetas/3

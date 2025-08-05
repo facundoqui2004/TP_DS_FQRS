@@ -5,6 +5,7 @@ import { orm } from "../shared/db/orm.js";
 
 
 
+
 const em = orm.em
 
 
@@ -14,7 +15,7 @@ function sanitizeBurocratasInput(req:Request , res:Response, next:NextFunction){
        aliasBuro:req.body.aliasBuro,
        origenBuro:req.body.origenBuro,
        telefono:req.body.telefono,
-       mailBuro:req.body.mailBuro
+       mailBuro:req.body.mailBuro,
     }
 
     Object.keys(req.body.sanitizedInput).forEach(key=>{
@@ -44,14 +45,19 @@ async function findOne(req:Request,res:Response){
       }
 }
 
-async function add(req:Request,res:Response){
-    try{
-        const burocrata = em.create(Burocrata, req.body.sanitizedInput)
-        await em.flush()
-        res.status(201).json({ message: 'burocrata created', data: burocrata })
-    } catch (error: any) {
-     res.status(500).json({ message: error.message })
-}
+async function add(req: Request, res: Response) {
+  try {
+    const nuevoBurocrata = em.create(Burocrata, req.body.sanitizedInput);
+    await em.persistAndFlush(nuevoBurocrata);
+    res.status(201).json({
+      message: "Burocrata creado correctamente",
+      data: nuevoBurocrata
+    });
+
+  } catch (error: any) {
+    console.error(error);
+    res.status(500).json({ message: "Error al crear Burocrata", error: error.message });
+  }
 }
 
 async function update(req:Request,res:Response){

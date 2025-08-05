@@ -7,10 +7,12 @@ import metahumanosRoutes from './metahumano/metahumano.routes.js'
 import poderesRoutes from './poder/poder.routes.js'
 import metaPoderesRoutes from './metaPoder/metaPoder.routes.js'
 import { burocratasRouter } from './Burocratas/Burocrata.routes.js'
+import { evidenciaRouter } from './evidencia/evidencia.routes.js'
 import { multasRouter } from './Multas/Multa.routes.js'
-import usuarioRoutes from './auth/usuario.routes.js' // 🚀 NUEVO
+import { carpetaRouter } from './carpeta/carpeta.routes.js'
 import cookieParser from 'cookie-parser' // 🚀 NUEVO
 import cors from 'cors' // 🚀 NUEVO
+import usuarioRouter from './auth/usuario.routes.js'
 
 const app = express()
 app.use(cors({
@@ -28,9 +30,12 @@ app.use((req, res, next) => {
 app.use('/api/metahumanos', metahumanosRoutes)
 app.use('/api/poderes', poderesRoutes)
 app.use('/api/metapoderes', metaPoderesRoutes)
-app.use('/api/Burocratas', burocratasRouter)
-app.use('/api/Multas', multasRouter)
-app.use('/api/usuarios', usuarioRoutes) // 🚀 NUEVO
+app.use('/api/burocratas', burocratasRouter)
+app.use('/api/multas', multasRouter)
+app.use('/api/evidencias', evidenciaRouter)
+app.use('/api/carpetas', carpetaRouter)
+app.use('/api/usuarios', usuarioRouter) // 🚀 NUEVO
+
 
 // 404 handler
 app.use((_, res) => {

@@ -1,14 +1,13 @@
 ### Obtener todos los burocratas
-GET http://localhost:3000/api/Burocratas
+GET http://localhost:3000/api/burocratas
 
 
 ### Obtener un burocrata por id
-GET http://localhost:3000/api/Burocratas/5
+GET http://localhost:3000/api/burocratas/5
 
 
 ### Crear un nuevo burocrata
-#   @name createBurocrata
-POST http://localhost:3000/api/Burocratas
+POST http://localhost:3000/api/burocratas
 Content-Type: application/json
 
 {
@@ -18,12 +17,11 @@ Content-Type: application/json
   "telefono": "12345",
   "mailBuro": "hola"
 }
-### ID
-@id = {{createBurocrata.response.body.data.id}}
+
 
 
 ###Actualiza el burocrata
-PUT http://localhost:3000/api/Burocratas/5
+PUT http://localhost:3000/api/burocratas/5
 Content-Type: application/json
 
 {
@@ -36,7 +34,7 @@ Content-Type: application/json
 
 
 ### Actualizar solo algunos datos
-PATCH http://localhost:3000/api/Burocratas/5
+PATCH http://localhost:3000/api/burocratas/5
 Content-Type: application/json
 
 {
@@ -49,4 +47,4 @@ Content-Type: application/json
 
 
 ### Eliminar un burocrata
-DELETE http://localhost:3000/api/Burocratas/3
+DELETE http://localhost:3000/api/burocratas/3
