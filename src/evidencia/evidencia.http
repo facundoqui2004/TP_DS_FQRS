@@ -1,0 +1,39 @@
+### Obtener todas las evidencias
+GET http://localhost:3000/api/evidencias
+
+
+### Obtener una evidencia por id
+GET http://localhost:3000/api/evidencias/1
+
+
+### Crear una nueva evidencia
+POST http://localhost:3000/api/evidencias
+  Content-Type: application/json
+
+  {
+    "descripcion":"soy una descripcion",
+    "fechaRecoleccion":"2025-07-25T12:00:00Z"
+
+  }
+
+###Actualiza la evidencia
+PUT http://localhost:3000/api/evidencias/2
+Content-Type: application/json
+
+{
+  "descripcion":"una vaca saturno saturnita",
+  "fechaRecoleccion":"2025-07-25T12:00:20Z"
+}
+
+
+### Actualizar solo algunos datos
+PATCH http://localhost:3000/api/evidencias/2
+Content-Type: application/json
+
+{
+    "descripcion":"jajaja actualize tu descripcion gil"
+}
+
+
+### Eliminar una evidencia
+DELETE http://localhost:3000/api/evidencias/2

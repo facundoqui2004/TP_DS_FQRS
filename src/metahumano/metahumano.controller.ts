@@ -74,6 +74,7 @@ async function findOne(req: Request, res: Response) {
   }
 }
 
+
 async function add(req: Request, res: Response) {
   try {
     const metahumano = em.create(Metahumano, req.body.sanitizedInput)

@@ -7,14 +7,19 @@ import { BaseEntity } from '../shared/db/baseEntity.entity.js';
 @Entity()
 export class Carpeta extends BaseEntity {
    
-   @ManyToOne(()=>Metahumano)
+   @ManyToOne(()=>Metahumano,{
+      nullable:true
+   })
    metahumano!:Rel<Metahumano>
    
-   @ManyToOne(()=>Burocrata)
+   @ManyToOne(()=>Burocrata,{
+      nullable : true
+   })
    burocrata!:Rel<Burocrata>
 
    @OneToMany(()=>Evidencia,evidencia => evidencia.carpeta, {
-      cascade: [Cascade.ALL]
+      cascade: [Cascade.ALL],
+      nullable : true
    })
    evidencias = new Collection<Evidencia>(this)
 }

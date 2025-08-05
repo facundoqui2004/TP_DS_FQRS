@@ -6,13 +6,20 @@ import { BaseEntity } from '../shared/db/baseEntity.entity.js';
 @Entity()
 export class Evidencia extends BaseEntity  {
 
-   @Property({ type: 'text' })
+   @Property({nullable: false })
     descripcion!: string;
 
-    @OneToMany(()=>Multa, multa => multa.evidencia)
+    @Property({nullable: false})
+    fechaRecoleccion!: Date
+
+    @OneToMany(()=>Multa, multa => multa.evidencia,{
+        nullable : true
+    })
     multas = new Collection<Multa>(this)
 
-    @ManyToOne(()=>Carpeta)
+    @ManyToOne(()=>Carpeta,{
+        nullable : true
+    })
     carpeta!:Rel<Carpeta>
 }
 

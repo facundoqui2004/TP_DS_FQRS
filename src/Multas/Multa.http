@@ -1,14 +1,13 @@
 ###Obtener todas las multas
-GET http://localhost:3000/api/Multas
+GET http://localhost:3000/api/multas
 
 
 
 ### Obtener una multa por id
-GET http://localhost:3000/api/Multas/3
+GET http://localhost:3000/api/multas/3
 
 ### Crear una nueva multa
-#  @name createMulta
-POST http://localhost:3000/api/Multas
+POST http://localhost:3000/api/multas
 Content-Type: application/json
 
 {
@@ -25,7 +24,7 @@ Content-Type: application/json
 
 ###Actualiza la multa
 
-PUT http://localhost:3000/api/Multas/3
+PUT http://localhost:3000/api/multas/3
 Content-Type: application/json
 
 {
@@ -39,7 +38,7 @@ Content-Type: application/json
 
 
 ### Actualizar solo algunos datos
-PATCH http://localhost:3000/api/Multas/3
+PATCH http://localhost:3000/api/multas/3
 Content-Type: application/json
 
 {
@@ -53,4 +52,4 @@ Content-Type: application/json
 
 
 ### Eliminar una multa
-DELETE http://localhost:3000/api/Multas/3
+DELETE http://localhost:3000/api/multas/3

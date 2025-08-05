@@ -5,6 +5,7 @@ import { orm } from "../shared/db/orm.js";
 
 
 
+
 const em = orm.em
 
 
@@ -14,7 +15,7 @@ function sanitizeBurocratasInput(req:Request , res:Response, next:NextFunction){
        aliasBuro:req.body.aliasBuro,
        origenBuro:req.body.origenBuro,
        telefono:req.body.telefono,
-       mailBuro:req.body.mailBuro
+       mailBuro:req.body.mailBuro,
     }
 
     Object.keys(req.body.sanitizedInput).forEach(key=>{
@@ -27,7 +28,7 @@ function sanitizeBurocratasInput(req:Request , res:Response, next:NextFunction){
 
 async function findAll(req:Request, res:Response){
   try{
-    const burocratas = await em.find(Burocrata, {})//cuando se agregue carpetas , { populate : ['carpetas']}
+    const burocratas = await em.find(Burocrata, {}, { populate : ['carpetas']}) 
     res.status(200).send({message : "find all burocratas",data : burocratas })
   } catch(error : any){
     res.status(500).json({message : error.message})
@@ -37,21 +38,26 @@ async function findAll(req:Request, res:Response){
 async function findOne(req:Request,res:Response){
     try {
         const id = Number.parseInt(req.params.id)
-        const burocrata = await em.findOneOrFail(Burocrata, { id })//cuando se cree Carpeta , {populate: ['carpetas'],}
+        const burocrata = await em.findOneOrFail(Burocrata, { id }, { populate : ['carpetas']})
         res.status(200).json({ message: 'find one burocrata', data: burocrata })
       } catch (error: any) {
         res.status(500).json({ message: error.message })
       }
 }
 
-async function add(req:Request,res:Response){
-    try{
-        const burocrata = em.create(Burocrata, req.body.sanitizedInput)
-        await em.flush()
-        res.status(201).json({ message: 'burocrata created', data: burocrata })
-    } catch (error: any) {
-     res.status(500).json({ message: error.message })
-}
+async function add(req: Request, res: Response) {
+  try {
+    const nuevoBurocrata = em.create(Burocrata, req.body.sanitizedInput);
+    await em.persistAndFlush(nuevoBurocrata);
+    res.status(201).json({
+      message: "Burocrata creado correctamente",
+      data: nuevoBurocrata
+    });
+
+  } catch (error: any) {
+    console.error(error);
+    res.status(500).json({ message: "Error al crear Burocrata", error: error.message });
+  }
 }
 
 async function update(req:Request,res:Response){
