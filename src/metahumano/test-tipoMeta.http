@@ -1,0 +1,37 @@
+### Test para verificar el atributo tipoMeta
+
+### 1. Crear un metahumano
+# @name createTestMetahumano
+POST http://localhost:3000/api/metahumanos
+Content-Type: application/json
+
+{
+  "nombre": "Test Usuario",
+  "alias": "Test Alias",
+  "origen": "Test Ciudad",
+  "telefono": "555-TEST",
+  "mail": "test@test.com"
+}
+
+### ID del metahumano creado
+@testId = {{createTestMetahumano.response.body.data.id}}
+
+### 2. Verificar que tipoMeta = "metahumano"
+GET http://localhost:3000/api/metahumanos/{{testId}}
+
+### 3. Convertir a villano
+POST http://localhost:3000/api/metahumanos/{{testId}}/villano
+Content-Type: application/json
+
+{
+  "nivelPeligrosidad": "Medio",
+  "motivacion": "Test motivación",
+  "estado": "activo",
+  "recompensa": 100000
+}
+
+### 4. Verificar que tipoMeta = "villano"
+GET http://localhost:3000/api/villanos/{{testId}}
+
+### 5. Limpiar - eliminar el villano de prueba
+DELETE http://localhost:3000/api/villanos/{{testId}}

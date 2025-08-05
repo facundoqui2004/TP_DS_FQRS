@@ -1,11 +1,13 @@
 import express from 'express'
 import {
   sanitizeMetahumanoInput,
+  sanitizeVillanoConversionInput,
   findAll,
   findOne,
   add,
   update,
   remove,
+  convertToVillano,
 } from './metahumano.controller.js'
 import {
   findAllForMetahumano,
@@ -21,6 +23,9 @@ router.get('/:id', findOne)
 router.post('/', sanitizeMetahumanoInput, add)
 router.put('/:id', sanitizeMetahumanoInput, update)
 router.delete('/:id', remove)
+
+// Conversión a villano
+router.post('/:id/villano', sanitizeVillanoConversionInput, convertToVillano)
 
 // MetaPoder relacionado al metahumano
 router.get('/:id/metapoder', findAllForMetahumano)

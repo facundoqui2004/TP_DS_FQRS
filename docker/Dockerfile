@@ -12,11 +12,11 @@ RUN pnpm install
 # Copiar el resto del código
 COPY . .
 
-# Compilar TypeScript
-RUN npm run build
+# Crear directorio dist si no existe
+RUN mkdir -p dist
 
 # Exponer el puerto
 EXPOSE 3000
 
-# Comando por defecto
+# Comando por defecto (sin build, el comando se ejecuta en runtime)
 CMD ["npm", "run", "start:dev"]

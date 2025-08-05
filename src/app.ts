@@ -10,6 +10,8 @@ import { burocratasRouter } from './Burocratas/Burocrata.routes.js'
 import { evidenciaRouter } from './evidencia/evidencia.routes.js'
 import { multasRouter } from './Multas/Multa.routes.js'
 import { carpetaRouter } from './carpeta/carpeta.routes.js'
+import usuarioRoutes from './auth/usuario.routes.js' // 🚀 NUEVO
+import villanoRoutes from './villano/villano.routes.js' // 🚀 NUEVO
 import cookieParser from 'cookie-parser' // 🚀 NUEVO
 import cors from 'cors' // 🚀 NUEVO
 import usuarioRouter from './auth/usuario.routes.js'
@@ -35,7 +37,10 @@ app.use('/api/multas', multasRouter)
 app.use('/api/evidencias', evidenciaRouter)
 app.use('/api/carpetas', carpetaRouter)
 app.use('/api/usuarios', usuarioRouter) // 🚀 NUEVO
-
+app.use('/api/Burocratas', burocratasRouter)
+app.use('/api/Multas', multasRouter)
+app.use('/api/usuarios', usuarioRoutes) // 🚀 NUEVO
+app.use('/api/villanos', villanoRoutes) // 🚀 NUEVO
 
 // 404 handler
 app.use((_, res) => {

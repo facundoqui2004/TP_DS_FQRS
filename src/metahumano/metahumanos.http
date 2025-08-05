@@ -17,7 +17,7 @@ Content-Type: application/json
 ### ID
 @id = {{createMetahumano.response.body.data.id}}
 
-### GET one metahumano
+### GET one metahumano (verificar tipoMeta = "metahumano")
 GET http://localhost:3000/api/metahumanos/{{id}}
 
 ### GET one metahumano
@@ -50,4 +50,49 @@ Content-Type: application/json
 
 ### DELETE a metahumano
 DELETE http://localhost:3000/api/metahumanos/{{id}}
+
+### ==========================================
+### CONVERSIÓN DE METAHUMANO A VILLANO
+### ==========================================
+### NOTA: Al convertir, el atributo tipoMeta cambia automáticamente de "metahumano" a "villano"
+
+### Convertir metahumano a villano (FUNCIONALIDAD PRINCIPAL)
+POST http://localhost:3000/api/metahumanos/6/villano
+Content-Type: application/json
+
+{
+  "nivelPeligrosidad": "Alto",
+  "motivacion": "Dominar el mundo",
+  "estado": "activo",
+  "recompensa": 1000000
+}
+
+### Convertir otro metahumano a villano con fecha de captura
+POST http://localhost:3000/api/metahumanos/4/villano
+Content-Type: application/json
+
+{
+  "nivelPeligrosidad": "Medio",
+  "motivacion": "Venganza personal",
+  "fechaCaptura": "2024-01-15",
+  "estado": "fugitivo",
+  "recompensa": 500000
+}
+
+### Verificar villanos convertidos (tipoMeta debe ser "villano")
+GET http://localhost:3000/api/villanos
+
+### Verificar el villano específico convertido
+GET http://localhost:3000/api/villanos/6
+
+### POST - Convertir metahumano a villano
+POST http://localhost:3000/api/metahumanos/2/villano
+Content-Type: application/json
+
+{
+  "nivelPeligrosidad": "Alto",
+  "motivacion": "Dominar el mundo",
+  "estado": "activo",
+  "recompensa": 1000000
+}
 
