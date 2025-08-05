@@ -28,7 +28,7 @@ function sanitizeBurocratasInput(req:Request , res:Response, next:NextFunction){
 
 async function findAll(req:Request, res:Response){
   try{
-    const burocratas = await em.find(Burocrata, {})//cuando se agregue carpetas , { populate : ['carpetas']}
+    const burocratas = await em.find(Burocrata, {}, { populate : ['carpetas']}) 
     res.status(200).send({message : "find all burocratas",data : burocratas })
   } catch(error : any){
     res.status(500).json({message : error.message})
@@ -38,7 +38,7 @@ async function findAll(req:Request, res:Response){
 async function findOne(req:Request,res:Response){
     try {
         const id = Number.parseInt(req.params.id)
-        const burocrata = await em.findOneOrFail(Burocrata, { id })//cuando se cree Carpeta , {populate: ['carpetas'],}
+        const burocrata = await em.findOneOrFail(Burocrata, { id }, { populate : ['carpetas']})
         res.status(200).json({ message: 'find one burocrata', data: burocrata })
       } catch (error: any) {
         res.status(500).json({ message: error.message })

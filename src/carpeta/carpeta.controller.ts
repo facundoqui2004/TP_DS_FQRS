@@ -38,7 +38,7 @@ async function add(req:Request , res: Response){
 }
 
 
-}
+
 
 async function remove(req:Request, res:Response){
   try {
