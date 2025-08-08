@@ -1,76 +1,254 @@
-### GET todos los villanos
-GET http://localhost:3000/api/villanos
+### 🦹‍♂️ API VILLANOS
+### Base URL: http://localhost:3000/api/villanos
 
-### GET un villano específico
-GET http://localhost:3000/api/villanos/1
+##################################################
+### 1️⃣ CREAR VILLANOS
+##################################################
 
-### POST crear un villano
+### Crear villano directamente
 # @name createVillano
 POST http://localhost:3000/api/villanos
 Content-Type: application/json
 
 {
-  "nombre": "Victor Von Doom",
-  "alias": "Doctor Doom",
-  "origen": "Latveria",
-  "telefono": "+1-555-0123",
-  "mail": "doom@latveria.com",
-  "nivelPeligrosidad": "Alto",
-  "motivacion": "Dominio mundial y venganza contra Reed Richards",
-  "estado": "activo",
-  "recompensa": 10000000
+  "nombre": "Lex Luthor",
+  "alias": "Lex Corp CEO",
+  "origen": "Metropolis - Empresario corrupto",
+  "tipoMeta": "VILLANO",
+  "planMaestro": "Destruir a Superman y dominar el mundo",
+  "nivelAmenaza": "EXTREMO"
 }
 
-### POST otro villano
-# @name createVillano2
+###
+
+### Crear villano secundario
+# @name createVillanoSecundario
 POST http://localhost:3000/api/villanos
 Content-Type: application/json
 
 {
   "nombre": "Norman Osborn",
-  "alias": "Duende Verde",
-  "origen": "Nueva York",
-  "telefono": "+1-555-0456",
-  "mail": "nosborn@oscorp.com",
-  "nivelPeligrosidad": "Medio",
-  "motivacion": "Venganza contra Spider-Man",
-  "estado": "fugitivo",
-  "recompensa": 5000000
+  "alias": "Green Goblin",
+  "origen": "Nueva York - Experimento químico fallido",
+  "tipoMeta": "VILLANO",
+  "planMaestro": "Eliminar a Spider-Man y controlar Nueva York",
+  "nivelAmenaza": "ALTO"
 }
 
-### ID del villano creado
-@villanoId = {{createVillano.response.body.data.id}}
+###
 
-### PUT actualizar villano
-PUT http://localhost:3000/api/villanos/{{villanoId}}
+##################################################
+### 2️⃣ CONVERSIÓN DE METAHUMANO A VILLANO
+##################################################
+
+### Convertir metahumano existente a villano
+# @name convertToVillano
+POST http://localhost:3000/api/metahumanos/1/villano
 Content-Type: application/json
 
 {
-  "nombre": "Victor Von Doom",
-  "alias": "Doctor Doom",
-  "origen": "Latveria",
-  "telefono": "+1-555-0123",
-  "mail": "doom@latveria.com",
-  "nivelPeligrosidad": "Alto",
-  "motivacion": "Dominio mundial y venganza contra Reed Richards",
-  "estado": "activo",
-  "recompensa": 15000000
+  "planMaestro": "Usar poderes para beneficio personal",
+  "nivelAmenaza": "MEDIO"
 }
 
-### PATCH capturar villano
-PATCH http://localhost:3000/api/villanos/{{villanoId}}/capturar
+###
 
-### PATCH rehabilitar villano
-PATCH http://localhost:3000/api/villanos/{{villanoId}}/rehabilitar
+##################################################
+### 3️⃣ CONSULTAS DE VILLANOS
+##################################################
 
-### PATCH marcar como fugitivo
-PATCH http://localhost:3000/api/villanos/{{villanoId}}/fugitivo
+### Listar todos los villanos
+# @name getAllVillanos
+GET http://localhost:3000/api/villanos
 
-### GET villanos por nivel de peligrosidad
-GET http://localhost:3000/api/villanos/nivel/Alto
+###
 
-### GET villanos por estado
-GET http://localhost:3000/api/villanos/estado/activo
+### Obtener villano por ID
+# @name getVillanoById
+GET http://localhost:3000/api/villanos/1
 
-### DELETE villano
-DELETE http://localhost:3000/api/villanos/{{villanoId}}
+###
+
+### Filtrar villanos por nivel de amenaza
+# @name getVillanosByAmenaza
+GET http://localhost:3000/api/villanos?nivelAmenaza=EXTREMO
+
+###
+
+### Buscar villanos por origen
+# @name getVillanosByOrigen
+GET http://localhost:3000/api/villanos?origen=Metropolis
+
+###
+
+##################################################
+### 4️⃣ ACTUALIZAR VILLANOS
+##################################################
+
+### Actualizar plan maestro
+# @name updatePlanMaestro
+PUT http://localhost:3000/api/villanos/1
+Content-Type: application/json
+
+{
+  "nombre": "Lex Luthor",
+  "alias": "Lex Corp CEO",
+  "origen": "Metropolis - Empresario corrupto",
+  "tipoMeta": "VILLANO",
+  "planMaestro": "Crear ejército de robots para conquistar la Tierra",
+  "nivelAmenaza": "EXTREMO"
+}
+
+###
+
+### Actualizar nivel de amenaza
+# @name updateNivelAmenaza
+PUT http://localhost:3000/api/villanos/2
+Content-Type: application/json
+
+{
+  "nombre": "Norman Osborn",
+  "alias": "Green Goblin",
+  "origen": "Nueva York - Experimento químico fallido",
+  "tipoMeta": "VILLANO",
+  "planMaestro": "Eliminar a Spider-Man y controlar Nueva York",
+  "nivelAmenaza": "EXTREMO"
+}
+
+###
+
+##################################################
+### 5️⃣ VILLANOS ESPECÍFICOS
+##################################################
+
+### Crear archienemigo de Batman
+# @name createJoker
+POST http://localhost:3000/api/villanos
+Content-Type: application/json
+
+{
+  "nombre": "Unknown",
+  "alias": "The Joker",
+  "origen": "Gotham City - Accidente químico",
+  "tipoMeta": "VILLANO",
+  "planMaestro": "Crear caos absoluto en Gotham City",
+  "nivelAmenaza": "EXTREMO"
+}
+
+###
+
+### Crear villano cósmico
+# @name createGalactus
+POST http://localhost:3000/api/villanos
+Content-Type: application/json
+
+{
+  "nombre": "Galan",
+  "alias": "Galactus",
+  "origen": "Universo anterior - Devorador de mundos",
+  "tipoMeta": "VILLANO",
+  "planMaestro": "Devorar planetas para sobrevivir",
+  "nivelAmenaza": "COSMICO"
+}
+
+###
+
+### Crear villano tecnológico
+# @name createUltron
+POST http://localhost:3000/api/villanos
+Content-Type: application/json
+
+{
+  "nombre": "Ultron",
+  "alias": "Ultron Prime",
+  "origen": "Laboratorio de Tony Stark - IA rebelde",
+  "tipoMeta": "VILLANO",
+  "planMaestro": "Extinguir la humanidad para salvar la Tierra",
+  "nivelAmenaza": "EXTREMO"
+}
+
+###
+
+##################################################
+### 6️⃣ BÚSQUEDAS AVANZADAS
+##################################################
+
+### Buscar villanos por palabra clave en plan maestro
+# @name searchByPlanMaestro
+GET http://localhost:3000/api/villanos?search=dominar
+
+###
+
+### Obtener villanos de amenaza extrema o cósmica
+# @name getVillanosAltaAmenaza
+GET http://localhost:3000/api/villanos?nivelAmenaza=EXTREMO,COSMICO
+
+###
+
+### Buscar villanos por alias
+# @name searchByAlias
+GET http://localhost:3000/api/villanos?alias=Joker
+
+###
+
+##################################################
+### 7️⃣ ESTADÍSTICAS DE VILLANOS
+##################################################
+
+### Obtener estadísticas de villanos por nivel de amenaza
+# @name getEstadisticasAmenaza
+GET http://localhost:3000/api/villanos/estadisticas/amenaza
+
+###
+
+### Obtener ranking de villanos más peligrosos
+# @name getRankingPeligrosidad
+GET http://localhost:3000/api/villanos/ranking
+
+###
+
+### Obtener villanos activos por región
+# @name getVillanosByRegion
+GET http://localhost:3000/api/villanos/region?origen=Gotham
+
+###
+
+##################################################
+### 8️⃣ OPERACIONES ESPECIALES
+##################################################
+
+### Marcar villano como capturado
+# @name markVillanoCapturado
+POST http://localhost:3000/api/villanos/1/capturar
+Content-Type: application/json
+
+{
+  "fechaCaptura": "2025-08-08",
+  "ubicacionCaptura": "Metropolis - LexCorp Tower",
+  "agentesResponsables": ["Superman", "Agent Hill"]
+}
+
+###
+
+### Reportar escape de villano
+# @name reportVillanoEscape
+POST http://localhost:3000/api/villanos/1/escape
+Content-Type: application/json
+
+{
+  "fechaEscape": "2025-08-08",
+  "ubicacionEscape": "Prisión de Máxima Seguridad",
+  "metodoEscape": "Teletransporte tecnológico"
+}
+
+###
+
+##################################################
+### 9️⃣ ELIMINAR VILLANOS
+##################################################
+
+### Eliminar villano (usar con extrema precaución)
+# @name deleteVillano
+DELETE http://localhost:3000/api/villanos/1
+
+###

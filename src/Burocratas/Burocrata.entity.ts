@@ -1,28 +1,35 @@
 
 import { Carpeta } from "../carpeta/carpeta.entity.js";
 import { BaseEntity } from "../shared/db/baseEntity.entity.js";
-import { Cascade, Collection, Entity, OneToMany, Property,Rel } from "@mikro-orm/core";
+import { Usuario } from "../auth/usuario.entity.js";
+import { Cascade, Collection, Entity, OneToMany, OneToOne, Property, Rel } from "@mikro-orm/core";
 
 @Entity()
 export class Burocrata extends BaseEntity{
   @Property({nullable:false})
-  nombreBuro!:string
+  nombre!:string
 
   @Property({nullable:false})
-  aliasBuro!:string
+  alias!:string
 
   @Property({nullable:false})
-  origenBuro!:string
+  origen!:string
 
-  @Property({nullable:true})
-  telefono!:string
-
-  @Property({nullable:true})
-  mailBuro!:string
+  // Relación OneToOne con Usuario (obligatoria y única)
+  @OneToOne({ entity: () => Usuario, inversedBy: 'burocrata', owner: true })
+  usuario!: Rel<Usuario>
   
   @OneToMany(()=>Carpeta, carpeta => carpeta.burocrata,{
-  cascade : [Cascade.ALL]
+    cascade : [Cascade.ALL]
   })
   carpetas = new Collection<Carpeta>(this)
-  
+
+  // Métodos para acceder a los campos de contacto desde Usuario
+  getEmail(): string {
+    return this.usuario?.email || ''
+  }
+
+  getTelefono(): string {
+    return this.usuario?.telefono || ''
+  }
 }

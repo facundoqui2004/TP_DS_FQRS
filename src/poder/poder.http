@@ -1,47 +1,200 @@
-### GET all poderes
+### ⚡ API PODERES
+### Base URL: http://localhost:3000/api/poderes
+
+##################################################
+### 1️⃣ CREAR PODERES
+##################################################
+
+### Crear poder de aracnido
+# @name createPoderAracnido
+POST http://localhost:3000/api/poderes
+Content-Type: application/json
+
+{
+  "nombre": "Sentido Arácnido",
+  "descripcion": "Capacidad de detectar peligro inminente",
+  "tipo": "SENSORIAL",
+  "nivel": "ALTO"
+}
+
+###
+
+### Crear poder de fuerza
+# @name createPoderFuerza
+POST http://localhost:3000/api/poderes
+Content-Type: application/json
+
+{
+  "nombre": "Super Fuerza",
+  "descripcion": "Fuerza física sobrehumana",
+  "tipo": "FISICO",
+  "nivel": "EXTREMO"
+}
+
+###
+
+### Crear poder de vuelo
+# @name createPoderVuelo
+POST http://localhost:3000/api/poderes
+Content-Type: application/json
+
+{
+  "nombre": "Vuelo",
+  "descripcion": "Capacidad de volar sin asistencia mecánica",
+  "tipo": "FISICO",
+  "nivel": "ALTO"
+}
+
+###
+
+##################################################
+### 2️⃣ CONSULTAS DE PODERES
+##################################################
+
+### Listar todos los poderes
+# @name getAllPoderes
 GET http://localhost:3000/api/poderes
 
-### POST a poder
-# @name createPoder
+###
+
+### Obtener poder por ID
+# @name getPoderById
+GET http://localhost:3000/api/poderes/1
+
+###
+
+### Filtrar poderes por tipo
+# @name getPoderesByTipo
+GET http://localhost:3000/api/poderes?tipo=FISICO
+
+###
+
+### Filtrar poderes por nivel
+# @name getPoderesByNivel
+GET http://localhost:3000/api/poderes?nivel=ALTO
+
+###
+
+##################################################
+### 3️⃣ ACTUALIZAR PODERES
+##################################################
+
+### Actualizar poder
+# @name updatePoder
+PUT http://localhost:3000/api/poderes/1
+Content-Type: application/json
+
+{
+  "nombre": "Sentido Arácnido Mejorado",
+  "descripcion": "Capacidad de detectar peligro inminente con mayor precisión",
+  "tipo": "SENSORIAL",
+  "nivel": "EXTREMO"
+}
+
+###
+
+### Actualizar descripción de poder
+# @name updatePoderDescripcion
+PUT http://localhost:3000/api/poderes/2
+Content-Type: application/json
+
+{
+  "nombre": "Super Fuerza",
+  "descripcion": "Fuerza física sobrehumana capaz de levantar hasta 10 toneladas",
+  "tipo": "FISICO",
+  "nivel": "EXTREMO"
+}
+
+###
+
+##################################################
+### 4️⃣ PODERES ESPECÍFICOS
+##################################################
+
+### Crear poder de teletransporte
+# @name createPoderTeletransporte
 POST http://localhost:3000/api/poderes
 Content-Type: application/json
 
 {
-  "nomPoder": "Telepatía",
-  "debilidad": "Ruido psíquico",
-  "descPoder": "Lee y controla la mente",
-  "descDebilidad": "La sobrecarga mental lo incapacita",
-  "categoria": "Psiquico",
-  "costoMulta": 3000
+  "nombre": "Teletransporte",
+  "descripcion": "Capacidad de transportarse instantáneamente a cualquier ubicación",
+  "tipo": "DIMENSIONAL",
+  "nivel": "EXTREMO"
 }
-### POST a poder
-# @name createPoder
+
+###
+
+### Crear poder de invisibilidad
+# @name createPoderInvisibilidad
 POST http://localhost:3000/api/poderes
 Content-Type: application/json
 
 {
-  "nomPoder": "Regeneración",
-  "debilidad": "Fuego intenso",
-  "descPoder": "Regenera heridas rápidamente",
-  "descDebilidad": "El fuego intenso lo debilita",
-  "categoria": "Fisico",
-  "costoMulta": 2000
+  "nombre": "Invisibilidad",
+  "descripcion": "Capacidad de volverse invisible a la vista",
+  "tipo": "OPTICO",
+  "nivel": "MEDIO"
 }
 
-### ID del poder
-@poderId = {{createPoder.response.body.data.id}}
+###
 
-### GET one poder
-GET http://localhost:3000/api/poderes/{{poderId}}
-
-### PUT poder
-PUT http://localhost:3000/api/poderes/{{poderId}}
+### Crear poder de control mental
+# @name createPoderControlMental
+POST http://localhost:3000/api/poderes
 Content-Type: application/json
 
 {
-  "descPoder": "Control mental avanzado",
-  "categoria": "Psiquico"
+  "nombre": "Control Mental",
+  "descripcion": "Capacidad de controlar la mente de otros seres",
+  "tipo": "PSIQUICO",
+  "nivel": "EXTREMO"
 }
 
-### DELETE poder
-DELETE http://localhost:3000/api/poderes/{{poderId}}
+###
+
+### Crear poder de regeneración
+# @name createPoderRegeneracion
+POST http://localhost:3000/api/poderes
+Content-Type: application/json
+
+{
+  "nombre": "Regeneración",
+  "descripcion": "Capacidad de curar heridas y regenerar tejidos",
+  "tipo": "BIOLOGICO",
+  "nivel": "ALTO"
+}
+
+###
+
+##################################################
+### 5️⃣ BÚSQUEDAS AVANZADAS
+##################################################
+
+### Buscar poderes por nombre
+# @name searchPoderesByNombre
+GET http://localhost:3000/api/poderes?search=Super
+
+###
+
+### Buscar poderes de nivel extremo
+# @name getPoderesExtremo
+GET http://localhost:3000/api/poderes?nivel=EXTREMO
+
+###
+
+### Buscar poderes físicos
+# @name getPoderesFisicos
+GET http://localhost:3000/api/poderes?tipo=FISICO
+
+###
+
+##################################################
+### 6️⃣ ELIMINAR PODERES
+##################################################
+
+### Eliminar poder
+# @name deletePoder
+DELETE http://localhost:3000/api/poderes/1
+
+###

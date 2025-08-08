@@ -10,7 +10,7 @@ services:
       MYSQL_USER: dsw
       MYSQL_PASSWORD: dsw
     ports:
-      - "3308:3306"
+      - "3309:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro

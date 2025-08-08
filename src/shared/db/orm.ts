@@ -4,7 +4,7 @@ import { SqlHighlighter } from '@mikro-orm/sql-highlighter'
 // Configuración de base de datos con variables de entorno
 const dbConfig = {
   host: process.env.DB_HOST || '127.0.0.1',
-  port: parseInt(process.env.DB_PORT || '3308'),
+  port: parseInt(process.env.DB_PORT || '3309'),
   dbName: process.env.DB_NAME || 'metahumano',
   user: process.env.DB_USER || 'dsw',
   password: process.env.DB_PASSWORD || 'dsw',

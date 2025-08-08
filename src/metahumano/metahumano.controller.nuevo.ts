@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
 import { Metahumano } from './metahumano.entity.js'
-import { Usuario } from '../auth/usuario.entity.js'
 import { orm } from '../shared/db/orm.js'
 
 const em = orm.em
@@ -11,7 +10,6 @@ function sanitizeMetahumanoInput(req: Request, res: Response, next: NextFunction
     alias: req.body.alias,
     origen: req.body.origen,
     tipoMeta: req.body.tipoMeta,
-    usuarioId: req.body.usuarioId
   }
 
   // Eliminar claves undefined
@@ -22,65 +20,6 @@ function sanitizeMetahumanoInput(req: Request, res: Response, next: NextFunction
   })
 
   next()
-}
-
-async function crearPerfilMetahumano(req: Request, res: Response) {
-  try {
-    const { usuarioId, nombre, alias, origen, tipoMeta } = req.body
-
-    // Validaciones básicas
-    if (!usuarioId || !nombre || !alias || !origen) {
-      return res.status(400).json({ 
-        message: 'Campos requeridos: usuarioId, nombre, alias, origen' 
-      })
-    }
-
-    // Verificar que el usuario existe y no tiene ya un perfil de metahumano
-    const usuario = await em.findOne(Usuario, { id: usuarioId }, { populate: ['metahumano', 'burocrata'] })
-    if (!usuario) {
-      return res.status(404).json({ message: 'Usuario no encontrado' })
-    }
-
-    if (usuario.metahumano) {
-      return res.status(400).json({ message: 'El usuario ya tiene un perfil de metahumano' })
-    }
-
-    if (usuario.burocrata) {
-      return res.status(400).json({ message: 'El usuario ya tiene un perfil de burócrata' })
-    }
-
-    if (usuario.role !== 'METAHUMANO') {
-      return res.status(400).json({ message: 'El usuario debe tener role METAHUMANO' })
-    }
-
-    // Crear perfil de metahumano
-    const metahumano = em.create(Metahumano, {
-      nombre,
-      alias,
-      origen,
-      tipoMeta: tipoMeta || 'NORMAL',
-      usuario: usuario
-    })
-
-    await em.persistAndFlush(metahumano)
-
-    res.status(201).json({
-      message: 'Perfil de metahumano creado exitosamente',
-      data: {
-        id: metahumano.id,
-        nombre: metahumano.nombre,
-        alias: metahumano.alias,
-        origen: metahumano.origen,
-        tipoMeta: metahumano.tipoMeta,
-        usuarioId: usuario.id,
-        email: usuario.email,
-        telefono: usuario.telefono
-      }
-    })
-  } catch (error: any) {
-    console.error('Error al crear perfil de metahumano:', error)
-    res.status(500).json({ message: 'Error interno del servidor' })
-  }
 }
 
 async function findAll(req: Request, res: Response) {
@@ -139,4 +78,4 @@ async function remove(req: Request, res: Response) {
   }
 }
 
-export { sanitizeMetahumanoInput, crearPerfilMetahumano, findAll, findOne, add, update, remove }
+export { sanitizeMetahumanoInput, findAll, findOne, add, update, remove }

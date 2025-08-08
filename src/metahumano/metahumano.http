@@ -1,0 +1,147 @@
+### 🦸‍♂️ API METAHUMANOS
+### Base URL: http://localhost:3000/api/metahumanos
+
+##################################################
+### 1️⃣ CREAR PERFIL DE METAHUMANO (NUEVO FLUJO)
+##################################################
+
+### Crear perfil para usuario existente
+# @name createMetahumanoProfile
+POST http://localhost:3000/api/metahumanos
+Content-Type: application/json
+
+{
+  "usuarioId": 3,
+  "nombre": "Peter Parker",
+  "alias": "Spider-Man",
+  "origen": "Nueva York",
+  "tipoMeta": "HEROE"
+}
+
+###
+
+##################################################
+### 2️⃣ CONSULTAS DE METAHUMANOS
+##################################################
+
+### Listar todos los metahumanos
+# @name getAllMetahumanos
+GET http://localhost:3000/api/metahumanos
+
+###
+
+### Obtener metahumano por ID
+# @name getMetahumanoById
+GET http://localhost:3000/api/metahumanos/1
+
+###
+
+### Obtener metahumano específico
+# @name getMetahumano2
+GET http://localhost:3000/api/metahumanos/2
+
+###
+
+##################################################
+### 3️⃣ ACTUALIZAR METAHUMANOS
+##################################################
+
+### Actualizar información de metahumano
+# @name updateMetahumano
+PUT http://localhost:3000/api/metahumanos/1
+Content-Type: application/json
+
+{
+  "nombre": "Clark Kent",
+  "alias": "Superman Updated",
+  "origen": "Krypton - Planeta actualizado",
+  "tipoMeta": "HEROE"
+}
+
+###
+
+### Actualizar parcialmente
+# @name updateMetahumanoPartial
+PUT http://localhost:3000/api/metahumanos/2
+Content-Type: application/json
+
+{
+  "alias": "Amazing Spider-Man",
+  "tipoMeta": "HEROE"
+}
+
+###
+
+##################################################
+### 4️⃣ EJEMPLOS ADICIONALES
+##################################################
+
+### Crear otro perfil de metahumano
+# @name createMetahumano2
+POST http://localhost:3000/api/metahumanos
+Content-Type: application/json
+
+{
+  "usuarioId": 5,
+  "nombre": "Diana Prince",
+  "alias": "Wonder Woman",
+  "origen": "Themyscira",
+  "tipoMeta": "HEROE"
+}
+
+###
+
+### Crear metahumano villano
+# @name createVillano
+POST http://localhost:3000/api/metahumanos
+Content-Type: application/json
+
+{
+  "usuarioId": 6,
+  "nombre": "Lex Luthor",
+  "alias": "Lex Luthor",
+  "origen": "Metropolis",
+  "tipoMeta": "VILLANO"
+}
+
+###
+
+##################################################
+### 5️⃣ VALIDACIONES Y ERRORES
+##################################################
+
+### Intentar crear perfil para usuario inexistente (debe fallar)
+# @name errorUsuarioInexistente
+POST http://localhost:3000/api/metahumanos
+Content-Type: application/json
+
+{
+  "usuarioId": 999,
+  "nombre": "Usuario Falso",
+  "alias": "Fake Hero",
+  "origen": "Nowhere",
+  "tipoMeta": "HEROE"
+}
+
+###
+
+### Intentar crear perfil sin campos obligatorios (debe fallar)
+# @name errorCamposObligatorios
+POST http://localhost:3000/api/metahumanos
+Content-Type: application/json
+
+{
+  "usuarioId": 3
+}
+
+###
+
+##################################################
+### 6️⃣ ELIMINAR METAHUMANOS
+##################################################
+
+### Eliminar metahumano (usar con cuidado)
+# @name deleteMetahumano
+DELETE http://localhost:3000/api/metahumanos/1
+
+###

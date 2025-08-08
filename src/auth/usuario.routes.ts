@@ -1,12 +1,27 @@
 import express from 'express'
-import { register, login, logout, getCurrentUser, getAllUsers } from './usuario.controller.js'
-import { get } from 'http'
+import { 
+  crearUsuarioBasico,
+  registrarMetahumano, 
+  registrarBurocrata, 
+  login, 
+  obtenerPerfil,
+  actualizarContacto,
+  listarUsuarios,
+  logout
+} from './usuario.controller.js'
 
 const router = express.Router()
 
-router.post('/register', register)
+// Rutas de autenticación
+router.post('/register/basic', crearUsuarioBasico)
+router.post('/register/metahumano', registrarMetahumano)
+router.post('/register/burocrata', registrarBurocrata)
 router.post('/login', login)
 router.post('/logout', logout)
-router.get('/me', getCurrentUser)
-router.get('/', getAllUsers)
+
+// Rutas protegidas (requieren autenticación)
+router.get('/perfil', obtenerPerfil)
+router.put('/contacto', actualizarContacto)
+router.get('/admin/usuarios', listarUsuarios)
+
 export default router

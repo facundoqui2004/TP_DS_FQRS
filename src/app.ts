@@ -10,15 +10,15 @@ import { burocratasRouter } from './Burocratas/Burocrata.routes.js'
 import { evidenciaRouter } from './evidencia/evidencia.routes.js'
 import { multasRouter } from './Multas/Multa.routes.js'
 import { carpetaRouter } from './carpeta/carpeta.routes.js'
-import usuarioRoutes from './auth/usuario.routes.js' // 🚀 NUEVO
-import villanoRoutes from './villano/villano.routes.js' // 🚀 NUEVO
-import cookieParser from 'cookie-parser' // 🚀 NUEVO
-import cors from 'cors' // 🚀 NUEVO
 import usuarioRouter from './auth/usuario.routes.js'
+import villanoRoutes from './villano/villano.routes.js'
+import cookieParser from 'cookie-parser'
+import cors from 'cors'
 
 const app = express()
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000']
+  origin: ['http://localhost:5173', 'http://localhost:3000'],
+  credentials: true // permitir envío de cookies al front
 }))
 app.use(express.json())
 app.use(cookieParser()) // habilita uso de cookies
@@ -36,11 +36,8 @@ app.use('/api/burocratas', burocratasRouter)
 app.use('/api/multas', multasRouter)
 app.use('/api/evidencias', evidenciaRouter)
 app.use('/api/carpetas', carpetaRouter)
-app.use('/api/usuarios', usuarioRouter) // 🚀 NUEVO
-app.use('/api/Burocratas', burocratasRouter)
-app.use('/api/Multas', multasRouter)
-app.use('/api/usuarios', usuarioRoutes) // 🚀 NUEVO
-app.use('/api/villanos', villanoRoutes) // 🚀 NUEVO
+app.use('/api/auth', usuarioRouter) // � ACTUALIZADO: Nuevo modelo de usuario
+app.use('/api/villanos', villanoRoutes)
 
 // 404 handler
 app.use((_, res) => {

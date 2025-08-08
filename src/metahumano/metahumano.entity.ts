@@ -2,12 +2,15 @@ import {
   Entity,
   Property,
   OneToMany,
+  OneToOne,
   Cascade,
   Collection,
+  Rel,
 } from '@mikro-orm/core'
 import { BaseEntity } from '../shared/db/baseEntity.entity.js'
 import { MetaPoder } from  '../metaPoder/metaPoder.entity.js'
 import { Carpeta } from '../carpeta/carpeta.entity.js'
+import { Usuario } from '../auth/usuario.entity.js'
 
 @Entity({
   discriminatorColumn: 'tipo_meta',
@@ -16,7 +19,7 @@ import { Carpeta } from '../carpeta/carpeta.entity.js'
     'villano': 'Villano',
     'heroe': 'Heroe'
   }
-}) //PARA QUE VILLANO HEREDE DE ,METAHUMANO LOS ATRIBUTOS
+}) //PARA QUE VILLANO HEREDE DE METAHUMANO LOS ATRIBUTOS
 export class Metahumano extends BaseEntity {
   @Property({ nullable: false })
   nombre!: string
@@ -27,11 +30,9 @@ export class Metahumano extends BaseEntity {
   @Property({ nullable: false })
   origen!: string
 
-  @Property({ nullable: false })
-  telefono!: string
-
-  @Property({ nullable: false })
-  mail!: string
+  // Relación OneToOne con Usuario (obligatoria y única)
+  @OneToOne({ entity: () => Usuario, inversedBy: 'metahumano', owner: true })
+  usuario!: Rel<Usuario>
 
   @OneToMany(()=>Carpeta, carpeta => carpeta.metahumano, {
     cascade: [Cascade.ALL]
@@ -42,6 +43,15 @@ export class Metahumano extends BaseEntity {
     cascade: [Cascade.ALL],
   })
   poderes = new Collection<MetaPoder>(this)
+
+  // Métodos para acceder a los campos de contacto desde Usuario
+  getEmail(): string {
+    return this.usuario?.email || ''
+  }
+
+  getTelefono(): string {
+    return this.usuario?.telefono || ''
+  }
 
   // Getter para acceder al tipo de metahumano
   get tipoMeta(): string {

@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
 import { Burocrata } from './Burocrata.entity.js'
-import { Usuario } from '../auth/usuario.entity.js'
 import { orm } from '../shared/db/orm.js'
 
 const em = orm.em
@@ -10,7 +9,6 @@ function sanitizeBurocrataInput(req: Request, res: Response, next: NextFunction)
     nombre: req.body.nombre,
     alias: req.body.alias,
     origen: req.body.origen,
-    usuarioId: req.body.usuarioId
   }
 
   // Eliminar claves undefined
@@ -21,63 +19,6 @@ function sanitizeBurocrataInput(req: Request, res: Response, next: NextFunction)
   })
 
   next()
-}
-
-async function crearPerfilBurocrata(req: Request, res: Response) {
-  try {
-    const { usuarioId, nombre, alias, origen } = req.body
-
-    // Validaciones básicas
-    if (!usuarioId || !nombre || !alias || !origen) {
-      return res.status(400).json({ 
-        message: 'Campos requeridos: usuarioId, nombre, alias, origen' 
-      })
-    }
-
-    // Verificar que el usuario existe y no tiene ya un perfil
-    const usuario = await em.findOne(Usuario, { id: usuarioId }, { populate: ['metahumano', 'burocrata'] })
-    if (!usuario) {
-      return res.status(404).json({ message: 'Usuario no encontrado' })
-    }
-
-    if (usuario.burocrata) {
-      return res.status(400).json({ message: 'El usuario ya tiene un perfil de burócrata' })
-    }
-
-    if (usuario.metahumano) {
-      return res.status(400).json({ message: 'El usuario ya tiene un perfil de metahumano' })
-    }
-
-    if (usuario.role !== 'BUROCRATA') {
-      return res.status(400).json({ message: 'El usuario debe tener role BUROCRATA' })
-    }
-
-    // Crear perfil de burócrata
-    const burocrata = em.create(Burocrata, {
-      nombre,
-      alias,
-      origen,
-      usuario: usuario
-    })
-
-    await em.persistAndFlush(burocrata)
-
-    res.status(201).json({
-      message: 'Perfil de burócrata creado exitosamente',
-      data: {
-        id: burocrata.id,
-        nombre: burocrata.nombre,
-        alias: burocrata.alias,
-        origen: burocrata.origen,
-        usuarioId: usuario.id,
-        email: usuario.email,
-        telefono: usuario.telefono
-      }
-    })
-  } catch (error: any) {
-    console.error('Error al crear perfil de burócrata:', error)
-    res.status(500).json({ message: 'Error interno del servidor' })
-  }
 }
 
 async function findAll(req: Request, res: Response) {
@@ -136,4 +77,4 @@ async function remove(req: Request, res: Response) {
   }
 }
 
-export { sanitizeBurocrataInput, crearPerfilBurocrata, findAll, findOne, add, update, remove }
+export { sanitizeBurocrataInput, findAll, findOne, add, update, remove }

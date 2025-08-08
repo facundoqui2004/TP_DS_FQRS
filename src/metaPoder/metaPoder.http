@@ -1,22 +1,223 @@
-### GET all MetaPoder (relaciones)
-GET http://localhost:3000/api/metapoder
+### 🔗 API META-PODERES (Relación Metahumano-Poder)
+### Base URL: http://localhost:3000/api/meta-poderes
 
-### POST asignar poder a metahumano
-# @name asignarPoder
-POST http://localhost:3000/api/metapoder
+##################################################
+### 1️⃣ ASIGNAR PODERES A METAHUMANOS
+##################################################
+
+### Asignar Sentido Arácnido a Spider-Man
+# @name assignPoderSpiderMan1
+POST http://localhost:3000/api/meta-poderes
 Content-Type: application/json
 
 {
-  "estado": "aprobado",
-  "fechaSolicitud": "2025-07-08",
-  "fechaRespuesta": "2025-07-09",
-  "certificado": "certificado-001.pdf",
- //   "metahumanoId": {{createMetahumano.response.body.data.id}},
- //   "poderId": {{createPoder.response.body.data.id}}
+  "metahumano_id": 1,
+  "poder_id": 1,
+  "nivelDominio": "EXPERTO",
+  "fechaManifestacion": "2025-01-15"
 }
 
-### ID de MetaPoder
-@metaPoderId = {{asignarPoder.response.body.data.id}}
+###
 
-### DELETE una relación MetaPoder
-DELETE http://localhost:3000/api/metapoder/{{metaPoderId}}
+### Asignar Super Fuerza a Spider-Man
+# @name assignPoderSpiderMan2
+POST http://localhost:3000/api/meta-poderes
+Content-Type: application/json
+
+{
+  "metahumano_id": 1,
+  "poder_id": 2,
+  "nivelDominio": "AVANZADO",
+  "fechaManifestacion": "2025-01-15"
+}
+
+###
+
+### Asignar Vuelo a Superman
+# @name assignPoderSuperman1
+POST http://localhost:3000/api/meta-poderes
+Content-Type: application/json
+
+{
+  "metahumano_id": 2,
+  "poder_id": 3,
+  "nivelDominio": "MAESTRO",
+  "fechaManifestacion": "2024-06-01"
+}
+
+###
+
+##################################################
+### 2️⃣ CONSULTAS DE META-PODERES
+##################################################
+
+### Listar todas las relaciones metahumano-poder
+# @name getAllMetaPoderes
+GET http://localhost:3000/api/meta-poderes
+
+###
+
+### Obtener poderes de un metahumano específico
+# @name getPoderesByMetahumano
+GET http://localhost:3000/api/meta-poderes?metahumano_id=1
+
+###
+
+### Obtener metahumanos que tienen un poder específico
+# @name getMetahumanosByPoder
+GET http://localhost:3000/api/meta-poderes?poder_id=2
+
+###
+
+### Obtener relación específica por ID
+# @name getMetaPoderById
+GET http://localhost:3000/api/meta-poderes/1
+
+###
+
+##################################################
+### 3️⃣ ACTUALIZAR RELACIONES
+##################################################
+
+### Actualizar nivel de dominio
+# @name updateNivelDominio
+PUT http://localhost:3000/api/meta-poderes/1
+Content-Type: application/json
+
+{
+  "metahumano_id": 1,
+  "poder_id": 1,
+  "nivelDominio": "MAESTRO",
+  "fechaManifestacion": "2025-01-15"
+}
+
+###
+
+### Actualizar fecha de manifestación
+# @name updateFechaManifestacion
+PUT http://localhost:3000/api/meta-poderes/2
+Content-Type: application/json
+
+{
+  "metahumano_id": 1,
+  "poder_id": 2,
+  "nivelDominio": "EXPERTO",
+  "fechaManifestacion": "2025-01-16"
+}
+
+###
+
+##################################################
+### 4️⃣ EJEMPLOS ADICIONALES
+##################################################
+
+### Asignar múltiples poderes a Wonder Woman
+# @name assignPoderWonderWoman1
+POST http://localhost:3000/api/meta-poderes
+Content-Type: application/json
+
+{
+  "metahumano_id": 3,
+  "poder_id": 2,
+  "nivelDominio": "MAESTRO",
+  "fechaManifestacion": "2020-05-01"
+}
+
+###
+
+# @name assignPoderWonderWoman2
+POST http://localhost:3000/api/meta-poderes
+Content-Type: application/json
+
+{
+  "metahumano_id": 3,
+  "poder_id": 3,
+  "nivelDominio": "EXPERTO",
+  "fechaManifestacion": "2020-05-01"
+}
+
+###
+
+### Asignar poder de regeneración
+# @name assignPoderRegeneracion
+POST http://localhost:3000/api/meta-poderes
+Content-Type: application/json
+
+{
+  "metahumano_id": 1,
+  "poder_id": 4,
+  "nivelDominio": "INTERMEDIO",
+  "fechaManifestacion": "2025-02-01"
+}
+
+###
+
+##################################################
+### 5️⃣ FILTROS Y BÚSQUEDAS
+##################################################
+
+### Buscar por nivel de dominio
+# @name getByNivelDominio
+GET http://localhost:3000/api/meta-poderes?nivelDominio=MAESTRO
+
+###
+
+### Buscar por fecha de manifestación
+# @name getByFechaManifestacion
+GET http://localhost:3000/api/meta-poderes?fechaManifestacion=2025-01-15
+
+###
+
+### Obtener estadísticas de poderes por metahumano
+# @name getEstadisticasPoderes
+GET http://localhost:3000/api/meta-poderes/estadisticas/1
+
+###
+
+##################################################
+### 6️⃣ VALIDACIONES Y ERRORES
+##################################################
+
+### Intentar asignar poder inexistente (debe fallar)
+# @name errorPoderInexistente
+POST http://localhost:3000/api/meta-poderes
+Content-Type: application/json
+
+{
+  "metahumano_id": 1,
+  "poder_id": 999,
+  "nivelDominio": "EXPERTO",
+  "fechaManifestacion": "2025-08-08"
+}
+
+###
+
+### Intentar asignar a metahumano inexistente (debe fallar)
+# @name errorMetahumanoInexistente
+POST http://localhost:3000/api/meta-poderes
+Content-Type: application/json
+
+{
+  "metahumano_id": 999,
+  "poder_id": 1,
+  "nivelDominio": "EXPERTO",
+  "fechaManifestacion": "2025-08-08"
+}
+
+###
+
+##################################################
+### 7️⃣ ELIMINAR RELACIONES
+##################################################
+
+### Eliminar relación metahumano-poder
+# @name deleteMetaPoder
+DELETE http://localhost:3000/api/meta-poderes/1
+
+###
+
+### Eliminar todos los poderes de un metahumano
+# @name deleteAllPoderesByMetahumano
+DELETE http://localhost:3000/api/meta-poderes/metahumano/1
+
+###
