@@ -5,7 +5,8 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "start:dev": "tsc-watch --noClear -p ./tsconfig.json --onSuccess \"node ./dist/app.js\"",
+  "start:dev": "tsc-watch --noClear -p ./tsconfig.json --onSuccess \"node ./dist/app.js\"",
+  "dev": "npm run start:dev",
     "build": "tsc",
     "start": "node dist/app.js",
     "docker:dev": "cd docker && ./start-dev.sh",

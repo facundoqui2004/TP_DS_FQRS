@@ -8,9 +8,10 @@ const em = orm.em
 
 function sanitizeMetaPoderInput(req: Request, res: Response, next: Function) {
   req.body.sanitizedInput = {
-    estado: req.body.estado,
-    fechaSolicitud: new Date(req.body.fechaSolicitud),
-    fechaRespuesta: new Date(req.body.fechaRespuesta),
+    dominio: req.body.dominio,
+    fechaAdquisicion: req.body.fechaAdquisicion ? new Date(req.body.fechaAdquisicion) : new Date(),
+    nivelControl: req.body.nivelControl || 50,
+    estado: req.body.estado || 'ACTIVO',
     certificado: req.body.certificado || null,
     metahumanoId: req.body.metahumanoId,
     poderId: req.body.poderId,
@@ -28,21 +29,44 @@ function sanitizeMetaPoderInput(req: Request, res: Response, next: Function) {
 async function assignPoder(req: Request, res: Response) {
   try {
     const {
+      dominio,
+      fechaAdquisicion,
+      nivelControl,
       estado,
-      fechaSolicitud,
-      fechaRespuesta,
       certificado,
       metahumanoId,
       poderId,
     } = req.body.sanitizedInput
 
+    // Validar que el dominio sea válido
+    const dominiosValidos = ['NOVATO', 'INTERMEDIO', 'AVANZADO', 'EXPERTO', 'MAESTRO']
+    if (!dominiosValidos.includes(dominio)) {
+      return res.status(400).json({ 
+        message: 'Dominio inválido', 
+        validos: dominiosValidos 
+      })
+    }
+
     const metahumano = await em.findOneOrFail(Metahumano, { id: metahumanoId })
     const poder = await em.findOneOrFail(Poder, { id: poderId })
 
+    // Verificar si ya existe la relación
+    const existente = await em.findOne(MetaPoder, {
+      metahumano: metahumanoId,
+      poder: poderId
+    })
+
+    if (existente) {
+      return res.status(400).json({ 
+        message: 'El metahumano ya tiene asignado este poder' 
+      })
+    }
+
     const metaPoder = em.create(MetaPoder, {
+      dominio,
+      fechaAdquisicion,
+      nivelControl,
       estado,
-      fechaSolicitud,
-      fechaRespuesta,
       certificado,
       metahumano,
       poder,
@@ -50,7 +74,25 @@ async function assignPoder(req: Request, res: Response) {
 
     await em.persistAndFlush(metaPoder)
 
-    res.status(201).json({ message: 'Poder asignado a metahumano', data: metaPoder })
+    res.status(201).json({ 
+      message: 'Poder asignado a metahumano exitosamente', 
+      data: {
+        id: metaPoder.id,
+        dominio: metaPoder.dominio,
+        nivelControl: metaPoder.nivelControl,
+        estado: metaPoder.estado,
+        metahumano: {
+          id: metahumano.id,
+          nombre: metahumano.nombre,
+          alias: metahumano.alias
+        },
+        poder: {
+          id: poder.id,
+          nomPoder: poder.nomPoder,
+          categoria: poder.categoria
+        }
+      }
+    })
   } catch (error: any) {
     res.status(500).json({ message: error.message })
   }
@@ -81,14 +123,87 @@ async function remove(req: Request, res: Response) {
 // busca todos los MetaPoder de un metahumano
 async function findAllForMetahumano(req: Request, res: Response) {
   try {
-    const id = Number.parseInt(req.params.id)
+    const metahumanoId = Number.parseInt(req.params.metahumanoId)
     const registros = await em.find(MetaPoder, {
-      metahumano: id,
+      metahumano: metahumanoId,
     }, {
-      populate: ['poder'],
+      populate: ['poder', 'metahumano'],
     })
 
-    res.status(200).json({ message: 'found metapoder for metahumano', data: registros })
+    const result = registros.map(mp => ({
+      id: mp.id,
+      dominio: mp.dominio,
+      nivelControl: mp.nivelControl,
+      estado: mp.estado,
+      fechaAdquisicion: mp.fechaAdquisicion,
+      certificado: mp.certificado,
+      poder: {
+        id: mp.poder.id,
+        nomPoder: mp.poder.nomPoder,
+        categoria: mp.poder.categoria,
+        debilidad: mp.poder.debilidad
+      }
+    }))
+
+    res.status(200).json({ 
+      message: 'Poderes del metahumano encontrados', 
+      data: result 
+    })
+  } catch (error: any) {
+    res.status(500).json({ message: error.message })
+  }
+}
+
+// Actualizar relación MetaPoder
+async function updateMetaPoder(req: Request, res: Response) {
+  try {
+    const id = Number.parseInt(req.params.id)
+    const {
+      dominio,
+      nivelControl,
+      estado,
+      certificado
+    } = req.body.sanitizedInput
+
+    const metaPoder = await em.findOneOrFail(MetaPoder, { id }, {
+      populate: ['metahumano', 'poder']
+    })
+
+    if (dominio) {
+      const dominiosValidos = ['NOVATO', 'INTERMEDIO', 'AVANZADO', 'EXPERTO', 'MAESTRO']
+      if (!dominiosValidos.includes(dominio)) {
+        return res.status(400).json({ 
+          message: 'Dominio inválido', 
+          validos: dominiosValidos 
+        })
+      }
+      metaPoder.dominio = dominio
+    }
+
+    if (nivelControl !== undefined) {
+      if (nivelControl < 0 || nivelControl > 100) {
+        return res.status(400).json({ 
+          message: 'Nivel de control debe estar entre 0 y 100' 
+        })
+      }
+      metaPoder.nivelControl = nivelControl
+    }
+
+    if (estado) metaPoder.estado = estado
+    if (certificado !== undefined) metaPoder.certificado = certificado
+
+    await em.flush()
+
+    res.status(200).json({ 
+      message: 'Relación MetaPoder actualizada', 
+      data: {
+        id: metaPoder.id,
+        dominio: metaPoder.dominio,
+        nivelControl: metaPoder.nivelControl,
+        estado: metaPoder.estado,
+        certificado: metaPoder.certificado
+      }
+    })
   } catch (error: any) {
     res.status(500).json({ message: error.message })
   }
@@ -98,15 +213,37 @@ async function findAllForMetahumano(req: Request, res: Response) {
 async function assignPoderToMetahumano(req: Request, res: Response) {
   try {
     const metahumanoId = Number.parseInt(req.params.id)
-    const { estado, fechaSolicitud, fechaRespuesta, certificado, poderId } = req.body.sanitizedInput
+    const { dominio, nivelControl, estado, certificado, poderId } = req.body.sanitizedInput
+
+    // Validar que el dominio sea válido
+    const dominiosValidos = ['NOVATO', 'INTERMEDIO', 'AVANZADO', 'EXPERTO', 'MAESTRO']
+    if (!dominiosValidos.includes(dominio)) {
+      return res.status(400).json({ 
+        message: 'Dominio inválido', 
+        validos: dominiosValidos 
+      })
+    }
 
     const metahumano = await em.findOneOrFail(Metahumano, { id: metahumanoId })
     const poder = await em.findOneOrFail(Poder, { id: poderId })
 
+    // Verificar si ya existe la relación
+    const existente = await em.findOne(MetaPoder, {
+      metahumano: metahumanoId,
+      poder: poderId
+    })
+
+    if (existente) {
+      return res.status(400).json({ 
+        message: 'El metahumano ya tiene asignado este poder' 
+      })
+    }
+
     const metaPoder = em.create(MetaPoder, {
-      estado,
-      fechaSolicitud,
-      fechaRespuesta,
+      dominio,
+      fechaAdquisicion: new Date(),
+      nivelControl: nivelControl || 50,
+      estado: estado || 'ACTIVO',
       certificado,
       metahumano,
       poder
@@ -114,7 +251,20 @@ async function assignPoderToMetahumano(req: Request, res: Response) {
 
     await em.persistAndFlush(metaPoder)
 
-    res.status(201).json({ message: 'Poder asignado', data: metaPoder })
+    res.status(201).json({ 
+      message: 'Poder asignado exitosamente', 
+      data: {
+        id: metaPoder.id,
+        dominio: metaPoder.dominio,
+        nivelControl: metaPoder.nivelControl,
+        estado: metaPoder.estado,
+        poder: {
+          id: poder.id,
+          nomPoder: poder.nomPoder,
+          categoria: poder.categoria
+        }
+      }
+    })
   } catch (error: any) {
     res.status(500).json({ message: error.message })
   }
@@ -126,5 +276,6 @@ export {
   assignPoderToMetahumano,
   findAll,
   findAllForMetahumano,
+  updateMetaPoder,
   remove
 }

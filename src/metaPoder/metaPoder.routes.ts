@@ -5,14 +5,16 @@ import {
   assignPoder,
   assignPoderToMetahumano,
   findAllForMetahumano,
+  updateMetaPoder,
   remove
 } from './metaPoder.controller.js'
 const router = express.Router()
 
 router.get('/', findAll)
-router.get('/:metahumanoId', findAllForMetahumano)
 router.post('/', sanitizeMetaPoderInput, assignPoder)
-router.post('/:metahumanoId/:poderId', assignPoderToMetahumano)
+router.get('/metahumano/:metahumanoId', findAllForMetahumano)
+router.post('/metahumano/:id', sanitizeMetaPoderInput, assignPoderToMetahumano)
+router.put('/:id', sanitizeMetaPoderInput, updateMetaPoder)
 router.delete('/:id', remove)
 
 export default router

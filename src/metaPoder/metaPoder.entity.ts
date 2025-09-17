@@ -11,13 +11,16 @@ import { Poder } from '../poder/poder.entity.js'
 @Entity()
 export class MetaPoder extends BaseEntity {
   @Property({ nullable: false })
-  estado!: string
+  dominio!: string // NOVATO, INTERMEDIO, AVANZADO, EXPERTO, MAESTRO
 
-  @Property({ nullable: false })
-  fechaSolicitud!: Date
+  @Property({ nullable: true })
+  fechaAdquisicion?: Date
 
-  @Property({ nullable: false })
-  fechaRespuesta!: Date
+  @Property({ nullable: true })
+  nivelControl?: number // 1-100
+
+  @Property({ nullable: true })
+  estado?: string // ACTIVO, INACTIVO, BLOQUEADO
 
   @Property({ nullable: true })
   certificado?: string
