@@ -1,12 +1,14 @@
 import { Request, Response, NextFunction } from "express";
 import { Evidencia } from "./evidencia.entity.js";
 import { orm } from "../shared/db/orm.js";
+import { Carpeta } from "../carpeta/carpeta.entity.js";
 
 const em = orm.em
 function sanitizeEvidenciaInput(req: Request, res: Response, next: NextFunction) {
   req.body.sanitizedInput = {
     descripcion: req.body.descripcion,
     fechaRecoleccion: req.body.fechaRecoleccion,
+    carpetaId:req.body.carpetaId
   }
 
   Object.keys(req.body.sanitizedInput).forEach((key) => {
@@ -21,7 +23,7 @@ function sanitizeEvidenciaInput(req: Request, res: Response, next: NextFunction)
 
 async function findAll(req:Request, res:Response){
     try {
-    const evidencias = await em.find(Evidencia, {}, {populate :['multas']})
+    const evidencias = await em.find(Evidencia, {}, {populate :['carpeta', 'multas']})
     res.status(200).json({message : 'find All evidencias', data: evidencias})
     } catch (error : any) {
       res.status(500).json({error:error.message})  
@@ -40,14 +42,24 @@ async function findOne(req:Request, res: Response){
 
 
 async function add(req:Request , res: Response){
-  try {
-    console.log()
-    const nuevaEvidencia = em.create(Evidencia, req.body.sanitizedInput)
-    await em.flush()
-    res.status(200).json({message : 'Evidencia has been created', data : nuevaEvidencia})
+  try { 
+    const {carpetaId, ...sanitizedInput} = req.body
+    const nuevaEvidencia = em.create(Evidencia, sanitizedInput)
+   if(carpetaId){
+    const carpeta = await em.findOneOrFail(Carpeta, {id : Number(carpetaId)});
+    if(!carpeta) {
+      return res.status(404).json({message : "Carpeta not found"})
+   } else {
+    nuevaEvidencia.carpeta = carpeta;
+    
+    await em.flush();
+    res.status(200).json({message : 'Carpeta has been created', data : nuevaEvidencia})
+   }
+  }
+    
   } catch (error : any) {
     res.status(500).json({error:error.message})
-  }
+  } 
 }
 
 async function update(req:Request , res:Response){

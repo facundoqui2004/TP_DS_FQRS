@@ -12,8 +12,8 @@ export class Migration20250808000001 extends Migration {
         password_hash VARCHAR(255) NOT NULL,
         role ENUM('METAHUMANO', 'BUROCRATA') NOT NULL,
         verificado BOOLEAN DEFAULT FALSE,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         
         INDEX idx_usuario_email (email),
         INDEX idx_usuario_role (role)

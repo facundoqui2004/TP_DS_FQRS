@@ -80,6 +80,19 @@ async function crearPerfilBurocrata(req: Request, res: Response) {
   }
 }
 
+async function getCarpetas(req: Request, res: Response){
+  try {
+    const burocrataId = Number.parseInt(req.params.id)
+    const burocrata = await em.findOneOrFail(Burocrata, {id : burocrataId}, {populate : ['carpetas.evidencias.multas']})
+    if(!burocrata){
+      return res.status(404).json({message : "Burocrata not found"})
+    }
+  res.status(200).json({message: 'Carpetas found', data: burocrata.carpetas})
+  }catch(error : any){
+    res.status(500).json({message : error.message})
+  } 
+} 
+
 async function findAll(req: Request, res: Response) {
   try {
     const burocratas = await em.find(Burocrata, {}, {
@@ -136,4 +149,4 @@ async function remove(req: Request, res: Response) {
   }
 }
 
-export { sanitizeBurocrataInput, crearPerfilBurocrata, findAll, findOne, add, update, remove }
+export { sanitizeBurocrataInput, crearPerfilBurocrata, getCarpetas,  findAll, findOne, add, update, remove }
