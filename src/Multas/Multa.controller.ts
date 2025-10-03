@@ -1,6 +1,7 @@
 import { orm } from "../shared/db/orm.js";
 import { Request, Response, NextFunction } from "express";
 import { Multa } from "./Multa.entity.js";
+import { Evidencia } from "../evidencia/evidencia.entity.js";
 
 const em = orm.em
 
@@ -11,7 +12,8 @@ function sanitizeMultasInput(req:Request , res:Response, next:NextFunction){
         lugarDePago:req.body.lugarDePago,
         fechaEmision:req.body.fechaEmision,
         estado:req.body.estado,
-        fechaVencimiento:req.body.fechaVencimiento
+        fechaVencimiento:req.body.fechaVencimiento,
+        evidenciaId : req.body.evidenciaId
     }
 
     Object.keys(req.body.sanitizedInput).forEach(key=>{
@@ -44,9 +46,20 @@ async function findOne(req:Request,res:Response){
 
 async function add(req:Request,res:Response){
     try{
-        const multa = em.create(Multa, req.body.sanitizedInput)
-        await em.flush()
-        res.status(201).json({ message: 'multa created', data: multa })
+        const { evidenciaId, ...sanitizedInput} = req.body
+        const nuevaMulta = em.create(Multa, sanitizedInput)
+        if(!evidenciaId){
+            return res.status(400).json({message : "Evidencia id is required"})
+        }else{
+            const evidencia = await em.findOneOrFail(Evidencia, { id : evidenciaId})
+            if(!evidencia){
+                return res.status(404).json({message: "evidencia not found"})
+            }else {
+                nuevaMulta.evidencia = evidencia;
+                await em.flush();
+            }
+        }
+        res.status(201).json({ message: 'multa created', data: nuevaMulta })
     } catch (error: any) {
      res.status(500).json({ message: error.message })
 }
