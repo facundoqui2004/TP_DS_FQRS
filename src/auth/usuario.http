@@ -1,0 +1,50 @@
+## Obtener todos los usuarios
+GET  http://localhost:3000/api/usuarios
+
+### Registro de nuevo usuario
+# @name registerUseradmin123
+POST http://localhost:3000/api/usuarios/register
+Content-Type: application/json
+
+{
+  "nomUsuario": "admin123",
+  "mail": "admin123@ejemplo.com",
+  "contrasena": "supersegura",
+  "rol": "admin",
+  "idMeta": null,
+  "idBurocrata": null
+}
+
+
+### Registro de nuevo usuario (burocrata)
+
+POST http://localhost:3000/api/usuarios/register
+Content-Type: application/json
+
+{
+  "nomUsuario": "3123ASD",
+  "mail": "admi3123n123@ejemplo.com",
+  "contrasena": "supersegura",
+  "rol": "BUROCRATA",
+  "idMeta": null,
+  "idBurocrata": null
+}
+
+
+### Login del usuario
+# @name loginUser
+POST http://localhost:3000/api/usuarios/login
+Content-Type: application/json
+
+{
+  "nomUsuario": "admin123",
+  "contrasena": "supersegura"
+}
+
+
+### Obtener usuario actual (requiere cookie con token)
+GET http://localhost:3000/api/usuarios/me
+
+
+### Logout del usuario (borra la cookie)
+POST http://localhost:3000/api/usuarios/logout
