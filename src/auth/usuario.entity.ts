@@ -11,7 +11,8 @@ import { BaseEntity } from '../shared/db/baseEntity.entity.js'
 
 export enum UserRole {
   METAHUMANO = 'METAHUMANO',
-  BUROCRATA = 'BUROCRATA'
+  BUROCRATA = 'BUROCRATA',
+  ADMIN = 'ADMIN'
 }
 
 @Entity()
