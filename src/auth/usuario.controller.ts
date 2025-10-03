@@ -644,3 +644,63 @@ export async function logout(req: Request, res: Response) {
     res.status(500).json({ message: 'Error interno del servidor', error: error.message })
   }
 }
+
+/**
+ * Obtener usuario por ID
+ */
+export async function obtenerUsuarioPorId(req: Request, res: Response) {
+  try {
+    const id = Number.parseInt(req.params.id)
+    
+    if (isNaN(id)) {
+      return res.status(400).json({ message: 'ID inválido' })
+    }
+
+    const usuario = await em.findOne(Usuario, { id }, {
+      populate: ['metahumano', 'burocrata']
+    })
+
+    if (!usuario) {
+      return res.status(404).json({ message: 'Usuario no encontrado' })
+    }
+
+    // Respuesta sin datos sensibles
+    const response: any = {
+      id: usuario.id,
+      email: usuario.email,
+      telefono: usuario.telefono,
+      role: usuario.role,
+      verificado: usuario.verificado,
+      createdAt: usuario.createdAt,
+      updatedAt: usuario.updatedAt
+    }
+
+    // Añadir perfil según el tipo
+    if (usuario.metahumano) {
+      response.metahumano = {
+        id: usuario.metahumano.id,
+        nombre: usuario.metahumano.nombre,
+        alias: usuario.metahumano.alias,
+        origen: usuario.metahumano.origen
+      }
+    }
+
+    if (usuario.burocrata) {
+      response.burocrata = {
+        id: usuario.burocrata.id,
+        nombre: usuario.burocrata.nombre,
+        alias: usuario.burocrata.alias,
+        origen: usuario.burocrata.origen
+      }
+    }
+
+    res.json({
+      message: 'Usuario encontrado',
+      usuario: response
+    })
+
+  } catch (error: any) {
+    console.error('Error al obtener usuario:', error)
+    res.status(500).json({ message: 'Error interno del servidor' })
+  }
+}

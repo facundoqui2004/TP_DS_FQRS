@@ -1,33 +1,51 @@
 ## Obtener todos los usuarios
 GET  http://localhost:3000/api/usuarios
 
-### Registro de nuevo usuario
+###
+
+### Obtener usuario por ID
+# @name getUserById
+GET http://localhost:3000/api/usuarios/1
+
+###
+
+### Registro de nuevo usuario básico
 # @name registerUseradmin123
 POST http://localhost:3000/api/usuarios/register
 Content-Type: application/json
 
 {
-  "nomUsuario": "admin123",
-  "mail": "admin123@ejemplo.com",
-  "contrasena": "supersegura",
-  "rol": "admin",
-  "idMeta": null,
-  "idBurocrata": null
+  "email": "admin123@ejemplo.com",
+  "telefono": "+1234567890",
+  "password": "supersegura",
+  "role": "ADMIN"
 }
 
 
-### Registro de nuevo usuario (burocrata)
-
+### Registro de nuevo usuario (metahumano)
+# @name registerMetahumano
 POST http://localhost:3000/api/usuarios/register
 Content-Type: application/json
 
 {
-  "nomUsuario": "3123ASD",
-  "mail": "admi3123n123@ejemplo.com",
-  "contrasena": "supersegura",
-  "rol": "BUROCRATA",
-  "idMeta": null,
-  "idBurocrata": null
+  "email": "peter.parker@ejemplo.com",
+  "telefono": "+9876543210",
+  "password": "spidersecret",
+  "role": "METAHUMANO"
+}
+
+###
+
+### Registro de nuevo usuario (burocrata)
+# @name registerBurocrata
+POST http://localhost:3000/api/usuarios/register
+Content-Type: application/json
+
+{
+  "email": "burocrata@gobierno.com",
+  "telefono": "+5555551234",
+  "password": "supersegura",
+  "role": "BUROCRATA"
 }
 
 
@@ -37,8 +55,8 @@ POST http://localhost:3000/api/usuarios/login
 Content-Type: application/json
 
 {
-  "nomUsuario": "admin123",
-  "contrasena": "supersegura"
+  "email": "admin123@ejemplo.com",
+  "password": "supersegura"
 }
 
 
@@ -48,3 +66,32 @@ GET http://localhost:3000/api/usuarios/me
 
 ### Logout del usuario (borra la cookie)
 POST http://localhost:3000/api/usuarios/logout
+
+###
+
+##################################################
+### 🍪 CONSULTAR COOKIES EN CONSOLA DEL NAVEGADOR
+##################################################
+
+# Para ver todas las cookies:
+# document.cookie
+
+# Para obtener información del usuario desde la cookie:
+# let userInfo = document.cookie.split('; ').find(row => row.startsWith('user_info='));
+# if (userInfo) console.log(JSON.parse(decodeURIComponent(userInfo.split('=')[1])));
+
+# Para obtener solo el userId:
+# let userInfo = document.cookie.split('; ').find(row => row.startsWith('user_info='));
+# if (userInfo) { 
+#   let data = JSON.parse(decodeURIComponent(userInfo.split('=')[1])); 
+#   console.log('User ID:', data.id);
+# }
+
+# Función útil para el frontend:
+# function getUserFromCookie() {
+#   const userCookie = document.cookie.split('; ').find(row => row.startsWith('user_info='));
+#   if (userCookie) {
+#     return JSON.parse(decodeURIComponent(userCookie.split('=')[1]));
+#   }
+#   return null;
+# }

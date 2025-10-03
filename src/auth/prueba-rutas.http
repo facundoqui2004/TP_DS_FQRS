@@ -37,11 +37,12 @@ POST http://localhost:3000/api/auth/register/burocrata
 Content-Type: application/json
 
 {
-  "email": "admin.prueba@example.com",
+  "email": "a1dmi1n.prueba@example.com",
   "telefono": "+1-555-ADMIN",
   "password": "admin123456",
   "nombre": "Admin de Prueba",
   "alias": "Admin Tester",
+  "role":"ADMINISTRTOR",
   "origen": "Departamento de Testing"
 }
 

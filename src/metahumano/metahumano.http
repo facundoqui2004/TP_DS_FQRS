@@ -2,16 +2,41 @@
 ### Base URL: http://localhost:3000/api/metahumanos
 
 ##################################################
+### 0️⃣ VERIFICAR USUARIOS DISPONIBLES
+##################################################
+
+### Listar todos los usuarios (para ver qué usuarios existen)
+# @name getAllUsers
+GET http://localhost:3000/api/usuarios
+
+###
+
+##################################################
 ### 1️⃣ CREAR PERFIL DE METAHUMANO (NUEVO FLUJO)
 ##################################################
 
-### Crear perfil para usuario existente
+### PASO 1: Crear usuario con role METAHUMANO primero
+# @name createUser
+POST http://localhost:3000/api/usuarios/register
+Content-Type: application/json
+
+{
+  "nomUsuario": "peterparker",
+  "mail": "peter.parker@ejemplo.com",
+  "contrasena": "spidersecret",
+  "rol": "METAHUMANO",
+  "telefono": "+1234567890"
+}
+
+###
+
+### PASO 2: Crear perfil para usuario existente (usar ID del paso anterior)
 # @name createMetahumanoProfile
 POST http://localhost:3000/api/metahumanos
 Content-Type: application/json
 
 {
-  "usuarioId": 3,
+  "usuarioId": 1,
   "nombre": "Peter Parker",
   "alias": "Spider-Man",
   "origen": "Nueva York",
@@ -76,13 +101,28 @@ Content-Type: application/json
 ### 4️⃣ EJEMPLOS ADICIONALES
 ##################################################
 
-### Crear otro perfil de metahumano
+### PASO 1: Crear usuario para Wonder Woman
+# @name createUserWW
+POST http://localhost:3000/api/usuarios/register
+Content-Type: application/json
+
+{
+  "nomUsuario": "dianaprince",
+  "mail": "diana.prince@themyscira.com",
+  "contrasena": "amazonwarrior",
+  "rol": "METAHUMANO",
+  "telefono": "+9876543210"
+}
+
+###
+
+### PASO 2: Crear perfil de Wonder Woman
 # @name createMetahumano2
 POST http://localhost:3000/api/metahumanos
 Content-Type: application/json
 
 {
-  "usuarioId": 5,
+  "usuarioId": 2,
   "nombre": "Diana Prince",
   "alias": "Wonder Woman",
   "origen": "Themyscira",
@@ -91,13 +131,28 @@ Content-Type: application/json
 
 ###
 
-### Crear metahumano villano
+### PASO 1: Crear usuario para Lex Luthor
+# @name createUserLex
+POST http://localhost:3000/api/usuarios/register
+Content-Type: application/json
+
+{
+  "nomUsuario": "lexluthor",
+  "mail": "lex.luthor@lexcorp.com",
+  "contrasena": "kryptonite",
+  "rol": "METAHUMANO",
+  "telefono": "+5555551234"
+}
+
+###
+
+### PASO 2: Crear metahumano villano
 # @name createVillano
 POST http://localhost:3000/api/metahumanos
 Content-Type: application/json
 
 {
-  "usuarioId": 6,
+  "usuarioId": 3,
   "nombre": "Lex Luthor",
   "alias": "Lex Luthor",
   "origen": "Metropolis",
@@ -131,7 +186,7 @@ POST http://localhost:3000/api/metahumanos
 Content-Type: application/json
 
 {
-  "usuarioId": 3
+  "usuarioId": 1
 }
 
 ###

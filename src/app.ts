@@ -21,7 +21,8 @@ import {
   login as loginUsuario, 
   obtenerPerfil as obtenerUsuarioActual, 
   logout as logoutUsuario,
-  listarUsuarios as obtenerTodosLosUsuarios 
+  listarUsuarios as obtenerTodosLosUsuarios,
+  obtenerUsuarioPorId
 } from './auth/usuario.controller.js'
 
 const app = express()
@@ -40,6 +41,7 @@ app.use((req, res, next) => {
 // Rutas legacy de usuarios (para compatibilidad con el frontend)
 const usuariosLegacyRouter = express.Router()
 usuariosLegacyRouter.get('/', obtenerTodosLosUsuarios)
+usuariosLegacyRouter.get('/:id', obtenerUsuarioPorId)
 usuariosLegacyRouter.post('/register', registrarUsuario)
 usuariosLegacyRouter.post('/login', loginUsuario)
 usuariosLegacyRouter.get('/me', obtenerUsuarioActual)
