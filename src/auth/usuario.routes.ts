@@ -2,7 +2,8 @@ import express from 'express'
 import { 
   crearUsuarioBasico,
   registrarMetahumano, 
-  registrarBurocrata, 
+  registrarBurocrata,
+  registrarAdmin,
   login, 
   obtenerPerfil,
   actualizarContacto,
@@ -16,6 +17,7 @@ const router = express.Router()
 router.post('/register/basic', crearUsuarioBasico)
 router.post('/register/metahumano', registrarMetahumano)
 router.post('/register/burocrata', registrarBurocrata)
+router.post('/register/admin', registrarAdmin)
 router.post('/login', login)
 router.post('/logout', logout)
 

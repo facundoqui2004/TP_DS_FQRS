@@ -15,6 +15,16 @@ import villanoRoutes from './villano/villano.routes.js'
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
 
+// Importar controladores para rutas de usuarios legacy
+import { 
+  crearUsuarioBasico as registrarUsuario, 
+  login as loginUsuario, 
+  obtenerPerfil as obtenerUsuarioActual, 
+  logout as logoutUsuario,
+  listarUsuarios as obtenerTodosLosUsuarios,
+  obtenerUsuarioPorId
+} from './auth/usuario.controller.js'
+
 const app = express()
 app.use(cors({
   origin: ['http://localhost:5173', 'http://localhost:3000'],
@@ -28,7 +38,17 @@ app.use((req, res, next) => {
   RequestContext.create(orm.em, next)
 })
 
-// Rutas
+// Rutas legacy de usuarios (para compatibilidad con el frontend)
+const usuariosLegacyRouter = express.Router()
+usuariosLegacyRouter.get('/', obtenerTodosLosUsuarios)
+usuariosLegacyRouter.get('/:id', obtenerUsuarioPorId)
+usuariosLegacyRouter.post('/register', registrarUsuario)
+usuariosLegacyRouter.post('/login', loginUsuario)
+usuariosLegacyRouter.get('/me', obtenerUsuarioActual)
+usuariosLegacyRouter.post('/logout', logoutUsuario)
+
+// Rutas principales
+app.use('/api/usuarios', usuariosLegacyRouter) // Rutas legacy para el frontend
 app.use('/api/metahumanos', metahumanosRoutes)
 app.use('/api/poderes', poderesRoutes)
 app.use('/api/metapoderes', metaPoderesRoutes)

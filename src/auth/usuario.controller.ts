@@ -278,6 +278,96 @@ export async function registrarBurocrata(req: Request, res: Response) {
 }
 
 /**
+ * Registro de usuario con rol ADMIN (sin perfil de metahumano o burócrata)
+ */
+export async function registrarAdmin(req: Request, res: Response) {
+  try {
+    const { email, telefono, password, nombre } = req.body
+
+    // Validaciones básicas
+    if (!email || !telefono || !password || !nombre) {
+      return res.status(400).json({ 
+        message: 'Todos los campos son requeridos: email, telefono, password, nombre' 
+      })
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ message: 'La contraseña debe tener al menos 6 caracteres' })
+    }
+
+    // Verificar que el email sea único
+    const existeUsuario = await em.findOne(Usuario, { email })
+    if (existeUsuario) {
+      return res.status(400).json({ message: 'Ya existe un usuario con este email' })
+    }
+
+    // Hash de la contraseña
+    const passwordHash = await bcrypt.hash(password, 10)
+
+    // Crear usuario con rol ADMIN
+    const usuario = new Usuario()
+    usuario.email = email
+    usuario.telefono = telefono
+    usuario.passwordHash = passwordHash
+    usuario.role = UserRole.ADMIN
+    usuario.verificado = true // Los admins se consideran verificados por defecto
+    usuario.createdAt = new Date()
+    usuario.updatedAt = new Date()
+
+    await em.persistAndFlush(usuario)
+
+    // Generar JWT
+    const token = jwt.sign(
+      { 
+        usuarioId: usuario.id, 
+        email: usuario.email, 
+        role: usuario.role,
+        nombre
+      },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    )
+
+    // Establecer cookies
+    const isProd = process.env.NODE_ENV === 'production'
+    res.cookie('auth_token', token, {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: isProd ? 'strict' : 'lax',
+      maxAge: 1000 * 60 * 60 * 24,
+      path: '/'
+    })
+    res.cookie('user_info', JSON.stringify({
+      id: usuario.id,
+      role: usuario.role,
+      nombre,
+      email: usuario.email
+    }), {
+      httpOnly: false,
+      secure: isProd,
+      sameSite: isProd ? 'strict' : 'lax',
+      maxAge: 1000 * 60 * 60 * 24,
+      path: '/'
+    })
+
+    res.status(201).json({
+      message: 'Administrador registrado exitosamente',
+      token,
+      usuario: {
+        id: usuario.id,
+        email: usuario.email,
+        role: usuario.role,
+        nombre
+      }
+    })
+
+  } catch (error: any) {
+    console.error('Error en registro de admin:', error)
+    res.status(500).json({ message: 'Error interno del servidor', error: error.message })
+  }
+}
+
+/**
  * Login de usuario
  */
 export async function login(req: Request, res: Response) {
@@ -308,7 +398,16 @@ export async function login(req: Request, res: Response) {
     let perfilId: number | undefined
     let perfilData: any
 
-    if (usuario.metahumano) {
+    if (usuario.role === UserRole.ADMIN) {
+      // Usuario admin no tiene perfil de metahumano o burócrata
+      perfil = 'admin'
+      perfilId = usuario.id
+      perfilData = {
+        id: usuario.id,
+        nombre: 'Administrador',
+        email: usuario.email
+      }
+    } else if (usuario.metahumano) {
       perfil = 'metahumano'
       perfilId = usuario.metahumano.id
       perfilData = {
@@ -356,7 +455,7 @@ export async function login(req: Request, res: Response) {
       role: usuario.role,
       perfil,
       perfilId,
-      alias: perfilData.alias
+      alias: perfilData.alias || perfilData.nombre || 'Admin'
     }), {
       httpOnly: false,
       secure: isProd,
@@ -543,5 +642,65 @@ export async function logout(req: Request, res: Response) {
   } catch (error: any) {
     console.error('Error en logout:', error)
     res.status(500).json({ message: 'Error interno del servidor', error: error.message })
+  }
+}
+
+/**
+ * Obtener usuario por ID
+ */
+export async function obtenerUsuarioPorId(req: Request, res: Response) {
+  try {
+    const id = Number.parseInt(req.params.id)
+    
+    if (isNaN(id)) {
+      return res.status(400).json({ message: 'ID inválido' })
+    }
+
+    const usuario = await em.findOne(Usuario, { id }, {
+      populate: ['metahumano', 'burocrata']
+    })
+
+    if (!usuario) {
+      return res.status(404).json({ message: 'Usuario no encontrado' })
+    }
+
+    // Respuesta sin datos sensibles
+    const response: any = {
+      id: usuario.id,
+      email: usuario.email,
+      telefono: usuario.telefono,
+      role: usuario.role,
+      verificado: usuario.verificado,
+      createdAt: usuario.createdAt,
+      updatedAt: usuario.updatedAt
+    }
+
+    // Añadir perfil según el tipo
+    if (usuario.metahumano) {
+      response.metahumano = {
+        id: usuario.metahumano.id,
+        nombre: usuario.metahumano.nombre,
+        alias: usuario.metahumano.alias,
+        origen: usuario.metahumano.origen
+      }
+    }
+
+    if (usuario.burocrata) {
+      response.burocrata = {
+        id: usuario.burocrata.id,
+        nombre: usuario.burocrata.nombre,
+        alias: usuario.burocrata.alias,
+        origen: usuario.burocrata.origen
+      }
+    }
+
+    res.json({
+      message: 'Usuario encontrado',
+      usuario: response
+    })
+
+  } catch (error: any) {
+    console.error('Error al obtener usuario:', error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
