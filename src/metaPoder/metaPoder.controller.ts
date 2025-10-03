@@ -2,6 +2,7 @@ import { Request, Response } from 'express'
 import { MetaPoder } from './metaPoder.entity.js'
 import { Metahumano } from '../metahumano/metahumano.entity.js'
 import { Poder } from '../poder/poder.entity.js'
+import { Usuario } from '../auth/usuario.entity.js'
 import { orm } from '../shared/db/orm.js'
 
 const em = orm.em
@@ -270,12 +271,154 @@ async function assignPoderToMetahumano(req: Request, res: Response) {
   }
 }
 
+// busca todos los MetaPoder de un usuario - Estructura adaptada para el frontend
+async function findAllForUsuario(req: Request, res: Response) {
+  try {
+    const usuarioId = Number.parseInt(req.params.usuarioId)
+    
+    // Buscar el usuario con su metahumano
+    const usuario = await em.findOne(Usuario, { id: usuarioId }, {
+      populate: ['metahumano']
+    })
+
+    if (!usuario) {
+      return res.status(404).json({ 
+        message: 'Usuario no encontrado' 
+      })
+    }
+
+    if (!usuario.metahumano) {
+      return res.status(404).json({ 
+        message: 'No se encontró un metahumano para este usuario',
+        usuario: {
+          id: usuario.id,
+          metahumano: null
+        }
+      })
+    }
+
+    // Luego buscar todos los metapoderes de ese metahumano
+    const registros = await em.find(MetaPoder, {
+      metahumano: usuario.metahumano.id,
+    }, {
+      populate: ['poder', 'metahumano'],
+    })
+
+    const result = registros.map(mp => ({
+      id: mp.id,
+      dominio: mp.dominio,
+      nivelControl: mp.nivelControl,
+      estado: mp.estado,
+      fechaAdquisicion: mp.fechaAdquisicion,
+      certificado: mp.certificado,
+      poder: {
+        id: mp.poder.id,
+        nomPoder: mp.poder.nomPoder,
+        categoria: mp.poder.categoria,
+        debilidad: mp.poder.debilidad
+      }
+    }))
+
+    // Estructura que espera el frontend
+    res.status(200).json({ 
+      message: `Poderes encontrados para el usuario ${usuarioId}`,
+      usuario: {
+        id: usuario.id,
+        metahumano: {
+          id: usuario.metahumano.id,
+          nombre: usuario.metahumano.nombre,
+          alias: usuario.metahumano.alias
+        }
+      },
+      totalPoderes: result.length,
+      data: result 
+    })
+  } catch (error: any) {
+    res.status(500).json({ message: error.message })
+  }
+}
+
+// Función para la ruta /api/metapoderes/:id cuando es un metahumanoId
+async function findOneOrAllForMetahumano(req: Request, res: Response) {
+  try {
+    const id = Number.parseInt(req.params.id)
+    
+    // Intentar como metahumanoId primero (para compatibilidad con frontend)
+    const registrosPorMetahumano = await em.find(MetaPoder, {
+      metahumano: id,
+    }, {
+      populate: ['poder', 'metahumano'],
+    })
+
+    if (registrosPorMetahumano.length > 0) {
+      // Es un metahumanoId, devolver todos sus poderes
+      const result = registrosPorMetahumano.map(mp => ({
+        id: mp.id,
+        dominio: mp.dominio,
+        nivelControl: mp.nivelControl,
+        estado: mp.estado,
+        fechaAdquisicion: mp.fechaAdquisicion,
+        certificado: mp.certificado,
+        poder: {
+          id: mp.poder.id,
+          nomPoder: mp.poder.nomPoder,
+          categoria: mp.poder.categoria,
+          debilidad: mp.poder.debilidad
+        }
+      }))
+
+      return res.status(200).json({ 
+        message: 'Poderes del metahumano encontrados', 
+        data: result 
+      })
+    } else {
+      // Intentar como ID de MetaPoder individual
+      const metaPoder = await em.findOne(MetaPoder, { id }, {
+        populate: ['metahumano', 'poder']
+      })
+
+      if (metaPoder) {
+        return res.status(200).json({ 
+          message: 'MetaPoder encontrado', 
+          data: {
+            id: metaPoder.id,
+            dominio: metaPoder.dominio,
+            nivelControl: metaPoder.nivelControl,
+            estado: metaPoder.estado,
+            fechaAdquisicion: metaPoder.fechaAdquisicion,
+            certificado: metaPoder.certificado,
+            poder: {
+              id: metaPoder.poder.id,
+              nomPoder: metaPoder.poder.nomPoder,
+              categoria: metaPoder.poder.categoria,
+              debilidad: metaPoder.poder.debilidad
+            },
+            metahumano: {
+              id: metaPoder.metahumano.id,
+              nombre: metaPoder.metahumano.nombre,
+              alias: metaPoder.metahumano.alias
+            }
+          }
+        })
+      } else {
+        return res.status(404).json({ 
+          message: 'No se encontraron resultados para el ID proporcionado' 
+        })
+      }
+    }
+  } catch (error: any) {
+    res.status(500).json({ message: error.message })
+  }
+}
+
 export {
   sanitizeMetaPoderInput,
   assignPoder,
   assignPoderToMetahumano,
   findAll,
   findAllForMetahumano,
+  findAllForUsuario,
   updateMetaPoder,
-  remove
+  remove,
+  findOneOrAllForMetahumano
 }

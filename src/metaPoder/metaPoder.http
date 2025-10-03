@@ -62,9 +62,22 @@ GET http://localhost:3000/api/metapoderes
 
 ###
 
-### Obtener poderes de un metahumano específico (ID=1)
+### Obtener poderes de un metahumano específico por ID de metahumano
 # @name getPoderesByMetahumano
-GET http://localhost:3000/api/metapoderes/metahumano/3
+GET http://localhost:3000/api/metapoderes/metahumano/1
+
+###
+
+### 🎯 OBTENER PODERES POR ID DE USUARIO (estructura para frontend)
+# @name getPoderesByUsuario
+GET http://localhost:3000/api/metapoderes/usuario/1
+
+###
+
+### 🔗 OBTENER PODERES POR METAHUMANO ID (compatible con frontend)
+# @name getPoderesByMetahumanoCompatible
+GET http://localhost:3000/api/metapoderes/1
+
 ###
 
 ### Obtener metahumanos que tienen un poder específico
@@ -217,9 +230,49 @@ GET http://localhost:3000/api/metapoderes/1
 
 ###
 
-### Obtener poderes de metahumano específico
+### Obtener poderes de metahumano específico por ID de metahumano
 # @name getPoderesByMetahumano2
 GET http://localhost:3000/api/metapoderes/metahumano/2
+
+###
+
+### 🎯 Obtener poderes por ID de usuario (diferentes usuarios)
+# @name getPoderesByUsuario1
+GET http://localhost:3000/api/metapoderes/usuario/6
+
+###
+
+# @name getPoderesByUsuario2
+GET http://localhost:3000/api/metapoderes/usuario/2
+
+###
+
+# @name getPoderesByUsuario3
+GET http://localhost:3000/api/metapoderes/usuario/3
+
+###
+
+##################################################
+### 🎯 CONSULTAS ESPECÍFICAS PARA EL FRONTEND
+##################################################
+
+### 1️⃣ Primera consulta del frontend: Obtener usuario y su metahumano
+# Devuelve: { usuario: { id: X, metahumano: { id: Y } } }
+# @name frontendConsulta1
+GET http://localhost:3000/api/metapoderes/usuario/1
+
+###
+
+### 2️⃣ Segunda consulta del frontend: Obtener poderes por metahumanoId
+# Usa el metahumanoId de la respuesta anterior
+# @name frontendConsulta2
+GET http://localhost:3000/api/metapoderes/1
+
+###
+
+### 🔍 Verificar respuesta de metahumano específico
+# @name verificarMetahumano
+GET http://localhost:3000/api/metapoderes/2
 
 ###
 
