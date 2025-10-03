@@ -11,6 +11,18 @@ GET http://localhost:3000/api/usuarios
 
 ###
 
+
+# @name registerUseradmin123
+POST http://localhost:3000/api/usuarios/register
+Content-Type: application/json
+
+{
+  "email": "admin123@ejemplo.com",
+  "telefono": "+1234567890",
+  "password": "supersegura",
+  "role": "ADMIN"
+}
+
 ##################################################
 ### 1️⃣ CREAR PERFIL DE METAHUMANO (NUEVO FLUJO)
 ##################################################
@@ -57,7 +69,7 @@ GET http://localhost:3000/api/metahumanos
 
 ### Obtener metahumano por ID
 # @name getMetahumanoById
-GET http://localhost:3000/api/metahumanos/1
+GET http://localhost:3000/api/metahumanos/2
 
 ###
 
