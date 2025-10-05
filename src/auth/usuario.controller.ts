@@ -487,13 +487,14 @@ export async function login(req: Request, res: Response) {
  */
 export async function obtenerPerfil(req: Request, res: Response) {
   try {
-    const usuarioId = (req as any).usuarioId;
+    const usuarioId = (req as any).usuarioId // Asumiendo middleware de autenticación
+
     const usuario = await em.findOne(Usuario, { id: usuarioId }, {
       populate: ['metahumano', 'burocrata']
-    });
+    })
 
     if (!usuario) {
-      return res.status(404).json({ message: 'Usuario no encontrado' });
+      return res.status(404).json({ message: 'Usuario no encontrado' })
     }
 
     const response: any = {
@@ -503,27 +504,32 @@ export async function obtenerPerfil(req: Request, res: Response) {
       role: usuario.role,
       verificado: usuario.verificado,
       createdAt: usuario.createdAt,
-      updatedAt: usuario.updatedAt,
-    };
+      updatedAt: usuario.updatedAt
+    }
 
     if (usuario.metahumano) {
-      response.perfilId = usuario.metahumano.id;
-      response.perfil = 'METAHUMANO';
+      response.metahumano = {
+        id: usuario.metahumano.id,
+        nombre: usuario.metahumano.nombre,
+        alias: usuario.metahumano.alias,
+        origen: usuario.metahumano.origen
+      }
     }
 
     if (usuario.burocrata) {
-      response.perfilId = usuario.burocrata.id;
-      response.perfil = 'BUROCRATA';
+      response.burocrata = {
+        id: usuario.burocrata.id,
+        nombre: usuario.burocrata.nombre,
+        alias: usuario.burocrata.alias,
+        origen: usuario.burocrata.origen
+      }
     }
 
-    return res.json({
-      message: 'Perfil obtenido correctamente',
-      data: response, // 👈 esto arregla tu "u"
-    });
+    res.json(response)
 
   } catch (error: any) {
-    console.error('Error al obtener perfil:', error);
-    res.status(500).json({ message: 'Error interno del servidor', error: error.message });
+    console.error('Error al obtener perfil:', error)
+    res.status(500).json({ message: 'Error interno del servidor', error: error.message })
   }
 }
 

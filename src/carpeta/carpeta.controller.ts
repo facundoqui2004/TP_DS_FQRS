@@ -1,28 +1,30 @@
 import { Request, Response,NextFunction } from "express";
 import { Carpeta } from "./carpeta.entity.js";
-import { Metahumano } from '../metahumano/metahumano.entity.js';
 import { orm } from "../shared/db/orm.js";
 import { Burocrata } from "../Burocratas/Burocrata.entity.js";
 
 
 const em = orm.em
 
-function sanitizeCarpetaInput(req: Request, res: Response, next: NextFunction) {
-  req.body.sanitizedInput = {
-    estado : req.body.estado,
-    tipo: req.body.tipo,
-    descripcion: req.body.descripcion,
-    burocrataId: req.body.burocrataId,
-    metahumanoId: req.body.metahumanoId
-  }   
-  // Eliminar claves undefined
-  Object.keys(req.body.sanitizedInput).forEach((key) => {
-    if (req.body.sanitizedInput[key] === undefined) {
-      delete req.body.sanitizedInput[key]
+
+  function sanitizeCarpetaInput(req: Request, res: Response, next: NextFunction) {
+    req.body.sanitizedInput = {
+      estado : req.body.estado,
+      tipo: req.body.tipo,
+      descripcion: req.body.descripcion,
+      burocrataId: req.body.burocrataId
     }
-  })
-  next()
-}
+    
+
+    // Eliminar claves undefined
+    Object.keys(req.body.sanitizedInput).forEach((key) => {
+      if (req.body.sanitizedInput[key] === undefined) {
+        delete req.body.sanitizedInput[key]
+      }
+    })
+
+    next()
+  }
 
 async function findAll(req:Request, res:Response){
     try {
@@ -47,32 +49,26 @@ async function findOne(req:Request, res: Response){
 async function LinkCarpBuro(req: Request, res: Response) {
   try {
 
-    const { burocrataId, metahumanoId, ...rest } = req.body.sanitizedInput ?? {};
+    const { burocrataId, ...sanitizedInput } = req.body.sanitizedInput;
+    console.log("📌 Datos finales que se usan para crear carpeta:", sanitizedInput);
 
-    if (!burocrataId || !metahumanoId) {
-      return res.status(400).json({ error: 'burocrataId y metahumanoId son requeridos' });
+    const nuevaCarpeta = em.create(Carpeta, sanitizedInput);
+    if (burocrataId) {
+      const burocrata = await em.findOne(Burocrata, { id: Number(burocrataId) });
+      if (!burocrata) {
+        return res.status(404).json({ message: "Burocrata not found" });
+      }
+      nuevaCarpeta.burocrata = burocrata;
     }
-    
-    const nuevaCarpeta = em.create(Carpeta, {
-      ...rest,
-    });
 
-
-    nuevaCarpeta.burocrata  = em.getReference(Burocrata,  Number(burocrataId));
-    nuevaCarpeta.metahumano = em.getReference(Metahumano, Number(metahumanoId));
+    // 🚨 Agregamos log antes y después de persistir
+    console.log("📝 Guardando carpeta en la base de datos...");
     await em.persistAndFlush(nuevaCarpeta);
-
-    const carpetaPopulada = await em.findOneOrFail(
-      Carpeta,
-      { id: nuevaCarpeta.id },
-      { populate: ['burocrata', 'metahumano', 'evidencias.multas'] }
-    );
-
     console.log("✅ Carpeta guardada:", nuevaCarpeta);
 
     res.status(201).json({
       message: "✅ Carpeta creada correctamente",
-      data: carpetaPopulada ,
+      data: nuevaCarpeta,
     });
   } catch (error: any) {
     console.error("❌ Error al crear carpeta:", error);
@@ -96,3 +92,5 @@ async function remove(req:Request, res:Response){
 
 
 export {findOne, findAll, remove, LinkCarpBuro, sanitizeCarpetaInput}
+
+  
