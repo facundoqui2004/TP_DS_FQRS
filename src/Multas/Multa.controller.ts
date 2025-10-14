@@ -26,7 +26,9 @@ function sanitizeMultasInput(req:Request , res:Response, next:NextFunction){
 
 async function findAll(req:Request, res:Response){
     try {
-        const multas = await em.find(Multa , {})
+        const multas = await em.find(Multa, {}, {
+            populate: ['evidencia', 'evidencia.carpeta', 'evidencia.carpeta.metahumano']
+        })
         res.status(200).json({message : "find all multas" , data : multas})
     } catch(error : any){
         res.status(500).json({message : error.message})

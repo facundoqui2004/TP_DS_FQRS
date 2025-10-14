@@ -234,8 +234,20 @@ GET http://localhost:3000/api/multas/ranking
 ### 7️⃣ ELIMINAR MULTAS
 ##################################################
 
-### Eliminar multa
+### Eliminar multa por ID
 # @name deleteMulta
 DELETE http://localhost:3000/api/multas/1
+
+###
+
+### Eliminar multa ID 2
+# @name deleteMulta2
+DELETE http://localhost:3000/api/multas/2
+
+###
+
+### Eliminar multa ID 3
+# @name deleteMulta3
+DELETE http://localhost:3000/api/multas/3
 
 ###
