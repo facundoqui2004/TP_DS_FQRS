@@ -43,6 +43,48 @@ async function findOne(req:Request, res: Response){
   }
 }
 
+// actualizar estado
+async function updateEstado(req:Request, res: Response) {
+  try {
+    const id = Number.parseInt(req.params.id);
+    const { estado } = req.body.sanitizedInput ?? req.body;
+
+    if (!estado || !['activa', 'pendiente', 'cerrada'].includes(estado)) {
+      return res.status(400).json({ message: 'estado requerido o inválido' });
+    }
+
+    const carpeta = await em.findOneOrFail(Carpeta, { id });
+    carpeta.estado = estado;
+    await em.flush();
+
+    return res.status(200).json({
+      message: 'Estado actualizado',
+      data: { id: carpeta.id, estado: carpeta.estado },
+    });
+  } catch (e:any) {
+    return res.status(500).json({ message: e.message });
+  }
+}
+
+async function findByMetahumano(req:Request, res: Response) {
+  try {
+    const metahumanoId = Number.parseInt(req.params.metahumanoId ?? req.query.metahumanoId);
+    if (Number.isNaN(metahumanoId)) {
+      return res.status(400).json({ message: 'metahumanoId inválido' });
+    }
+
+    const carpetas = await em.find(
+      Carpeta,
+      { metahumano: metahumanoId },
+      { populate: ['evidencias.multas'] }
+    );
+
+    return res.status(200).json({ message: 'ok', data: carpetas });
+  } catch (e:any) {
+    return res.status(500).json({ message: e.message });
+  }
+}
+
 
 async function LinkCarpBuro(req: Request, res: Response) {
   try {
@@ -95,4 +137,4 @@ async function remove(req:Request, res:Response){
 }
 
 
-export {findOne, findAll, remove, LinkCarpBuro, sanitizeCarpetaInput}
+export {findOne, findAll, remove, LinkCarpBuro, sanitizeCarpetaInput, updateEstado, findByMetahumano}
