@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express'
 import { Metahumano } from './metahumano.entity.js'
 import { Usuario } from '../auth/usuario.entity.js'
 import { orm } from '../shared/db/orm.js'
+import { Carpeta } from '../carpeta/carpeta.entity.js'
 
 const em = orm.em
 
@@ -82,6 +83,10 @@ async function crearPerfilMetahumano(req: Request, res: Response) {
     res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
+
+
+
+
 
 async function findAll(req: Request, res: Response) {
   try {

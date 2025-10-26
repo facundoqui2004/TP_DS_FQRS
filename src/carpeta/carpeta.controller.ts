@@ -24,6 +24,17 @@ function sanitizeCarpetaInput(req: Request, res: Response, next: NextFunction) {
   next()
 }
 
+async function getCarpetasByMetahumano(req: Request, res : Response){
+  try{
+    const idMetahumano = Number.parseInt(req.params.idMetahumano)
+    const carpetas = await em.find(Carpeta, {metahumano : idMetahumano})
+    res.status(200).json({message : 'found carpetas by metahumano', data : carpetas})
+  }
+  catch(error: any){
+    res.status(500).json({message : error.message})
+  }
+}
+
 async function findAll(req:Request, res:Response){
     try {
     const carpetas = await em.find(Carpeta, {}, {populate :['evidencias.multas']})
@@ -66,24 +77,7 @@ async function updateEstado(req:Request, res: Response) {
   }
 }
 
-async function findByMetahumano(req:Request, res: Response) {
-  try {
-    const metahumanoId = Number.parseInt(req.params.metahumanoId ?? req.query.metahumanoId);
-    if (Number.isNaN(metahumanoId)) {
-      return res.status(400).json({ message: 'metahumanoId inválido' });
-    }
 
-    const carpetas = await em.find(
-      Carpeta,
-      { metahumano: metahumanoId },
-      { populate: ['evidencias.multas'] }
-    );
-
-    return res.status(200).json({ message: 'ok', data: carpetas });
-  } catch (e:any) {
-    return res.status(500).json({ message: e.message });
-  }
-}
 
 
 async function LinkCarpBuro(req: Request, res: Response) {
@@ -137,4 +131,4 @@ async function remove(req:Request, res:Response){
 }
 
 
-export {findOne, findAll, remove, LinkCarpBuro, sanitizeCarpetaInput, updateEstado, findByMetahumano}
+export {findOne, findAll, remove, LinkCarpBuro, sanitizeCarpetaInput, updateEstado, getCarpetasByMetahumano}
