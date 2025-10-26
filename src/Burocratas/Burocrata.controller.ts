@@ -96,7 +96,7 @@ async function getCarpetas(req: Request, res: Response){
 async function findAll(req: Request, res: Response) {
   try {
     const burocratas = await em.find(Burocrata, {}, {
-      populate: ['usuario'], 
+      populate: ['usuario','carpetas.evidencias.multas'], 
     })
     res.status(200).json({ message: 'found all burocratas', data: burocratas })
   } catch (error: any) {
