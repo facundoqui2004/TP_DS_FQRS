@@ -51,7 +51,9 @@ async function add(req:Request , res: Response){
       return res.status(404).json({message : "Carpeta not found"})
    } else {
     nuevaEvidencia.carpeta = carpeta;
-    
+    if (nuevaEvidencia.fechaRecoleccion > new Date()) {
+      throw new Error("La fecha no puede ser futura")
+    }
     await em.flush();
     res.status(200).json({message : 'Carpeta has been created', data : nuevaEvidencia})
    }
@@ -66,7 +68,11 @@ async function update(req:Request , res:Response){
   try {
     const id = Number.parseInt(req.params.id)
     const evidenciaToUpdate = await em.findOneOrFail(Evidencia, {id})
-    const input = req.body.sanitizedInput
+    
+    if (evidenciaToUpdate.fechaRecoleccion > new Date()) {
+      throw new Error("La fecha no puede ser futura");
+    }
+
     em.assign(evidenciaToUpdate, req.body.sanitizedInput)
     await em.flush();
     res.status(200).json({message:'Evidencia updated', data:evidenciaToUpdate})
