@@ -57,14 +57,17 @@ async function add(req:Request,res:Response){
             if(!evidencia){
                 return res.status(404).json({message: "evidencia not found"})
             }else {
+                if (nuevaMulta.fechaEmision > nuevaMulta.fechaVencimiento) {
+                    throw new Error("La fecha de emisión no puede ser posterior al vencimiento");
+                }
                 nuevaMulta.evidencia = evidencia;
                 await em.flush();
             }
         }
         res.status(201).json({ message: 'multa created', data: nuevaMulta })
     } catch (error: any) {
-     res.status(500).json({ message: error.message })
-}
+    res.status(500).json({ message: error.message })
+    }
 }
 
 async function update(req:Request,res:Response){
