@@ -27,7 +27,7 @@ function sanitizeCarpetaInput(req: Request, res: Response, next: NextFunction) {
 async function getCarpetasByMetahumano(req: Request, res : Response){
   try{
     const idMetahumano = Number.parseInt(req.params.idMetahumano)
-    const carpetas = await em.find(Carpeta, {metahumano : idMetahumano})
+    const carpetas = await em.find(Carpeta, {metahumano : idMetahumano}, {populate : ['evidencias.multas']})
     res.status(200).json({message : 'found carpetas by metahumano', data : carpetas})
   }
   catch(error: any){
