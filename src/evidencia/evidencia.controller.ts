@@ -7,7 +7,7 @@ const em = orm.em
 function sanitizeEvidenciaInput(req: Request, res: Response, next: NextFunction) {
   req.body.sanitizedInput = {
     descripcion: req.body.descripcion,
-    fechaRecoleccion: req.body.fechaRecoleccion,
+    fechaRecoleccion: req.body.fechaRecoleccion ? new Date(req.body.fechaRecoleccion) : new Date(),
     carpetaId:req.body.carpetaId
   }
 
@@ -43,21 +43,22 @@ async function findOne(req:Request, res: Response){
 
 async function add(req:Request , res: Response){
   try { 
-    const {carpetaId, ...sanitizedInput} = req.body
+    const {carpetaId, ...sanitizedInput} = req.body.sanitizedInput
     const nuevaEvidencia = em.create(Evidencia, sanitizedInput)
-   if(carpetaId){
-    const carpeta = await em.findOneOrFail(Carpeta, {id : Number(carpetaId)});
-    if(!carpeta) {
-      return res.status(404).json({message : "Carpeta not found"})
-   } else {
-    nuevaEvidencia.carpeta = carpeta;
-    if (nuevaEvidencia.fechaRecoleccion > new Date()) {
-      throw new Error("La fecha no puede ser futura")
+    
+    // Validar que la fecha de recolección no sea futura
+    if (nuevaEvidencia.fechaRecoleccion && nuevaEvidencia.fechaRecoleccion > new Date()) {
+      return res.status(400).json({error: "La fecha de recolección no puede ser futura"})
     }
+    
+    // Asociar carpeta si se proporciona carpetaId
+    if(carpetaId){
+      const carpeta = await em.findOneOrFail(Carpeta, {id : Number(carpetaId)});
+      nuevaEvidencia.carpeta = carpeta;
+    }
+    
     await em.flush();
-    res.status(200).json({message : 'Carpeta has been created', data : nuevaEvidencia})
-   }
-  }
+    res.status(201).json({message : 'Evidencia creada exitosamente', data : nuevaEvidencia})
     
   } catch (error : any) {
     res.status(500).json({error:error.message})

@@ -1,0 +1,49 @@
+### TEST EVIDENCIAS - Verificar corrección del bug
+
+##################################################
+### 1. Crear evidencia SIN carpeta (caso que fallaba)
+##################################################
+POST http://localhost:3000/api/evidencias
+Content-Type: application/json
+
+{
+  "descripcion": "Evidencia de prueba sin carpeta",
+  "fechaRecoleccion": "2025-11-05T10:00:00.000Z"
+}
+
+##################################################
+### 2. Crear evidencia CON carpeta
+##################################################
+POST http://localhost:3000/api/evidencias
+Content-Type: application/json
+
+{
+  "descripcion": "Evidencia con carpeta asociada",
+  "fechaRecoleccion": "2025-11-05T10:00:00.000Z",
+  "carpetaId": 1
+}
+
+##################################################
+### 3. Listar todas las evidencias
+##################################################
+GET http://localhost:3000/api/evidencias
+
+##################################################
+### 4. Obtener una evidencia específica
+##################################################
+GET http://localhost:3000/api/evidencias/1
+
+##################################################
+### 5. Actualizar evidencia
+##################################################
+PUT http://localhost:3000/api/evidencias/1
+Content-Type: application/json
+
+{
+  "descripcion": "Evidencia actualizada"
+}
+
+##################################################
+### 6. Eliminar evidencia
+##################################################
+DELETE http://localhost:3000/api/evidencias/1

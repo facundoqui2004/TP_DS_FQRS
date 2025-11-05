@@ -79,7 +79,7 @@ GET http://localhost:3000/api/poderes?categoria=FISICO
 # @name searchPoderesByNombre
 GET http://localhost:3000/api/poderes?nomPoder=Super
 
-###
+##
 
 ##################################################
 ### 3️⃣ ACTUALIZAR PODERES
