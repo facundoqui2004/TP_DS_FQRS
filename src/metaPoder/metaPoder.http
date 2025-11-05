@@ -1,0 +1,409 @@
+### 🔗 API META-PODERES (Relación Metahumano-Poder)
+### Base URL: http://localhost:3000/api/metapoderes
+
+##################################################
+### 1️⃣ ASIGNAR PODERES A METAHUMANOS
+##################################################
+
+### Asignar Sentido Arácnido a Spider-Man
+# @name assignPoderSpiderMan1
+POST http://localhost:3000/api/metapoderes
+Content-Type: application/json
+
+{
+  "metahumanoId": 1,
+  "poderId": 1,
+  "dominio": "EXPERTO",
+  "nivelControl": 95,
+  "estado": "ACTIVO",
+  "fechaAdquisicion": "2025-01-15"
+}
+
+###
+
+### Asignar Super Fuerza a Spider-Man
+# @name assignPoderSpiderMan2
+POST http://localhost:3000/api/metapoderes
+Content-Type: application/json
+
+{
+  "metahumanoId": 1,
+  "poderId": 2,
+  "dominio": "AVANZADO",
+  "nivelControl": 75,
+  "estado": "ACTIVO"
+}
+
+###
+
+### Asignar Vuelo a Superman
+# @name assignPoderSuperman1
+POST http://localhost:3000/api/metapoderes
+Content-Type: application/json
+
+{
+  "metahumanoId": 2,
+  "poderId": 3,
+  "dominio": "MAESTRO",
+  "nivelControl": 100,
+  "estado": "ACTIVO",
+  "certificado": "Certificado de Vuelo Nivel Cósmico"
+}
+
+###
+
+##################################################
+### 2️⃣ CONSULTAS DE META-PODERES
+##################################################
+
+### Listar todas las relaciones metahumano-poder
+# @name getAllMetaPoderes
+GET http://localhost:3000/api/metapoderes
+
+###
+
+### Obtener poderes de un metahumano específico por ID de metahumano
+# @name getPoderesByMetahumano
+GET http://localhost:3000/api/metapoderes/metahumano/1
+
+###
+
+### 🎯 OBTENER PODERES POR ID DE USUARIO (estructura para frontend)
+# @name getPoderesByUsuario
+GET http://localhost:3000/api/metapoderes/usuario/1
+
+###
+
+### 🔗 OBTENER PODERES POR METAHUMANO ID (compatible con frontend)
+# @name getPoderesByMetahumanoCompatible
+GET http://localhost:3000/api/metapoderes/1
+
+###
+
+### Obtener metahumanos que tienen un poder específico
+# @name getMetahumanosByPoder
+GET http://localhost:3000/api/metapoderes?poderId=2
+
+###
+
+### Obtener relación específica por ID
+# @name getMetaPoderById
+GET http://localhost:3000/api/metapoderes/1
+
+###
+
+##################################################
+### 3️⃣ ACTUALIZAR RELACIONES
+##################################################
+
+### Actualizar nivel de dominio y control
+# @name updateNivelDominio
+PUT http://localhost:3000/api/metapoderes/1
+Content-Type: application/json
+
+{
+  "dominio": "MAESTRO",
+  "nivelControl": 98,
+  "estado": "ACTIVO"
+}
+
+###
+
+### Actualizar nivel de control
+# @name updateNivelControl
+PUT http://localhost:3000/api/metapoderes/2
+Content-Type: application/json
+
+{
+  "dominio": "EXPERTO",
+  "nivelControl": 85
+}
+
+###
+
+### 🎯 MODIFICAR SOLO EL ESTADO DE UN PODER POR ID
+# @name updateEstadoActivo
+PUT http://localhost:3000/api/metapoderes/1
+Content-Type: application/json
+
+{
+  "estado": "ACTIVO"
+}
+
+###
+
+### Desactivar poder (cambiar a INACTIVO)
+# @name updateEstadoInactivo
+PUT http://localhost:3000/api/metapoderes/1
+Content-Type: application/json
+
+{
+  "estado": "INACTIVO"
+}
+
+###
+
+### Suspender poder temporalmente
+# @name updateEstadoSuspendido
+PUT http://localhost:3000/api/metapoderes/3
+Content-Type: application/json
+
+{
+  "estado": "SUSPENDIDO"
+}
+
+###
+
+### Actualizar solo certificado
+# @name updateSoloCertificado
+PUT http://localhost:3000/api/metapoderes/1
+Content-Type: application/json
+
+{
+  "certificado": "Certificado actualizado - Nivel Avanzado"
+}
+
+###
+
+##################################################
+### 4️⃣ EJEMPLOS ADICIONALES
+##################################################
+
+### Asignar múltiples poderes a Wonder Woman
+# @name assignPoderWonderWoman1
+POST http://localhost:3000/api/metapoderes
+Content-Type: application/json
+
+{
+  "metahumanoId": 3,
+  "poderId": 2,
+  "dominio": "MAESTRO",
+  "nivelControl": 98,
+  "estado": "ACTIVO",
+  "certificado": "Certificado de Super Fuerza Amazona"
+}
+
+###
+
+# @name assignPoderWonderWoman2
+POST http://localhost:3000/api/metapoderes
+Content-Type: application/json
+
+{
+  "metahumanoId": 3,
+  "poderId": 3,
+  "dominio": "EXPERTO",
+  "nivelControl": 90,
+  "estado": "ACTIVO"
+}
+
+###
+
+### Asignar poder de regeneración (novato)
+# @name assignPoderRegeneracion
+POST http://localhost:3000/api/metapoderes
+Content-Type: application/json
+
+{
+  "metahumanoId": 1,
+  "poderId": 4,
+  "dominio": "NOVATO",
+  "nivelControl": 25,
+  "estado": "ACTIVO"
+}
+
+###
+
+##################################################
+### 5️⃣ FILTROS Y BÚSQUEDAS
+##################################################
+
+### Buscar metahumanos con poder específico
+# @name getMetahumanosByPoder
+GET http://localhost:3000/api/metapoderes?poderId=2
+
+###
+
+### Obtener relación específica por ID
+# @name getMetaPoderById
+GET http://localhost:3000/api/metapoderes/1
+
+###
+
+### Obtener poderes de metahumano específico por ID de metahumano
+# @name getPoderesByMetahumano2
+GET http://localhost:3000/api/metapoderes/metahumano/2
+
+###
+
+### 🎯 Obtener poderes por ID de usuario (diferentes usuarios)
+# @name getPoderesByUsuario1
+GET http://localhost:3000/api/metapoderes/usuario/6
+
+###
+
+# @name getPoderesByUsuario2
+GET http://localhost:3000/api/metapoderes/usuario/2
+
+###
+
+# @name getPoderesByUsuario3
+GET http://localhost:3000/api/metapoderes/usuario/3
+
+###
+
+##################################################
+### 🎯 CONSULTAS ESPECÍFICAS PARA EL FRONTEND
+##################################################
+
+### 1️⃣ Primera consulta del frontend: Obtener usuario y su metahumano
+# Devuelve: { usuario: { id: X, metahumano: { id: Y } } }
+# @name frontendConsulta1
+GET http://localhost:3000/api/metapoderes/usuario/1
+
+###
+
+### 2️⃣ Segunda consulta del frontend: Obtener poderes por metahumanoId
+# Usa el metahumanoId de la respuesta anterior
+# @name frontendConsulta2
+GET http://localhost:3000/api/metapoderes/1
+
+###
+
+### 🔍 Verificar respuesta de metahumano específico
+# @name verificarMetahumano
+GET http://localhost:3000/api/metapoderes/2
+
+###
+
+##################################################
+### 6️⃣ GESTIÓN DE ESTADOS DE PODERES
+##################################################
+
+### Activar poder por ID
+# @name activarPoder
+PUT http://localhost:3000/api/metapoderes/1
+Content-Type: application/json
+
+{
+  "estado": "ACTIVO"
+}
+
+###
+
+### Desactivar poder por ID
+# @name desactivarPoder
+PUT http://localhost:3000/api/metapoderes/1
+Content-Type: application/json
+
+{
+  "estado": "INACTIVO"
+}
+
+###
+
+### Suspender poder por ID
+# @name suspenderPoder
+PUT http://localhost:3000/api/metapoderes/1
+Content-Type: application/json
+
+{
+  "estado": "SUSPENDIDO"
+}
+
+###
+
+### Cambiar estado y agregar nota en certificado
+# @name cambiarEstadoConNota
+PUT http://localhost:3000/api/metapoderes/1
+Content-Type: application/json
+
+{
+  "estado": "SUSPENDIDO",
+  "certificado": "Poder suspendido por uso inadecuado - Revisión pendiente"
+}
+
+###
+
+##################################################
+### 7️⃣ CASOS ESPECIALES
+##################################################
+
+### Poder sin certificado
+# @name assignPoderSinCertificado
+POST http://localhost:3000/api/metapoderes
+Content-Type: application/json
+
+{
+  "metahumanoId": 2,
+  "poderId": 5,
+  "dominio": "INTERMEDIO",
+  "nivelControl": 60,
+  "estado": "ACTIVO"
+}
+
+###
+
+### Poder con estado INACTIVO
+# @name assignPoderInactivo
+POST http://localhost:3000/api/metapoderes
+Content-Type: application/json
+
+{
+  "metahumanoId": 1,
+  "poderId": 6,
+  "dominio": "AVANZADO",
+  "nivelControl": 70,
+  "estado": "INACTIVO",
+  "certificado": "Poder temporalmente suspendido"
+}
+
+###
+
+##################################################
+### 8️⃣ VALIDACIONES Y ERRORES
+##################################################
+
+### Intentar asignar poder inexistente (debe fallar)
+# @name errorPoderInexistente
+POST http://localhost:3000/api/metapoderes
+Content-Type: application/json
+
+{
+  "metahumanoId": 1,
+  "poderId": 999,
+  "dominio": "EXPERTO",
+  "nivelControl": 80
+}
+
+###
+
+### Intentar dominio inválido (debe fallar)
+# @name errorDominioInvalido
+POST http://localhost:3000/api/metapoderes
+Content-Type: application/json
+
+{
+  "metahumanoId": 1,
+  "poderId": 1,
+  "dominio": "SUPREMO",
+  "nivelControl": 80
+}
+
+###
+
+##################################################
+### 9️⃣ ELIMINAR RELACIONES
+##################################################
+
+### Eliminar relación metahumano-poder
+# @name deleteMetaPoder
+DELETE http://localhost:3000/api/metapoderes/1
+
+###
+
+### Eliminar todos los poderes de un metahumano
+# @name deleteAllPoderesByMetahumano
+DELETE http://localhost:3000/api/meta-poderes/metahumano/1
+
+###

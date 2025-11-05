@@ -1,0 +1,59 @@
+services:
+  # Base de datos MySQL
+  mysql:
+    image: mysql:8.0
+    container_name: metahumano-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: metahumano
+      MYSQL_USER: dsw
+      MYSQL_PASSWORD: dsw
+    ports:
+      - "3309:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - metahumano-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # Aplicación Node.js
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: metahumano-app
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: metahumano
+      DB_USER: dsw
+      DB_PASSWORD: dsw
+    volumes:
+      - ..:/app
+      - /app/node_modules
+    networks:
+      - metahumano-network
+    command: npm run start:dev
+    tty: true
+    stdin_open: true
+
+volumes:
+  mysql_data:
+
+networks:
+  metahumano-network:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: metahumano-br

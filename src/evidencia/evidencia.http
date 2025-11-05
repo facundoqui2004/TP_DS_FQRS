@@ -1,0 +1,188 @@
+### 🔍 API EVIDENCIAS
+### Base URL: http://localhost:3000/api/evidencias
+
+##################################################
+### 1️⃣ CREAR EVIDENCIAS
+##################################################
+
+### Crear evidencia fotográfica
+# @name createEvidenciaFoto
+POST http://localhost:3000/api/evidencias
+Content-Type: application/json
+
+{
+  "tipo": "FOTOGRAFICA",
+  "descripcion": "Foto de Spider-Man balanceándose entre edificios",
+  "archivo": "spiderman_swing_001.jpg",
+  "fechaObtencion": "2025-08-08",
+  "carpeta_id": 1
+}
+
+###
+
+### Crear evidencia testimonial
+# @name createEvidenciaTestimonial
+POST http://localhost:3000/api/evidencias
+Content-Type: application/json
+
+{
+  "tipo": "TESTIMONIAL",
+  "descripcion": "Testimonio de J. Jonah Jameson sobre actividades de Spider-Man",
+  "archivo": "testimonio_jameson.mp4",
+  "fechaObtencion": "2025-08-07",
+  "carpeta_id": 1
+}
+
+###
+
+### Crear evidencia documental
+# @name createEvidenciaDocumental
+POST http://localhost:3000/api/evidencias
+Content-Type: application/json
+
+{
+  "tipo": "DOCUMENTAL",
+  "descripcion": "Informe científico sobre telarañas sintéticas encontradas",
+  "archivo": "analisis_telarana_sintetica.pdf",
+  "fechaObtencion": "2025-08-06",
+  "carpeta_id": 1
+}
+
+###
+
+##################################################
+### 2️⃣ CONSULTAS DE EVIDENCIAS
+##################################################
+
+### Listar todas las evidencias
+# @name getAllEvidencias
+GET http://localhost:3000/api/evidencias
+
+###
+
+### Obtener evidencia por ID
+# @name getEvidenciaById
+GET http://localhost:3000/api/evidencias/1
+
+###
+
+### Obtener evidencias de una carpeta específica
+# @name getEvidenciasByCarpeta
+GET http://localhost:3000/api/evidencias?carpeta_id=1
+
+###
+
+### Filtrar evidencias por tipo
+# @name getEvidenciasByTipo
+GET http://localhost:3000/api/evidencias?tipo=FOTOGRAFICA
+
+###
+
+##################################################
+### 3️⃣ ACTUALIZAR EVIDENCIAS
+##################################################
+
+### Actualizar evidencia
+# @name updateEvidencia
+PUT http://localhost:3000/api/evidencias/1
+Content-Type: application/json
+
+{
+  "tipo": "FOTOGRAFICA",
+  "descripcion": "Foto de Spider-Man balanceándose entre edificios - Análisis mejorado",
+  "archivo": "spiderman_swing_001_analyzed.jpg",
+  "fechaObtencion": "2025-08-08",
+  "carpeta_id": 1
+}
+
+###
+
+### Actualizar descripción de evidencia
+# @name updateEvidenciaDescripcion
+PUT http://localhost:3000/api/evidencias/2
+Content-Type: application/json
+
+{
+  "tipo": "TESTIMONIAL",
+  "descripcion": "Testimonio actualizado de J. Jonah Jameson - Declaración rectificada",
+  "archivo": "testimonio_jameson_v2.mp4",
+  "fechaObtencion": "2025-08-07",
+  "carpeta_id": 1
+}
+
+###
+
+##################################################
+### 4️⃣ EJEMPLOS ADICIONALES
+##################################################
+
+### Crear evidencia de video vigilancia
+# @name createEvidenciaVideo
+POST http://localhost:3000/api/evidencias
+Content-Type: application/json
+
+{
+  "tipo": "VIDEO",
+  "descripcion": "Grabación de cámara de seguridad del Banco Central",
+  "archivo": "banco_central_cam_001.mp4",
+  "fechaObtencion": "2025-08-05",
+  "carpeta_id": 2
+}
+
+###
+
+### Crear evidencia física
+# @name createEvidenciaFisica
+POST http://localhost:3000/api/evidencias
+Content-Type: application/json
+
+{
+  "tipo": "FISICA",
+  "descripcion": "Muestra de telaraña sintética encontrada en la escena",
+  "archivo": "muestra_telarana_001.bag",
+  "fechaObtencion": "2025-08-04",
+  "carpeta_id": 1
+}
+
+###
+
+### Crear evidencia forense
+# @name createEvidenciaForense
+POST http://localhost:3000/api/evidencias
+Content-Type: application/json
+
+{
+  "tipo": "FORENSE",
+  "descripcion": "Análisis DNA de muestra encontrada en escena del crimen",
+  "archivo": "analisis_dna_spiderman.pdf",
+  "fechaObtencion": "2025-08-03",
+  "carpeta_id": 1
+}
+
+###
+
+##################################################
+### 5️⃣ BÚSQUEDAS AVANZADAS
+##################################################
+
+### Buscar evidencias por fecha
+# @name searchEvidenciasByFecha
+GET http://localhost:3000/api/evidencias?fechaObtencion=2025-08-08
+
+###
+
+### Buscar evidencias por palabra clave en descripción
+# @name searchEvidenciasByDescripcion
+GET http://localhost:3000/api/evidencias?search=Spider-Man
+
+###
+
+##################################################
+### 6️⃣ ELIMINAR EVIDENCIAS
+##################################################
+
+### Eliminar evidencia
+# @name deleteEvidencia
+DELETE http://localhost:3000/api/evidencias/1
+
+###
