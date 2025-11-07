@@ -32,14 +32,13 @@ app.use(cors({
   credentials: true // permitir envío de cookies al front
 }))
 app.use(express.json())
-app.use(cookieParser()) // habilita uso de cookies
+app.use(cookieParser()) 
 
 // Contexto de EntityManager por request
 app.use((req, res, next) => {
   RequestContext.create(orm.em, next)
 })
 
-// Rutas legacy de usuarios (para compatibilidad con el frontend)
 const usuariosLegacyRouter = express.Router()
 usuariosLegacyRouter.get('/', obtenerTodosLosUsuarios)
 usuariosLegacyRouter.get('/me', requireAuth, obtenerUsuarioActual);
@@ -49,7 +48,7 @@ usuariosLegacyRouter.post('/login', loginUsuario)
 usuariosLegacyRouter.post('/logout', logoutUsuario)
 
 // Rutas principales
-app.use('/api/usuarios', usuariosLegacyRouter) // Rutas legacy para el frontend
+app.use('/api/usuarios', usuariosLegacyRouter)
 app.use('/api/metahumanos', metahumanosRoutes)
 app.use('/api/poderes', poderesRoutes)
 app.use('/api/metapoderes', metaPoderesRoutes)
@@ -57,7 +56,7 @@ app.use('/api/burocratas', burocratasRouter)
 app.use('/api/multas', multasRouter)
 app.use('/api/evidencias', evidenciaRouter)
 app.use('/api/carpetas', carpetaRouter)
-app.use('/api/auth', usuarioRouter) // � ACTUALIZADO: Nuevo modelo de usuario
+app.use('/api/auth', usuarioRouter) 
 app.use('/api/villanos', villanoRoutes)
 
 // 404 handler
@@ -65,7 +64,7 @@ app.use((_, res) => {
   return res.status(404).send({ message: 'Resource not found' })
 })
 
-// Sincronizar base de datos (dev only)
+// Sincronizar base de datos
 await syncSchema()
 
 app.listen(3000, () => {

@@ -518,7 +518,7 @@ export async function obtenerPerfil(req: Request, res: Response) {
 
     return res.json({
       message: 'Perfil obtenido correctamente',
-      data: response, // 👈 esto arregla tu "u"
+      data: response,
     });
 
   } catch (error: any) {
@@ -532,7 +532,7 @@ export async function obtenerPerfil(req: Request, res: Response) {
  */
 export async function actualizarContacto(req: Request, res: Response) {
   try {
-    const usuarioId = (req as any).usuarioId // Asumiendo middleware de autenticación
+    const usuarioId = (req as any).usuarioId
     const { email, telefono } = req.body
 
     const usuario = await em.findOne(Usuario, { id: usuarioId })
@@ -626,7 +626,7 @@ export async function listarUsuarios(req: Request, res: Response) {
 }
 
 /**
- * Logout de usuario: limpia cookies de autenticación
+ * limpia cookies de autenticación
  */
 export async function logout(req: Request, res: Response) {
   try {

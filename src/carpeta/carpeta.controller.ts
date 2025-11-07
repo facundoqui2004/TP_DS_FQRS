@@ -104,14 +104,14 @@ async function LinkCarpBuro(req: Request, res: Response) {
       { populate: ['burocrata', 'metahumano', 'evidencias.multas'] }
     );
 
-    console.log("✅ Carpeta guardada:", nuevaCarpeta);
+    console.log("Carpeta guardada:", nuevaCarpeta);
 
     res.status(201).json({
-      message: "✅ Carpeta creada correctamente",
+      message: "Carpeta creada correctamente",
       data: carpetaPopulada ,
     });
   } catch (error: any) {
-    console.error("❌ Error al crear carpeta:", error);
+    console.error("Error al crear carpeta:", error);
     res.status(500).json({ error: error.message });
   }
 }
