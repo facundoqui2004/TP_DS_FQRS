@@ -1,0 +1,108 @@
+###  PRUEBA RÁPIDA - VERIFICAR RUTAS FUNCIONANDO
+### Después de actualizar las rutas del nuevo modelo
+
+##################################################
+###  VERIFICACIÓN BÁSICA
+##################################################
+
+### 1. Probar que el servidor responde
+# @name healthCheck
+GET http://localhost:3000/api/auth/admin/usuarios
+
+### 2. Si da 404, probar la ruta vieja
+# @name oldRoute
+GET http://localhost:3000/api/usuarios
+
+##################################################
+###  REGISTRO DE PRUEBA
+##################################################
+
+### 3. Registrar un metahumano de prueba
+# @name testRegisterMeta
+POST http://localhost:3000/api/auth/register/metahumano
+Content-Type: application/json
+
+{
+  "email": "test.prueba@example.com",
+  "telefono": "+1-555-TEST",
+  "password": "test123456",
+  "nombre": "Usuario de Prueba",
+  "alias": "Tester",
+  "origen": "Laboratorio de Testing"
+}
+
+### 4. Registrar un burocrata de prueba
+# @name testRegisterBuro
+POST http://localhost:3000/api/auth/register/burocrata
+Content-Type: application/json
+
+{
+  "email": "a1dmi1n.prueba@example.com",
+  "telefono": "+1-555-ADMIN",
+  "password": "admin123456",
+  "nombre": "Admin de Prueba",
+  "alias": "Admin Tester",
+  "role":"ADMINISTRTOR",
+  "origen": "Departamento de Testing"
+}
+
+##################################################
+###  LOGIN DE PRUEBA
+##################################################
+
+### 5. Login con el metahumano
+# @name testLogin
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "test.prueba@example.com",
+  "password": "test123456"
+}
+
+##################################################
+###  CONSULTA DE USUARIOS
+##################################################
+
+### 6. Listar todos los usuarios (sin token por ahora)
+# @name listUsers
+GET http://localhost:3000/api/auth/admin/usuarios
+
+### 7. Listar solo metahumanos
+# @name listMetas
+GET http://localhost:3000/api/auth/admin/usuarios?role=METAHUMANO
+
+### 8. Listar solo burócratas
+# @name listBuros
+GET http://localhost:3000/api/auth/admin/usuarios?role=BUROCRATA
+
+##################################################
+###  DIAGNÓSTICO SI ALGO FALLA
+##################################################
+
+### Si las rutas no funcionan, verificar:
+### 1. ¿El contenedor se reinició? docker ps
+### 2. ¿Hay errores en logs? docker logs metahumano-app
+### 3. ¿Las rutas están correctas en app.ts?
+### 4. ¿El controller se importa bien?
+
+### Comandos de diagnóstico:
+### docker logs metahumano-app --tail 50
+### docker exec -it metahumano-app ls src/auth/
+### docker exec -it metahumano-app cat src/app.ts | grep auth
+
+##################################################
+###  RESULTADOS ESPERADOS
+##################################################
+
+###  SI FUNCIONA:
+### - Registro: 201 Created con token
+### - Login: 200 OK con token y datos de usuario
+### - Lista: 200 OK con array de usuarios
+
+###  SI NO FUNCIONA:
+### - 404 Resource not found = problema de rutas
+### - 500 Internal Server Error = problema de controller/DB
+### - 400 Bad Request = problema de validación
+
+##################################################
