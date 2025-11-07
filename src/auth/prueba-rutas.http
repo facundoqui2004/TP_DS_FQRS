@@ -1,8 +1,8 @@
-### 🔧 PRUEBA RÁPIDA - VERIFICAR RUTAS FUNCIONANDO
+###  PRUEBA RÁPIDA - VERIFICAR RUTAS FUNCIONANDO
 ### Después de actualizar las rutas del nuevo modelo
 
 ##################################################
-### ✅ VERIFICACIÓN BÁSICA
+###  VERIFICACIÓN BÁSICA
 ##################################################
 
 ### 1. Probar que el servidor responde
@@ -14,7 +14,7 @@ GET http://localhost:3000/api/auth/admin/usuarios
 GET http://localhost:3000/api/usuarios
 
 ##################################################
-### 🧪 REGISTRO DE PRUEBA
+###  REGISTRO DE PRUEBA
 ##################################################
 
 ### 3. Registrar un metahumano de prueba
@@ -47,7 +47,7 @@ Content-Type: application/json
 }
 
 ##################################################
-### 🔐 LOGIN DE PRUEBA
+###  LOGIN DE PRUEBA
 ##################################################
 
 ### 5. Login con el metahumano
@@ -61,7 +61,7 @@ Content-Type: application/json
 }
 
 ##################################################
-### 📊 CONSULTA DE USUARIOS
+###  CONSULTA DE USUARIOS
 ##################################################
 
 ### 6. Listar todos los usuarios (sin token por ahora)
@@ -77,7 +77,7 @@ GET http://localhost:3000/api/auth/admin/usuarios?role=METAHUMANO
 GET http://localhost:3000/api/auth/admin/usuarios?role=BUROCRATA
 
 ##################################################
-### 🔍 DIAGNÓSTICO SI ALGO FALLA
+###  DIAGNÓSTICO SI ALGO FALLA
 ##################################################
 
 ### Si las rutas no funcionan, verificar:
@@ -92,15 +92,15 @@ GET http://localhost:3000/api/auth/admin/usuarios?role=BUROCRATA
 ### docker exec -it metahumano-app cat src/app.ts | grep auth
 
 ##################################################
-### 📝 RESULTADOS ESPERADOS
+###  RESULTADOS ESPERADOS
 ##################################################
 
-### ✅ SI FUNCIONA:
+###  SI FUNCIONA:
 ### - Registro: 201 Created con token
 ### - Login: 200 OK con token y datos de usuario
 ### - Lista: 200 OK con array de usuarios
 
-### ❌ SI NO FUNCIONA:
+###  SI NO FUNCIONA:
 ### - 404 Resource not found = problema de rutas
 ### - 500 Internal Server Error = problema de controller/DB
 ### - 400 Bad Request = problema de validación

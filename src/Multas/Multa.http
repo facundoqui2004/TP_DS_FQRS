@@ -1,8 +1,8 @@
-### 💰 API MULTAS
+
 ### Base URL: http://localhost:3000/api/multas
 
 ##################################################
-### 1️⃣ CREAR MULTAS
+
 ##################################################
 
 ### Crear multa por daños a la propiedad
@@ -54,7 +54,6 @@ Content-Type: application/json
 ###
 
 ##################################################
-### 2️⃣ CONSULTAS DE MULTAS
 ##################################################
 
 ### Listar todas las multas
@@ -248,6 +247,6 @@ DELETE http://localhost:3000/api/multas/2
 
 ### Eliminar multa ID 3
 # @name deleteMulta3
-DELETE http://localhost:3000/api/multas/3
+DELETE http://localhost:3000/api/multas/4
 
 ###

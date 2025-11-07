@@ -6,9 +6,9 @@ import { sanitizeMetahumanoInput } from '../metahumano/metahumano.controller.js'
 const em = orm.em
 
 function sanitizeVillanoInput(req: Request, res: Response, next: Function) {
-  // Reutilizar la sanitización de metahumano
+  
   sanitizeMetahumanoInput(req, res, () => {
-    // Agregar campos específicos de villano
+  
     req.body.sanitizedInput = {
       ...req.body.sanitizedInput,
       nivelPeligrosidad: req.body.nivelPeligrosidad,
@@ -18,7 +18,7 @@ function sanitizeVillanoInput(req: Request, res: Response, next: Function) {
       recompensa: req.body.recompensa ? Number(req.body.recompensa) : undefined,
     }
 
-    // Limpiar undefined
+   
     Object.keys(req.body.sanitizedInput).forEach((key) => {
       if (req.body.sanitizedInput[key] === undefined) {
         delete req.body.sanitizedInput[key]

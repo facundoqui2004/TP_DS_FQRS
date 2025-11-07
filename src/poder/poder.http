@@ -65,7 +65,7 @@ GET http://localhost:3000/api/poderes
 
 ### Obtener poder por ID
 # @name getPoderById
-GET http://localhost:3000/api/poderes/1
+GET http://localhost:3000/api/poderes/8
 
 ###
 

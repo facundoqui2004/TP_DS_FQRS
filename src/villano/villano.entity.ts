@@ -7,26 +7,24 @@ import { Metahumano } from '../metahumano/metahumano.entity.js'
 @Entity()
 export class Villano extends Metahumano {
   @Property({ nullable: false })
-  nivelPeligrosidad!: string // Alto, Medio, Bajo
+  nivelPeligrosidad!: string
 
   @Property({ nullable: true })
-  motivacion?: string // Motivación del villano
+  motivacion?: string 
 
   @Property({ nullable: true })
-  fechaCaptura?: Date // Fecha de última captura
+  fechaCaptura?: Date 
 
   @Property({ nullable: false, default: 'activo' })
   estado!: string // activo, capturado, rehabilitado, fugitivo
 
   @Property({ nullable: true })
-  recompensa?: number // Recompensa por captura
+  recompensa?: number 
 
-  // TODO: Agregar relaciones para futuros trámites
-  // - PermisoDestruccion
-  // - CertificadoRehabilitacion
+
 
   constructor() {
     super()
-    // El discriminator se maneja automáticamente por MikroORM
+    
   }
 }
