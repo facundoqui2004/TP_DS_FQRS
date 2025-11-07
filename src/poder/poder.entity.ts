@@ -26,7 +26,7 @@ export class Poder extends BaseEntity {
   categoria!: string
 
   @Property({ nullable: true})
-  costoMulta!: number // ← corregido de "float" a "number"
+  costoMulta!: number
 
   @OneToMany(() => MetaPoder, (metaPoder) => metaPoder.poder)
   metahumanos = new Collection<MetaPoder>(this)

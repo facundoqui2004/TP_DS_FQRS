@@ -271,7 +271,7 @@ async function assignPoderToMetahumano(req: Request, res: Response) {
   }
 }
 
-// busca todos los MetaPoder de un usuario - Estructura adaptada para el frontend
+// busca todos los MetaPoder de un usuario
 async function findAllForUsuario(req: Request, res: Response) {
   try {
     const usuarioId = Number.parseInt(req.params.usuarioId)
@@ -343,7 +343,7 @@ async function findOneOrAllForMetahumano(req: Request, res: Response) {
   try {
     const id = Number.parseInt(req.params.id)
     
-    // Intentar como metahumanoId primero (para compatibilidad con frontend)
+    // Intentar como metahumanoId
     const registrosPorMetahumano = await em.find(MetaPoder, {
       metahumano: id,
     }, {
