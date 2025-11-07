@@ -297,7 +297,7 @@ async function findAllForUsuario(req: Request, res: Response) {
       })
     }
 
-    // Luego buscar todos los metapoderes de ese metahumano
+    
     const registros = await em.find(MetaPoder, {
       metahumano: usuario.metahumano.id,
     }, {
@@ -319,7 +319,7 @@ async function findAllForUsuario(req: Request, res: Response) {
       }
     }))
 
-    // Estructura que espera el frontend
+   
     res.status(200).json({ 
       message: `Poderes encontrados para el usuario ${usuarioId}`,
       usuario: {
@@ -338,7 +338,7 @@ async function findAllForUsuario(req: Request, res: Response) {
   }
 }
 
-// Función para la ruta /api/metapoderes/:id cuando es un metahumanoId
+
 async function findOneOrAllForMetahumano(req: Request, res: Response) {
   try {
     const id = Number.parseInt(req.params.id)
@@ -351,7 +351,6 @@ async function findOneOrAllForMetahumano(req: Request, res: Response) {
     })
 
     if (registrosPorMetahumano.length > 0) {
-      // Es un metahumanoId, devolver todos sus poderes
       const result = registrosPorMetahumano.map(mp => ({
         id: mp.id,
         dominio: mp.dominio,
@@ -372,7 +371,7 @@ async function findOneOrAllForMetahumano(req: Request, res: Response) {
         data: result 
       })
     } else {
-      // Intentar como ID de MetaPoder individual
+ 
       const metaPoder = await em.findOne(MetaPoder, { id }, {
         populate: ['metahumano', 'poder']
       })

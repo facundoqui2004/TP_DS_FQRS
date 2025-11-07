@@ -46,12 +46,12 @@ async function add(req:Request , res: Response){
     const {carpetaId, ...sanitizedInput} = req.body.sanitizedInput
     const nuevaEvidencia = em.create(Evidencia, sanitizedInput)
     
-    // Validar que la fecha de recolección no sea futura
+    
     if (nuevaEvidencia.fechaRecoleccion && nuevaEvidencia.fechaRecoleccion > new Date()) {
       return res.status(400).json({error: "La fecha de recolección no puede ser futura"})
     }
     
-    // Asociar carpeta si se proporciona carpetaId
+   
     if(carpetaId){
       const carpeta = await em.findOneOrFail(Carpeta, {id : Number(carpetaId)});
       nuevaEvidencia.carpeta = carpeta;
