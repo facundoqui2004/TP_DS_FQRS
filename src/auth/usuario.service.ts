@@ -213,4 +213,32 @@ export class UsuarioService {
 
     return errores
   }
+
+  /**
+   * Elimina un usuario y sus perfiles asociados
+   */
+  async eliminarUsuario(id: number): Promise<boolean> {
+    const usuario = await this.em.findOne(Usuario, { id }, {
+      populate: ['metahumano', 'metahumano.poderes', 'metahumano.carpetas', 'burocrata', 'burocrata.carpetas']
+    })
+
+    if (!usuario) {
+      return false
+    }
+
+    // Al eliminar el usuario, MikroORM debería encargarse de las relaciones si están configuradas con cascade
+    // Pero para estar seguros y explícitos, podemos eliminar los perfiles si existen
+    if (usuario.metahumano) {
+      this.em.remove(usuario.metahumano)
+    }
+    
+    if (usuario.burocrata) {
+      this.em.remove(usuario.burocrata)
+    }
+
+    this.em.remove(usuario)
+    await this.em.flush()
+    
+    return true
+  }
 }

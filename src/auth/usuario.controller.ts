@@ -8,6 +8,7 @@ import jwt from 'jsonwebtoken'
 
 const em = orm.em
 const JWT_SECRET = process.env.JWT_SECRET || 'tu_secreto_aqui' // usar .env en producción
+import { UsuarioService } from './usuario.service.js'
 
 /**
  * Crear usuario básico (solo datos comunes, sin perfil)
@@ -696,5 +697,37 @@ export async function obtenerUsuarioPorId(req: Request, res: Response) {
   } catch (error: any) {
     console.error('Error al obtener usuario:', error)
     res.status(500).json({ message: 'Error interno del servidor' })
+  }
+}
+
+/**
+ * Eliminar usuario (admin)
+ */
+export async function eliminarUsuario(req: Request, res: Response) {
+  try {
+    const id = Number.parseInt(req.params.id)
+    
+    if (isNaN(id)) {
+      return res.status(400).json({ message: 'ID inválido' })
+    }
+
+    // Verificar que no se esté eliminando a sí mismo
+    const usuarioId = (req as any).usuarioId
+    if (usuarioId === id) {
+      return res.status(400).json({ message: 'No puedes eliminar tu propia cuenta' })
+    }
+
+    const usuarioService = new UsuarioService(em)
+    const eliminado = await usuarioService.eliminarUsuario(id)
+
+    if (!eliminado) {
+      return res.status(404).json({ message: 'Usuario no encontrado' })
+    }
+
+    res.json({ message: 'Usuario eliminado correctamente' })
+
+  } catch (error: any) {
+    console.error('Error al eliminar usuario:', error)
+    res.status(500).json({ message: 'Error interno del servidor', error: error.message })
   }
 }
