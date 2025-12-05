@@ -8,7 +8,8 @@ import {
   obtenerPerfil,
   actualizarContacto,
   listarUsuarios,
-  logout
+  logout,
+  eliminarUsuario
 } from './usuario.controller.js'
 
 const router = express.Router()
@@ -25,5 +26,6 @@ router.post('/logout', logout)
 router.get('/perfil', obtenerPerfil)
 router.put('/contacto', actualizarContacto)
 router.get('/admin/usuarios', listarUsuarios)
+router.delete('/admin/usuarios/:id', eliminarUsuario)
 
 export default router

@@ -88,10 +88,12 @@ POST http://localhost:3000/api/usuarios/logout
 # }
 
 # Función útil para el frontend:
-# function getUserFromCookie() {
-#   const userCookie = document.cookie.split('; ').find(row => row.startsWith('user_info='));
-#   if (userCookie) {
 #     return JSON.parse(decodeURIComponent(userCookie.split('=')[1]));
 #   }
 #   return null;
 # }
+
+### Eliminar usuario (requiere ser admin)
+DELETE http://localhost:3000/api/auth/admin/usuarios/13
+
+
