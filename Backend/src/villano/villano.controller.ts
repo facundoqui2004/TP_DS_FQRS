@@ -157,7 +157,7 @@ async function solicitarPermisoDestruccion(req: Request, res: Response) {
       return res.status(403).json({ message: 'Acceso denegado: solo los Villanos pueden solicitar permisos de destrucción' })
     }
 
-    const { motivo, zonaAfectada, descripcionDanos, latitud, longitud } = req.body
+    const { motivo, zonaAfectada, descripcionDanos, latitud, longitud, radio } = req.body
 
     if (!motivo || !zonaAfectada || !descripcionDanos) {
       return res.status(400).json({ message: 'Campos requeridos: motivo, zonaAfectada, descripcionDanos' })
@@ -170,7 +170,8 @@ async function solicitarPermisoDestruccion(req: Request, res: Response) {
       tipo: 'PERMISO_DESTRUCCION',
       metahumano: villano,
       latitud: latitud !== undefined && latitud !== null ? Number(latitud) : undefined,
-      longitud: longitud !== undefined && longitud !== null ? Number(longitud) : undefined
+      longitud: longitud !== undefined && longitud !== null ? Number(longitud) : undefined,
+      radio: radio !== undefined && radio !== null ? Number(radio) : undefined
     } as any)
 
     await em.persistAndFlush(carpeta)

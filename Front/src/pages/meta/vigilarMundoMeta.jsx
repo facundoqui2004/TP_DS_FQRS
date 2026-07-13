@@ -207,6 +207,54 @@ export default function VigilarMundoMeta() {
                 console.warn(`Burocrata ${b.id} no tiene coordenadas lat/long válidas:`, b.latitud, b.longitud);
             }
         });
+
+        // 7. Graficar Zonas de Destrucción (carpetasDestruccion)
+        console.log('Graficando zonas de destrucción en el mapa, cantidad:', carpetasDestruccion.length);
+        carpetasDestruccion.forEach(c => {
+            console.log('Procesando carpeta de destrucción:', c);
+            if (c.latitud && c.longitud) {
+                const icon = L.divIcon({
+                    html: `<div style="font-size: 26px; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.5));">💥</div>`,
+                    iconSize: [26, 26],
+                    iconAnchor: [13, 13]
+                });
+
+                L.marker([c.latitud, c.longitud], { icon })
+                    .addTo(mapInstance)
+                    .bindPopup(`
+                        <div style="font-family: sans-serif; color: #333; min-width: 180px; padding: 2px;">
+                            <strong style="font-size: 13px; color: #ef4444;">💥 ZONA DE DESTRUCCIÓN</strong><br/>
+                            <hr style="margin: 4px 0; border: 0; border-top: 1px solid #e2e8f0;"/>
+                            <span style="font-size: 11px; color: #475569;">
+                                📂 <b>Trámite ID:</b> ${c.id}
+                            </span><br/>
+                            <span style="font-size: 11px; color: #475569;">
+                                📝 <b>Descripción:</b> ${c.descripcion || 'Sin descripción'}
+                            </span><br/>
+                            <span style="font-size: 11px; color: #475569;">
+                                🎯 <b>Radio:</b> ${c.radio ? `${c.radio} metros` : 'No especificado'}
+                            </span><br/>
+                            <span style="font-size: 11px; font-weight: bold; color: ${c.estado === 'APROBADA' ? '#10b981' : c.estado === 'PENDIENTE' ? '#f59e0b' : '#ef4444'}">
+                                ⚖️ <b>Estado:</b> ${c.estado}
+                            </span>
+                        </div>
+                    `);
+
+                if (c.radio) {
+                    L.circle([c.latitud, c.longitud], {
+                        radius: Number(c.radio),
+                        color: '#ef4444',
+                        fillColor: '#ef4444',
+                        fillOpacity: 0.15,
+                        weight: 1.5,
+                        dashArray: '5, 5'
+                    }).addTo(mapInstance);
+                }
+                console.log(`Marcador de destrucción ${c.id} agregado al mapa con radio ${c.radio}m en coordenadas:`, [c.latitud, c.longitud]);
+            } else {
+                console.warn(`Carpeta de destrucción ${c.id} no tiene coordenadas lat/long válidas:`, c.latitud, c.longitud);
+            }
+        });
     }, [metahumanosList, carpetasDestruccion, evidenciasList, burocratasList, isAuthenticated, mapTheme]);
 
     return (

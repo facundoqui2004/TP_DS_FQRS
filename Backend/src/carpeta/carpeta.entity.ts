@@ -25,6 +25,9 @@ export class Carpeta extends BaseEntity {
    @Property({ type: 'double', nullable: true })
    longitud?: number;
 
+   @Property({ type: 'int', nullable: true })
+   radio?: number;
+
    
     @ManyToOne(()=>Metahumano,{
        nullable:true

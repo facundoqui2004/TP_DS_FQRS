@@ -37,8 +37,10 @@ function Home() {
   const [destructionDanos, setDestructionDanos] = useState("");
   const [destructionLat, setDestructionLat] = useState(null);
   const [destructionLng, setDestructionLng] = useState(null);
+  const [destructionRadio, setDestructionRadio] = useState(500);
   const destructionMapRef = useRef(null);
   const destructionMarkerRef = useRef(null);
+  const destructionCircleRef = useRef(null);
   const [incomingEnemyRequests, setIncomingEnemyRequests] = useState([]);
 
   // Obtener datos del usuario
@@ -170,6 +172,14 @@ function Home() {
 
           if (destructionLat && destructionLng) {
             destructionMarkerRef.current = L.marker([destructionLat, destructionLng], { icon }).addTo(map);
+            destructionCircleRef.current = L.circle([destructionLat, destructionLng], {
+              radius: destructionRadio,
+              color: '#ef4444',
+              fillColor: '#ef4444',
+              fillOpacity: 0.15,
+              weight: 1.5,
+              dashArray: '5, 5'
+            }).addTo(map);
           }
 
           map.on("click", (e) => {
@@ -181,6 +191,19 @@ function Home() {
               destructionMarkerRef.current.setLatLng([lat, lng]);
             } else {
               destructionMarkerRef.current = L.marker([lat, lng], { icon }).addTo(map);
+            }
+
+            if (destructionCircleRef.current) {
+              destructionCircleRef.current.setLatLng([lat, lng]);
+            } else {
+              destructionCircleRef.current = L.circle([lat, lng], {
+                radius: destructionRadio,
+                color: '#ef4444',
+                fillColor: '#ef4444',
+                fillOpacity: 0.15,
+                weight: 1.5,
+                dashArray: '5, 5'
+              }).addTo(map);
             }
           });
         }
@@ -194,9 +217,17 @@ function Home() {
         destructionMapRef.current.remove();
         destructionMapRef.current = null;
         destructionMarkerRef.current = null;
+        destructionCircleRef.current = null;
       }
     }
   }, [showFormDestruction]);
+
+  // Actualizar dinámicamente el radio del círculo del trámite
+  useEffect(() => {
+    if (destructionMapRef.current && destructionLat && destructionLng && destructionCircleRef.current) {
+      destructionCircleRef.current.setRadius(destructionRadio);
+    }
+  }, [destructionRadio, destructionLat, destructionLng]);
 
   // Definir estilo de vida (Héroe o Villano)
   const handleDefinirEstiloVida = async (e) => {
@@ -329,7 +360,8 @@ function Home() {
           zonaAfectada: destructionZona,
           descripcionDanos: destructionDanos,
           latitud: destructionLat,
-          longitud: destructionLng
+          longitud: destructionLng,
+          radio: destructionRadio
         })
       });
       
@@ -345,6 +377,7 @@ function Home() {
       setDestructionDanos("");
       setDestructionLat(null);
       setDestructionLng(null);
+      setDestructionRadio(500);
     } catch (err) {
       setError(err.message);
       console.error(err);
@@ -1308,6 +1341,22 @@ const solicitarPoder = async (poder) => {
 
                   <div>
                     <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">
+                      Radio de Destrucción Estimado (metros)
+                    </label>
+                    <input
+                      type="number"
+                      min="10"
+                      max="10000"
+                      value={destructionRadio}
+                      onChange={(e) => setDestructionRadio(Number(e.target.value))}
+                      placeholder="Ej: 500"
+                      className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-red-500"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">
                       Ubicación del Incidente/Destrucción (Seleccionar en el mapa)
                     </label>
                     <div 
@@ -1317,7 +1366,7 @@ const solicitarPoder = async (poder) => {
                     ></div>
                     {destructionLat && destructionLng ? (
                       <p className="text-xs text-green-400">
-                        Coordenadas seleccionadas: Lat: {destructionLat.toFixed(6)}, Lng: {destructionLng.toFixed(6)}
+                        Coordenadas seleccionadas: Lat: {destructionLat.toFixed(6)}, Lng: {destructionLng.toFixed(6)} | Radio: {destructionRadio}m
                       </p>
                     ) : (
                       <p className="text-xs text-amber-400">
