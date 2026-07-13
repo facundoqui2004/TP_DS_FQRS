@@ -1,7 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "../../context/AuthContext";
 import MetahumanoLayout from "../../components/layouts/MetahumanoLayout"
 import { Meta } from "react-router-dom";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 
 function Home() {
   const [showMenu, setShowMenu] = useState(false);
@@ -33,6 +35,10 @@ function Home() {
   const [destructionMotivo, setDestructionMotivo] = useState("");
   const [destructionZona, setDestructionZona] = useState("");
   const [destructionDanos, setDestructionDanos] = useState("");
+  const [destructionLat, setDestructionLat] = useState(null);
+  const [destructionLng, setDestructionLng] = useState(null);
+  const destructionMapRef = useRef(null);
+  const destructionMarkerRef = useRef(null);
   const [incomingEnemyRequests, setIncomingEnemyRequests] = useState([]);
 
   // Obtener datos del usuario
@@ -137,6 +143,60 @@ function Home() {
       fetchIncomingEnemyRequests();
     }
   }, [metahumanoDetails]);
+
+  // Manejar inicialización y destrucción del mapa del trámite de destrucción
+  useEffect(() => {
+    if (showFormDestruction) {
+      const timer = setTimeout(() => {
+        const container = document.getElementById("destruction-map");
+        if (container && !destructionMapRef.current) {
+          const defaultLat = -32.9468;
+          const defaultLng = -60.6393;
+          const initialLat = destructionLat || defaultLat;
+          const initialLng = destructionLng || defaultLng;
+
+          const map = L.map("destruction-map").setView([initialLat, initialLng], 14);
+          L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+          }).addTo(map);
+
+          destructionMapRef.current = map;
+
+          const icon = L.divIcon({
+            html: `<div style="font-size: 26px; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.5));">💥</div>`,
+            iconSize: [26, 26],
+            iconAnchor: [13, 13]
+          });
+
+          if (destructionLat && destructionLng) {
+            destructionMarkerRef.current = L.marker([destructionLat, destructionLng], { icon }).addTo(map);
+          }
+
+          map.on("click", (e) => {
+            const { lat, lng } = e.latlng;
+            setDestructionLat(lat);
+            setDestructionLng(lng);
+
+            if (destructionMarkerRef.current) {
+              destructionMarkerRef.current.setLatLng([lat, lng]);
+            } else {
+              destructionMarkerRef.current = L.marker([lat, lng], { icon }).addTo(map);
+            }
+          });
+        }
+      }, 100);
+
+      return () => {
+        clearTimeout(timer);
+      };
+    } else {
+      if (destructionMapRef.current) {
+        destructionMapRef.current.remove();
+        destructionMapRef.current = null;
+        destructionMarkerRef.current = null;
+      }
+    }
+  }, [showFormDestruction]);
 
   // Definir estilo de vida (Héroe o Villano)
   const handleDefinirEstiloVida = async (e) => {
@@ -251,6 +311,10 @@ function Home() {
   // Solicitar Permiso de Destrucción
   const handleSolicitarPermisoDestruccion = async (e) => {
     e.preventDefault();
+    if (!destructionLat || !destructionLng) {
+      setError("Por favor, selecciona una ubicación en el mapa haciendo clic sobre él.");
+      return;
+    }
     try {
       setLoading(true);
       setError("");
@@ -263,7 +327,9 @@ function Home() {
         body: JSON.stringify({
           motivo: destructionMotivo,
           zonaAfectada: destructionZona,
-          descripcionDanos: destructionDanos
+          descripcionDanos: destructionDanos,
+          latitud: destructionLat,
+          longitud: destructionLng
         })
       });
       
@@ -277,6 +343,8 @@ function Home() {
       setDestructionMotivo("");
       setDestructionZona("");
       setDestructionDanos("");
+      setDestructionLat(null);
+      setDestructionLng(null);
     } catch (err) {
       setError(err.message);
       console.error(err);
@@ -1238,7 +1306,25 @@ const solicitarPoder = async (poder) => {
                     />
                   </div>
 
-
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">
+                      Ubicación del Incidente/Destrucción (Seleccionar en el mapa)
+                    </label>
+                    <div 
+                      id="destruction-map" 
+                      style={{ height: "250px" }} 
+                      className="w-full rounded-lg overflow-hidden border border-slate-700 mb-2 relative z-10"
+                    ></div>
+                    {destructionLat && destructionLng ? (
+                      <p className="text-xs text-green-400">
+                        Coordenadas seleccionadas: Lat: {destructionLat.toFixed(6)}, Lng: {destructionLng.toFixed(6)}
+                      </p>
+                    ) : (
+                      <p className="text-xs text-amber-400">
+                        Haz clic en el mapa para marcar el lugar del incidente.
+                      </p>
+                    )}
+                  </div>
 
                   <div className="flex justify-end gap-3 border-t border-slate-750 pt-4">
                     <button

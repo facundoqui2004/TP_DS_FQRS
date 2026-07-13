@@ -1,12 +1,21 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { FaRegUserCircle } from "react-icons/fa";
 import { MdEmail, MdPhone, MdWork, MdPerson, MdHome } from "react-icons/md";
 import MetahumanoLayout from "../../components/layouts/MetahumanoLayout";
-import { getMe, obtenerMetahumanoById } from "../../api/usuarios";
+import { getMe, obtenerMetahumanoById, actualizarMetahumano } from "../../api/usuarios";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 
 export default function MiPerfilMeta() {
   const [metahumano, setMetahumano] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [tempLat, setTempLat] = useState(null);
+  const [tempLng, setTempLng] = useState(null);
+  const [savingLocation, setSavingLocation] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const profileMapRef = useRef(null);
+  const profileMarkerRef = useRef(null);
 
   useEffect(() => {
     const usuarioActual = async () => {
@@ -24,6 +33,96 @@ export default function MiPerfilMeta() {
 
     usuarioActual();
   }, []);
+
+  // Manejar inicialización y actualización del mapa del perfil
+  useEffect(() => {
+    let timer;
+    if (!loading && metahumano) {
+      timer = setTimeout(() => {
+        const container = document.getElementById("profile-map");
+        if (container && !profileMapRef.current) {
+          const defaultLat = -32.9468;
+          const defaultLng = -60.6393;
+          const initialLat = metahumano.latitud || defaultLat;
+          const initialLng = metahumano.longitud || defaultLng;
+
+          const map = L.map("profile-map").setView([initialLat, initialLng], 14);
+          L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+          }).addTo(map);
+
+          profileMapRef.current = map;
+
+          const icon = L.divIcon({
+            html: `<div style="font-size: 26px; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.5));">📍</div>`,
+            iconSize: [26, 26],
+            iconAnchor: [13, 13]
+          });
+
+          // Ubicar marcador si ya tiene ubicación guardada
+          if (metahumano.latitud && metahumano.longitud) {
+            profileMarkerRef.current = L.marker([metahumano.latitud, metahumano.longitud], { icon }).addTo(map);
+          }
+
+          map.on("click", (e) => {
+            const { lat, lng } = e.latlng;
+            setTempLat(lat);
+            setTempLng(lng);
+            setSaveSuccess(false);
+
+            if (profileMarkerRef.current) {
+              profileMarkerRef.current.setLatLng([lat, lng]);
+            } else {
+              profileMarkerRef.current = L.marker([lat, lng], { icon }).addTo(map);
+            }
+          });
+        }
+      }, 100);
+    }
+
+    return () => {
+      if (timer) clearTimeout(timer);
+      if (profileMapRef.current) {
+        profileMapRef.current.remove();
+        profileMapRef.current = null;
+        profileMarkerRef.current = null;
+      }
+    };
+  }, [loading, metahumano]);
+
+  const handleSaveLocation = async () => {
+    if (!tempLat || !tempLng) return;
+    try {
+      setSavingLocation(true);
+      setSaveSuccess(false);
+      setSaveError("");
+
+      const payload = {
+        nombre: metahumano.nombre,
+        alias: metahumano.alias,
+        origen: metahumano.origen,
+        latitud: tempLat,
+        longitud: tempLng
+      };
+
+      await actualizarMetahumano(metahumano.id, payload);
+
+      setMetahumano(prev => ({
+        ...prev,
+        latitud: tempLat,
+        longitud: tempLng
+      }));
+
+      setSaveSuccess(true);
+      setTempLat(null);
+      setTempLng(null);
+    } catch (error) {
+      console.error("Error al guardar ubicación:", error);
+      setSaveError(error.message || "Error al actualizar ubicación");
+    } finally {
+      setSavingLocation(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -45,7 +144,7 @@ export default function MiPerfilMeta() {
     );
   }
 
-  const { nombre, alias, origen, usuario } = metahumano;
+  const { nombre, alias, origen, usuario, latitud, longitud } = metahumano;
 
   return (
     <MetahumanoLayout>
@@ -131,6 +230,56 @@ export default function MiPerfilMeta() {
                 {usuario?.role || "METAHUMANO"}
               </p>
             </div>
+          </div>
+
+          {/* Ubicación (Mapa para definir) */}
+          <div className="border-t border-white/10 pt-6 mt-6">
+            <h3 className="text-lg font-bold mb-3 text-blue-300 flex items-center gap-2">
+              📍 Ubicación de mi Base de Operaciones
+            </h3>
+            <div 
+              id="profile-map" 
+              style={{ height: "250px" }} 
+              className="w-full rounded-lg overflow-hidden border border-white/10 mb-3 relative z-10"
+            ></div>
+            
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className="text-sm">
+                {latitud && longitud ? (
+                  <p className="text-green-400 font-medium">
+                    Base establecida: Lat: {latitud.toFixed(6)}, Lng: {longitud.toFixed(6)}
+                  </p>
+                ) : (
+                  <p className="text-amber-400 font-medium">
+                    Sin ubicación definida. ¡Marca un punto en el mapa!
+                  </p>
+                )}
+                {tempLat && tempLng && (
+                  <p className="text-blue-300 text-xs mt-1">
+                    Nueva ubicación seleccionada: Lat: {tempLat.toFixed(6)}, Lng: {tempLng.toFixed(6)}
+                  </p>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={handleSaveLocation}
+                disabled={savingLocation || !tempLat}
+                className="w-full sm:w-auto px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:text-gray-400 disabled:cursor-not-allowed font-bold rounded-lg text-sm transition-colors cursor-pointer flex items-center justify-center gap-2"
+              >
+                {savingLocation ? "Guardando..." : "Guardar Ubicación"}
+              </button>
+            </div>
+            
+            {saveSuccess && (
+              <p className="text-xs text-green-400 mt-2">
+                ✓ Ubicación guardada exitosamente.
+              </p>
+            )}
+            {saveError && (
+              <p className="text-xs text-red-400 mt-2">
+                ✗ Error al guardar ubicación: {saveError}
+              </p>
+            )}
           </div>
         </div>
       </div>
