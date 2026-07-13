@@ -1,0 +1,253 @@
+### ⚡ API PODERES
+### Base URL: http://localhost:3000/api/poderes
+
+##################################################
+### 1️⃣ CREAR PODERES
+##################################################
+
+### Crear poder de aracnido
+# @name createPoderAracnido
+POST http://localhost:3000/api/poderes
+Content-Type: application/json
+
+{
+  "nomPoder": "Sentido Arácnido",
+  "debilidad": "Sobrecarga sensorial en ambientes muy ruidosos",
+  "descPoder": "Capacidad de detectar peligro inminente mediante sentidos aumentados",
+  "descDebilidad": "El exceso de estímulos puede causar dolor de cabeza severo",
+  "categoria": "SENSORIAL",
+  "costoMulta": 5000
+}
+
+###
+
+### Crear poder de fuerza
+# @name createPoderFuerza
+POST http://localhost:3000/api/poderes
+Content-Type: application/json
+
+{
+  "nomPoder": "Super Fuerza",
+  "debilidad": "Pérdida de control en situaciones emocionales",
+  "descPoder": "Fuerza física sobrehumana capaz de levantar hasta 50 toneladas",
+  "descDebilidad": "La ira intensa puede causar daños colaterales incontrolables",
+  "categoria": "FISICO",
+  "costoMulta": 15000
+}
+
+###
+
+### Crear poder de vuelo
+# @name createPoderVuelo
+POST http://localhost:3000/api/poderes
+Content-Type: application/json
+
+{
+  "nomPoder": "Vuelo Atmosférico",
+  "debilidad": "Limitado por condiciones climáticas extremas",
+  "descPoder": "Capacidad de volar sin asistencia mecánica hasta 10,000 metros",
+  "descDebilidad": "Tormentas eléctricas y vientos huracanados impiden el vuelo",
+  "categoria": "FISICO",
+  "costoMulta": 8000
+}
+
+###
+
+##################################################
+### 2️⃣ CONSULTAS DE PODERES
+##################################################
+
+### Listar todos los poderes
+# @name getAllPoderes
+GET http://localhost:3000/api/poderes
+
+###
+
+### Obtener poder por ID
+# @name getPoderById
+GET http://localhost:3000/api/poderes/8
+
+###
+
+### Filtrar poderes por categoria
+# @name getPoderesByCategoria
+GET http://localhost:3000/api/poderes?categoria=FISICO
+
+###
+
+### Buscar poderes por nombre
+# @name searchPoderesByNombre
+GET http://localhost:3000/api/poderes?nomPoder=Super
+
+##
+
+##################################################
+### 3️⃣ ACTUALIZAR PODERES
+##################################################
+
+### Actualizar poder completo
+# @name updatePoder
+PUT http://localhost:3000/api/poderes/1
+Content-Type: application/json
+
+{
+  "nomPoder": "Sentido Arácnido Mejorado",
+  "debilidad": "Sobrecarga sensorial en ambientes muy ruidosos",
+  "descPoder": "Capacidad de detectar peligro inminente con mayor precisión y alcance",
+  "descDebilidad": "El exceso de estímulos puede causar dolor de cabeza severo y desorientación",
+  "categoria": "SENSORIAL",
+  "costoMulta": 7500
+}
+
+###
+
+### Actualizar costo de multa
+# @name updateCostoMulta
+PUT http://localhost:3000/api/poderes/2
+Content-Type: application/json
+
+{
+  "nomPoder": "Super Fuerza",
+  "debilidad": "Pérdida de control en situaciones emocionales",
+  "descPoder": "Fuerza física sobrehumana capaz de levantar hasta 75 toneladas",
+  "descDebilidad": "La ira intensa puede causar daños colaterales incontrolables",
+  "categoria": "FISICO",
+  "costoMulta": 20000
+}
+
+###
+
+##################################################
+### 4️⃣ PODERES ESPECÍFICOS
+##################################################
+
+### Crear poder de teletransporte
+# @name createPoderTeletransporte
+POST http://localhost:3000/api/poderes
+Content-Type: application/json
+
+{
+  "nomPoder": "Teletransporte Dimensional",
+  "debilidad": "Desorientación espacial tras múltiples saltos",
+  "descPoder": "Capacidad de transportarse instantáneamente a cualquier ubicación conocida",
+  "descDebilidad": "Más de 5 teletransportes seguidos causan náuseas y pérdida temporal de orientación",
+  "categoria": "DIMENSIONAL",
+  "costoMulta": 25000
+}
+
+###
+
+### Crear poder de invisibilidad
+# @name createPoderInvisibilidad
+POST http://localhost:3000/api/poderes
+Content-Type: application/json
+
+{
+  "nomPoder": "Invisibilidad Óptica",
+  "debilidad": "Detectable por sensores térmicos",
+  "descPoder": "Capacidad de volverse invisible al espectro visible durante 30 minutos",
+  "descDebilidad": "La temperatura corporal sigue siendo detectable por equipos especializados",
+  "categoria": "OPTICO",
+  "costoMulta": 12000
+}
+
+###
+
+### Crear poder de control mental
+# @name createPoderControlMental
+POST http://localhost:3000/api/poderes
+Content-Type: application/json
+
+{
+  "nomPoder": "Dominio Psíquico",
+  "debilidad": "Agotamiento mental severo",
+  "descPoder": "Capacidad de influir y controlar la mente de otros seres conscientes",
+  "descDebilidad": "El uso prolongado causa migrañas severas y posible daño cerebral",
+  "categoria": "PSIQUICO",
+  "costoMulta": 50000
+}
+
+###
+
+### Crear poder de regeneración
+# @name createPoderRegeneracion
+POST http://localhost:3000/api/poderes
+Content-Type: application/json
+
+{
+  "nomPoder": "Regeneración Celular",
+  "debilidad": "Requiere alto consumo calórico",
+  "descPoder": "Capacidad de curar heridas y regenerar tejidos a velocidad acelerada",
+  "descDebilidad": "Necesita consumir 10 veces más calorías para mantener la regeneración activa",
+  "categoria": "BIOLOGICO",
+  "costoMulta": 18000
+}
+
+###
+
+### Crear poder de manipulación elemental
+# @name createPoderElemental
+POST http://localhost:3000/api/poderes
+Content-Type: application/json
+
+{
+  "nomPoder": "Control del Fuego",
+  "debilidad": "Vulnerable al agua y frío extremo",
+  "descPoder": "Capacidad de generar y manipular llamas hasta 1200°C",
+  "descDebilidad": "El contacto con agua fría o temperaturas bajo cero anula temporalmente el poder",
+  "categoria": "ELEMENTAL",
+  "costoMulta": 30000
+}
+
+###
+
+##################################################
+### 5️⃣ BÚSQUEDAS AVANZADAS
+##################################################
+
+### Buscar poderes por costo de multa alto
+# @name getPoderesMultaAlta
+GET http://localhost:3000/api/poderes?costoMulta=gte:20000
+
+###
+
+### Buscar poderes por categoría específica
+# @name getPoderesPsiquicos
+GET http://localhost:3000/api/poderes?categoria=PSIQUICO
+
+###
+
+### Buscar poderes por debilidad
+# @name searchByDebilidad
+GET http://localhost:3000/api/poderes?debilidad=sensorial
+
+###
+
+##################################################
+### 6️⃣ PODERES ESPECIALES
+##################################################
+
+### Crear poder sin costo de multa
+# @name createPoderSinMulta
+POST http://localhost:3000/api/poderes
+Content-Type: application/json
+
+{
+  "nomPoder": "Empatía Natural",
+  "debilidad": "Sobrecarga emocional en multitudes",
+  "descPoder": "Capacidad de sentir y comprender las emociones de otros",
+  "descDebilidad": "En lugares con muchas personas puede experimentar crisis emocionales",
+  "categoria": "PSIQUICO"
+}
+
+###
+
+##################################################
+### 7️⃣ ELIMINAR PODERES
+##################################################
+
+### Eliminar poder
+# @name deletePoder
+DELETE http://localhost:3000/api/poderes/1
+
+###

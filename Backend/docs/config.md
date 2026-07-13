@@ -1,0 +1,98 @@
+# Links
+
+## Docker
+
+- [install docker](https://docs.docker.com/get-docker/)
+- [percona server mongodb](https://hub.docker.com/r/percona/percona-server-mongodb/)
+
+## MongoDB
+
+- [mongodb](https://www.mongodb.com/)
+- [mongodb altlas](https://www.mongodb.com/es/atlas)
+- [mongodb comunity server](https://www.mongodb.com/try/download/community)
+- [mongodb shell](https://www.mongodb.com/products/tools/shell)
+- [mongodb for vs code](https://www.mongodb.com/es/products/tools/vs-code)
+- [mongodb compass](https://www.mongodb.com/products/tools/compass)
+- [mongodb courses](https://learn.mongodb.com/catalog)
+
+## mysql/percona-server
+
+- [percona server 8](https://docs.percona.com/percona-server/8.0/index.html)
+- [mysql 8](https://dev.mysql.com/downloads/mysql/)
+- [mysql workbench](https://dev.mysql.com/downloads/workbench/)
+- [mysql shell for vs code](https://marketplace.visualstudio.com/items?itemName=Oracle.mysql-shell-for-vs-code)
+- [canal de base de datos utn - sql playlist](https://youtube.com/playlist?list=PLKZTJP_-zNEJOZhAHTH17D2fJTjLRiSK8&si=xzwAUY3AgDQQAd4T)
+
+# Commands
+
+## mongodb-docker
+
+docker run --name mongodb6-dsw-hc4g-mo \
+ -v /home/adrian/docker-volumes/pmongodb6-dsw-hc4g-mo:/data/db \
+ -p 27017:27017 \
+ -d percona/percona-server-mongodb:latest
+
+## percona-server-8-docker / mysql8-docker
+
+## CREAR CONTENERDOR
+
+docker run --name ps8-metahumano \
+ -v /home/facu/docker-volumes/ps8-metahumano:/var/lib/mysql \
+ -e MYSQL_ROOT_HOST='%' \
+ -e MYSQL_ALLOW_EMPTY_PASSWORD="yes" \
+ -e MYSQL_PASSWORD="dsw" \
+ -e MYSQL_USER="dsw" \
+ -e MYSQL_DATABASE='metahumano' \
+ -p 3308:3306 \
+ -d percona/percona-server
+
+### Ver contenedor creado
+docker ps
+
+![alt text](image.png)
+
+docker start ps8-metahumano
+ps8-metahumano
+
+docker ps
+CONTAINER ID   IMAGE                    COMMAND                  CREATED      STATUS         PORTS                                                    NAMES
+db9440c3ca5f   percona/percona-server   "/docker-entrypoint.…"   3 days ago   Up 4 seconds   33060/tcp, 0.0.0.0:3308->3306/tcp, [::]:3308->3306/tcp   ps8-metahumano
+
+
+
+
+
+```mermaid
+classDiagram
+
+class Metahumano {
+    +int id_meta
+    +string nombre
+    +string alias
+    +string origen
+    +string telefono
+    +string mail
+}
+
+class Poder {
+    +int id_Poder
+    +string nom_poder
+    +string debilidad
+    +string desc_poder
+    +string desc_debilidad
+    +string categoria
+    +float costoMulta
+}
+
+class MetaPoder {
+    +estado: string
+    +fecha_solicitud: Date
+    +fecha_respuesta: Date
+    +certificado: string
+}
+
+Metahumano "1" --> "0..1" MetaPoder : posee
+Poder "1" --> "1..*" MetaPoder : pertenece
+MetaPoder --> Metahumano
+MetaPoder --> Poder
+```

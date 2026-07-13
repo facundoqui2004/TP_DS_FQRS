@@ -1,0 +1,88 @@
+### Base URL
+@baseURL = http://localhost:3000/api/burocratas
+
+### 1. LOGIN (EJECUTAR ESTO PRIMERO)
+# @name login
+POST http://localhost:3000/api/usuarios/login
+Content-Type: application/json
+
+{
+  "email": "admin123@ejemplo.com",
+  "password": "supersegura"
+}
+
+###
+# Extraemos el token del login automáticamente
+@authToken = {{login.response.body.token}}
+###
+
+### 2. Obtener todos los burocratas
+# @name getAllBurocratas
+GET {{baseURL}}
+Cookie: auth_token={{authToken}}
+
+###
+
+### 3. Obtener burocrata por ID
+# @name getBurocrataById
+GET {{baseURL}}/1
+Cookie: auth_token={{authToken}}
+
+###
+
+### 4. Crear perfil de burocrata
+# @name createBurocrata
+POST {{baseURL}}
+Content-Type: application/json
+Cookie: auth_token={{authToken}}
+
+{
+  "nombre": "Homero Simpson",
+  "alias": "Inspector de Seguridad",
+  "origen": "Springfield",
+  "latitud": 40.7128,
+  "longitud": -74.0060,
+  "usuario": 3
+}
+
+###
+
+### 5. Obtener carpetas asignadas a un burocrata
+# @name getCarpetasBurocrata
+GET {{baseURL}}/1/carpetas
+Cookie: auth_token={{authToken}}
+
+###
+
+### 6. Actualizar un burocrata completo (PUT)
+# @name updateBurocrataFull
+PUT {{baseURL}}/1
+Content-Type: application/json
+Cookie: auth_token={{authToken}}
+
+{
+  "nombre": "Homero J. Simpson",
+  "alias": "Don Barredora",
+  "origen": "Springfield",
+  "latitud": 40.7128,
+  "longitud": -74.0060
+}
+
+###
+
+### 7. Actualizar un burocrata parcialmente (PATCH)
+# @name updateBurocrataPartial
+PATCH {{baseURL}}/1
+Content-Type: application/json
+Cookie: auth_token={{authToken}}
+
+{
+  "alias": "Mr. Quitanieves"
+}
+
+###
+
+### 8. Eliminar burocrata
+# @name deleteBurocrata
+DELETE {{baseURL}}/1
+Cookie: auth_token={{authToken}}

@@ -1,0 +1,98 @@
+# API Testing for Registration and Login
+# Use VS Code REST Client extension to run these tests
+
+### Variables
+@baseUrl = http://localhost:3000
+@contentType = application/json
+
+### Test Register Metahumano
+# @name testRegisterMeta
+POST {{baseUrl}}/api/auth/register/metahumano
+Content-Type: {{contentType}}
+
+{
+  "email": "test.prueba@example.com",
+  "telefono": "+1-555-TEST",
+  "password": "test123456",
+  "nombre": "Usuario de Prueba",
+  "alias": "Tester",
+  "origen": "Laboratorio de Testing"
+}
+
+### Test Register Burocrata
+# @name testRegisterBuro
+POST {{baseUrl}}/api/auth/register/burocrata
+Content-Type: {{contentType}}
+
+{
+  "email": "admin.prueba@example.com",
+  "telefono": "+1-555-ADMIN",
+  "password": "admin123456",
+  "nombre": "Admin de Prueba",
+  "alias": "Admin Tester",
+  "origen": "Departamento de Testing"
+}
+
+### Test Login (verificar si usuario existe y credenciales)
+# @name testLogin
+POST {{baseUrl}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "test.prueba@example.com",
+  "password": "test123456"
+}
+
+### Test Login Admin (after registration)
+# @name testLoginAdmin
+POST {{baseUrl}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "admin.prueba@example.com",
+  "password": "admin123456"
+}
+
+### Test Register Metahumano 2
+# @name testRegisterMeta2
+POST {{baseUrl}}/api/auth/register/metahumano
+Content-Type: {{contentType}}
+
+{
+  "email": "heroe.test@example.com",
+  "telefono": "+1-555-HERO",
+  "password": "heropass123",
+  "nombre": "Súper Héroe Test",
+  "alias": "El Probador",
+  "origen": "Dimensión Alternativa"
+}
+
+### Test Register Burocrata 2
+# @name testRegisterBuro2
+POST {{baseUrl}}/api/auth/register/burocrata
+Content-Type: {{contentType}}
+
+{
+  "email": "funcionario.test@example.com",
+  "telefono": "+1-555-FUNC",
+  "password": "funcpass123",
+  "nombre": "Funcionario Test",
+  "alias": "El Tramitador",
+  "origen": "Ministerio de Pruebas"
+}
+
+### Obtener carpetas de un metahumano específico
+# @name getCarpetasByMetahumano
+GET {{baseUrl}}/api/carpetas?metahumano_id=1
+
+### Obtener todas las carpetas
+# @name getAllCarpetas
+GET {{baseUrl}}/api/carpetas
+
+### Eliminar evidencia
+# @name deleteEvidencia
+DELETE {{baseUrl}}/api/evidencias/1
+
+### Obtener evidencia por ID
+# @name getEvidenciaById
+GET {{baseUrl}}/api/evidencias/1

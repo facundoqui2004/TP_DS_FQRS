@@ -1,0 +1,252 @@
+
+### Base URL: http://localhost:3000/api/multas
+
+##################################################
+
+##################################################
+
+### Crear multa por daños a la propiedad
+# @name createMultaDanos
+POST http://localhost:3000/api/multas
+Content-Type: application/json
+
+{
+  "codigo": "MULT-001",
+  "descripcion": "Daños a propiedad pública durante enfrentamiento con villanos",
+  "monto": 50000.00,
+  "fechaEmision": "2025-08-08",
+  "estado": "PENDIENTE",
+  "metahumano_id": 1
+}
+
+###
+
+### Crear multa por uso no autorizado de poderes
+# @name createMultaPoderes
+POST http://localhost:3000/api/multas
+Content-Type: application/json
+
+{
+  "codigo": "MULT-002",
+  "descripcion": "Uso no autorizado de poderes en zona urbana",
+  "monto": 25000.00,
+  "fechaEmision": "2025-08-07",
+  "estado": "PENDIENTE",
+  "metahumano_id": 1
+}
+
+###
+
+### Crear multa por alteración del orden público
+# @name createMultaOrden
+POST http://localhost:3000/api/multas
+Content-Type: application/json
+
+{
+  "codigo": "MULT-003",
+  "descripcion": "Alteración del orden público durante actividad heroica",
+  "monto": 15000.00,
+  "fechaEmision": "2025-08-06",
+  "estado": "PENDIENTE",
+  "metahumano_id": 2
+}
+
+###
+
+##################################################
+##################################################
+
+### Listar todas las multas
+# @name getAllMultas
+GET http://localhost:3000/api/multas
+
+###
+
+### Obtener multa por ID
+# @name getMultaById
+GET http://localhost:3000/api/multas/1
+
+###
+
+### Obtener multas de un metahumano específico
+# @name getMultasByMetahumano
+GET http://localhost:3000/api/multas?metahumano_id=1
+
+###
+
+### Filtrar multas por estado
+# @name getMultasByEstado
+GET http://localhost:3000/api/multas?estado=PENDIENTE
+
+###
+
+##################################################
+### 3️⃣ ACTUALIZAR MULTAS
+##################################################
+
+### Actualizar estado de multa a PAGADA
+# @name updateMultaPagada
+PUT http://localhost:3000/api/multas/1
+Content-Type: application/json
+
+{
+  "codigo": "MULT-001",
+  "descripcion": "Daños a propiedad pública durante enfrentamiento con villanos",
+  "monto": 50000.00,
+  "fechaEmision": "2025-08-08",
+  "estado": "PAGADA",
+  "fechaPago": "2025-08-08",
+  "metahumano_id": 1
+}
+
+###
+
+### Actualizar monto de multa
+# @name updateMultaMonto
+PUT http://localhost:3000/api/multas/2
+Content-Type: application/json
+
+{
+  "codigo": "MULT-002",
+  "descripcion": "Uso no autorizado de poderes en zona urbana - Descuento aplicado",
+  "monto": 20000.00,
+  "fechaEmision": "2025-08-07",
+  "estado": "PENDIENTE",
+  "metahumano_id": 1
+}
+
+###
+
+### Anular multa
+# @name updateMultaAnulada
+PUT http://localhost:3000/api/multas/3
+Content-Type: application/json
+
+{
+  "codigo": "MULT-003",
+  "descripcion": "Alteración del orden público durante actividad heroica - Anulada por servicio público",
+  "monto": 0.00,
+  "fechaEmision": "2025-08-06",
+  "estado": "ANULADA",
+  "metahumano_id": 2
+}
+
+###
+
+##################################################
+### 4️⃣ EJEMPLOS ADICIONALES
+##################################################
+
+### Crear multa por velocidad excesiva
+# @name createMultaVelocidad
+POST http://localhost:3000/api/multas
+Content-Type: application/json
+
+{
+  "codigo": "MULT-004",
+  "descripcion": "Exceso de velocidad en vuelo sobre zona urbana",
+  "monto": 5000.00,
+  "fechaEmision": "2025-08-05",
+  "estado": "PENDIENTE",
+  "metahumano_id": 2
+}
+
+###
+
+### Crear multa por ruido excesivo
+# @name createMultaRuido
+POST http://localhost:3000/api/multas
+Content-Type: application/json
+
+{
+  "codigo": "MULT-005",
+  "descripcion": "Ruido excesivo durante aterrizaje supersónico",
+  "monto": 3000.00,
+  "fechaEmision": "2025-08-04",
+  "estado": "PENDIENTE",
+  "metahumano_id": 2
+}
+
+###
+
+### Crear multa administrativa
+# @name createMultaAdmin
+POST http://localhost:3000/api/multas
+Content-Type: application/json
+
+{
+  "codigo": "MULT-006",
+  "descripcion": "Falta de registro de actividades heroicas mensuales",
+  "monto": 1000.00,
+  "fechaEmision": "2025-08-03",
+  "estado": "PENDIENTE",
+  "metahumano_id": 1
+}
+
+###
+
+##################################################
+### 5️⃣ BÚSQUEDAS AVANZADAS
+##################################################
+
+### Buscar multas por rango de monto
+# @name getMultasByMontoRange
+GET http://localhost:3000/api/multas?monto_min=10000&monto_max=50000
+
+###
+
+### Buscar multas por fecha de emisión
+# @name getMultasByFecha
+GET http://localhost:3000/api/multas?fechaEmision=2025-08-08
+
+###
+
+### Buscar multas pendientes de pago
+# @name getMultasPendientes
+GET http://localhost:3000/api/multas?estado=PENDIENTE
+
+###
+
+### Obtener total de multas por metahumano
+# @name getTotalMultasByMetahumano
+GET http://localhost:3000/api/multas/total/1
+
+###
+
+##################################################
+### 6️⃣ ESTADÍSTICAS
+##################################################
+
+### Obtener estadísticas generales de multas
+# @name getEstadisticasMultas
+GET http://localhost:3000/api/multas/estadisticas
+
+###
+
+### Obtener ranking de metahumanos con más multas
+# @name getRankingMultas
+GET http://localhost:3000/api/multas/ranking
+
+###
+
+##################################################
+### 7️⃣ ELIMINAR MULTAS
+##################################################
+
+### Eliminar multa por ID
+# @name deleteMulta
+DELETE http://localhost:3000/api/multas/1
+
+###
+
+### Eliminar multa ID 2
+# @name deleteMulta2
+DELETE http://localhost:3000/api/multas/2
+
+###
+
+### Eliminar multa ID 3
+# @name deleteMulta3
+DELETE http://localhost:3000/api/multas/4
+
+###

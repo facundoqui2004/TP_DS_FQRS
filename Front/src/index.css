@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+/* Prevenir scroll horizontal en toda la aplicación */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Ocultar tooltips en pantallas pequeñas para evitar scroll horizontal */
+@media (max-width: 1024px) {
+  .tooltip-desktop {
+    display: none !important;
+  }
+}
+
+/* Estilos para scrollbar personalizado */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: #0f172a;
+  border-radius: 10px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #0891b2;
+  border-radius: 10px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: #0ea5e9;
+}
+
+/* Para Firefox */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: #0891b2 #0f172a;
+}
+
+/* Custom Animations */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-\\[shimmer_1\\.5s_infinite\\] {
+  animation: shimmer 1.5s infinite;
+}

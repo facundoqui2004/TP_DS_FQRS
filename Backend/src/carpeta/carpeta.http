@@ -1,0 +1,136 @@
+### 📁 API CARPETAS
+### Base URL: http://localhost:3000/api/carpetas
+
+##################################################
+### 1️⃣ CREAR CARPETAS
+##################################################
+
+### Crear carpeta asignada a metahumano
+# @name createCarpetaMetahumano
+POST http://localhost:3000/api/carpetas
+Content-Type: application/json
+
+{
+  "numero": "META-001",
+  "caratula": "Investigación: Hombre Araña",
+  "metahumano_id": 1,
+  "burocrata_id": null
+}
+
+###
+
+### Crear carpeta asignada a burócrata
+# @name createCarpetaBurocrata
+POST http://localhost:3000/api/carpetas
+Content-Type: application/json
+
+{
+  "numero": "ADMIN-001",
+  "caratula": "Evaluación de Agentes SHIELD",
+  "metahumano_id": null,
+  "burocrata_id": 1
+}
+
+###
+
+##################################################
+### 2️⃣ CONSULTAS DE CARPETAS
+##################################################
+
+### Listar todas las carpetas
+# @name getAllCarpetas
+GET http://localhost:3000/api/carpetas
+
+###
+
+### Obtener carpeta por ID
+# @name getCarpetaById
+GET http://localhost:3000/api/carpetas/1
+
+###
+
+### Obtener carpetas de un metahumano específico
+# @name getCarpetasByMetahumano
+GET http://localhost:3000/api/carpetas?metahumano_id=1
+
+###
+
+### Obtener carpetas de un burócrata específico
+# @name getCarpetasByBurocrata
+GET http://localhost:3000/api/carpetas?burocrata_id=1
+
+###
+
+##################################################
+### 3️⃣ ACTUALIZAR CARPETAS
+##################################################
+
+### Actualizar carpeta
+# @name updateCarpeta
+PUT http://localhost:3000/api/carpetas/1
+Content-Type: application/json
+
+{
+  "numero": "META-001-V2",
+  "caratula": "Investigación Actualizada: Spider-Man",
+  "metahumano_id": 1,
+  "burocrata_id": null
+}
+
+###
+
+### Transferir carpeta a otro responsable
+# @name transferCarpeta
+PUT http://localhost:3000/api/carpetas/2
+Content-Type: application/json
+
+{
+  "numero": "ADMIN-001",
+  "caratula": "Evaluación de Agentes SHIELD - Transferida",
+  "metahumano_id": null,
+  "burocrata_id": 2
+}
+
+###
+
+##################################################
+### 4️⃣ EJEMPLOS ADICIONALES
+##################################################
+
+### Crear carpeta de investigación especial
+# @name createCarpetaEspecial
+POST http://localhost:3000/api/carpetas
+Content-Type: application/json
+
+{
+  "numero": "SPEC-001",
+  "caratula": "Caso: Amenaza Kryptoniana",
+  "metahumano_id": 2,
+  "burocrata_id": null
+}
+
+###
+
+### Crear carpeta administrativa
+# @name createCarpetaAdmin
+POST http://localhost:3000/api/carpetas
+Content-Type: application/json
+
+{
+  "numero": "ADM-002",
+  "caratula": "Protocolo de Seguridad Nacional",
+  "metahumano_id": null,
+  "burocrata_id": 1
+}
+
+###
+
+##################################################
+### 5️⃣ ELIMINAR CARPETAS
+##################################################
+
+### Eliminar carpeta
+# @name deleteCarpeta
+DELETE http://localhost:3000/api/carpetas/1
+
+###

@@ -1,0 +1,15 @@
+import { Router } from 'express'
+import { sanitizeMultasInput, findAll, findOne, add, update, remove, pagarMulta } from './Multa.controller.js'
+import { requireAuth, requireRoles } from '../auth/auth.middleware.js'
+
+const multasRouter = Router();
+
+multasRouter.get('/', requireAuth, requireRoles(['BUROCRATA', 'ADMIN']), findAll)
+multasRouter.get('/:id', requireAuth, findOne)
+multasRouter.post('/', requireAuth, requireRoles(['BUROCRATA', 'ADMIN']), sanitizeMultasInput, add)
+multasRouter.post('/:id/pagar', requireAuth, pagarMulta) // Permitir pagar multa
+multasRouter.put('/:id', requireAuth, requireRoles(['BUROCRATA', 'ADMIN']), sanitizeMultasInput, update)
+multasRouter.patch('/:id', requireAuth, requireRoles(['BUROCRATA', 'ADMIN']), sanitizeMultasInput, update)
+multasRouter.delete('/:id', requireAuth, requireRoles(['BUROCRATA', 'ADMIN']), remove)
+
+export { multasRouter }
