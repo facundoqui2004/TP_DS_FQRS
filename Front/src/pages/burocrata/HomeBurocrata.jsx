@@ -117,6 +117,7 @@ function HomeBurocrata() {
   const goToCarpetas = () => navigate("/burocrata/carpetas");
   const goToPerfil = () => navigate("/burocrata/perfil");
   const goToSoporte = () => navigate("/burocrata/soporte");
+  const goToNoticias = () => navigate("/burocrata/noticias");
 
   // Menú lateral y usuario
   const toggleMenu = () => {
@@ -167,6 +168,21 @@ function HomeBurocrata() {
             </h2>
             <p className="text-white/90 text-sm">
               Consultá y actualizá tu información personal, credenciales y preferencias.
+            </p>
+            <div className="text-right mt-3 text-2xl font-light">→</div>
+          </div>
+
+          {/* Noticias */}
+          <div
+            onClick={goToNoticias}
+            className="cursor-pointer bg-gradient-to-r from-indigo-600 to-violet-500 hover:from-indigo-700 hover:to-violet-600 
+                       p-6 rounded-2xl shadow-2xl text-white w-full max-w-md transition transform hover:-translate-y-1 hover:shadow-indigo-500/30"
+          >
+            <h2 className="text-2xl font-bold mb-2 flex items-center gap-2">
+              📰 Gestión de Noticias
+            </h2>
+            <p className="text-white/90 text-sm">
+              Publicá, editá y gestioná noticias oficiales para los metahumanos registrados.
             </p>
             <div className="text-right mt-3 text-2xl font-light">→</div>
           </div>

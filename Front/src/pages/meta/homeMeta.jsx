@@ -24,6 +24,9 @@ function Home() {
   const goToVigilar = () => {
     navigate("/metahumano/vigilar-mundo");
   }
+  const goToNoticias = () => {
+    navigate("/metahumano/noticias");
+  }
 
   const toggleMenu = () => {
     setShowMenu(!showMenu);
@@ -108,6 +111,24 @@ function Home() {
               </div>
               <p className="text-orange-100 text-sm text-left leading-relaxed">
                 Monitorea bases de operaciones y reportes de destrucción a nivel nacional en tiempo real.
+              </p>
+            </div>
+
+            {/* Noticias Oficiales */}
+            <div
+              onClick={goToNoticias}
+              className="cursor-pointer group relative overflow-hidden bg-gradient-to-br from-indigo-600 to-violet-700 hover:from-indigo-700 hover:to-violet-800 text-white p-6 rounded-xl shadow-lg hover:shadow-indigo-500/30 transform hover:scale-105 transition-all duration-300 border border-indigo-500/30 h-full w-full max-w-md max-h-md"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-left">
+                  📰 Noticias Oficiales
+                </h2>
+                <div className="w-8 h-8 bg-indigo-500/30 rounded-full flex items-center justify-center group-hover:bg-indigo-400/50 transition-colors">
+                  <span className="text-sm">→</span>
+                </div>
+              </div>
+              <p className="text-indigo-100 text-sm text-left leading-relaxed">
+                Informate sobre los últimos comunicados, alertas y noticias oficiales de la Burocracia.
               </p>
             </div>
 

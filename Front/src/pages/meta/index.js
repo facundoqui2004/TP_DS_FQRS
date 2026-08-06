@@ -5,3 +5,4 @@ export { default as CrearPoderes } from '../admin/tramites/CrearPoderes.jsx';
 export { default as CarpetasMeta } from './carpetasMeta.jsx';
 export { default as SoporteMeta } from './SoporteMeta.jsx';
 export { default as VigilarMundo } from './vigilarMundoMeta.jsx';
+export { default as NoticiasMetahumano } from './NoticiasMetahumano.jsx';

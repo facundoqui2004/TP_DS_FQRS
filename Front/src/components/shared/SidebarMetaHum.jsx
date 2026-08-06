@@ -3,6 +3,7 @@ import { FaWpforms, FaRegUserCircle } from "react-icons/fa";
 import { MdContactSupport } from "react-icons/md";
 import { CiLogout } from "react-icons/ci";
 import { BiWorld } from "react-icons/bi";
+import { IoNewspaper } from "react-icons/io5";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
@@ -112,6 +113,20 @@ const Sidebar = (props) => {
                             {/* Tooltip */}
                             <div className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-red-500 text-white px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
                                 Vigilar el Mundo
+                                {/* Flecha del tooltip */}
+                                <div className="absolute right-full top-1/2 transform -translate-y-1/2 border-4 border-transparent border-r-red-500"></div>
+                            </div>
+                        </button>
+                    </li>
+                    <li className="hover:bg-[#b8cbd6] p-4 block rounded-tl-xl rounded-bl-xl group transition-colors">
+                        <button
+                            onClick={() => navigate('/metahumano/noticias')}
+                            className="cursor-pointer group-hover:bg-[#317196] p-4 flex justify-center w-full rounded-xl text-white group-hover:text-white relative"
+                        >
+                            <IoNewspaper className="text-2xl" />
+                            {/* Tooltip */}
+                            <div className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-red-500 text-white px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
+                                Noticias
                                 {/* Flecha del tooltip */}
                                 <div className="absolute right-full top-1/2 transform -translate-y-1/2 border-4 border-transparent border-r-red-500"></div>
                             </div>

@@ -30,7 +30,11 @@ import {
   CarpetasList,
   CrearCarpeta,
   CarpetaDetalle,
-  SoporteBuro
+  SoporteBuro,
+  GestionNoticias,
+
+  // Metahumanos extra
+  NoticiasMetahumano,
 
 } from './pages';
 import MiPerfilBuro from './pages/burocrata/MiPerfil';
@@ -81,6 +85,10 @@ function App() {
           <Route path="/burocrata/carpeta/:id" element={<CarpetaDetalle />} />
           <Route path="/burocrata/perfil" element={<MiPerfilBuro />} />
           <Route path="/burocrata/soporte" element={<SoporteBuro />} />
+          <Route path="/burocrata/noticias" element={<GestionNoticias />} />
+
+          {/* Noticias metahumanos */}
+          <Route path="/metahumano/noticias" element={<NoticiasMetahumano />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

@@ -15,6 +15,7 @@ import { carpetaRouter } from './carpeta/carpeta.routes.js'
 import usuarioRouter from './auth/usuario.routes.js'
 import villanoRoutes from './villano/villano.routes.js'
 import heroeRoutes from './heroe/heroe.routes.js'
+import { noticiaRouter } from './noticia/noticia.routes.js'
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
 import { requireAuth } from './auth/auth.middleware.js';
@@ -75,6 +76,7 @@ app.use('/api/carpetas', carpetaRouter)
 app.use('/api/auth', usuarioRouter) 
 app.use('/api/villanos', villanoRoutes)
 app.use('/api/heroes', heroeRoutes)
+app.use('/api/noticias', noticiaRouter)
 
 // 404 handler
 app.use((req, res, next) => {
