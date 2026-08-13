@@ -16,6 +16,7 @@ function Home() {
   const [expandedCarpetas, setExpandedCarpetas] = useState({});
   const [expandedMultas, setExpandedMultas] = useState({});
   const [burocrataNombre, setBurocrataNombre] = useState(null);
+  const [payingMulta, setPayingMulta] = useState(null);
   const { user } = useAuth();
  
 
@@ -94,19 +95,47 @@ function Home() {
         }));
     };
     
-    // Función para pagar directamente una multa
-    const handlePagarMulta = async (multa) => {
-      const confirmacion = window.confirm(`¿Estás seguro de que deseas abonar la Multa #${multa.id} por $${multa.montoMulta?.toLocaleString()}?`);
-      if (!confirmacion) return;
+    // Función para iniciar el pago de una multa con Mercado Pago
+    const handlePagarMulta = (multa) => {
+      setPayingMulta(multa);
+    };
 
+    // Procesar pago con Mercado Pago (Checkout Pro)
+    const procesarPagoMercadoPago = async () => {
+      if (!payingMulta) return;
       try {
         setLoading(true);
-        await pagarMultaRequest(multa.id);
-        alert(`✅ Multa #${multa.id} pagada exitosamente!`);
+        const resPref = await crearPreferenciaMPRequest(payingMulta.id);
+        const checkoutUrl = resPref.data?.data?.checkoutUrl || resPref.data?.data?.sandboxInitPoint || resPref.data?.data?.initPoint;
+
+        if (checkoutUrl) {
+          window.open(checkoutUrl, '_blank');
+        }
+
+        await pagarMultaRequest(payingMulta.id, { formaPago: 'Mercado Pago' });
+        alert(`💙 ¡Preferencia de Checkout generada en Mercado Pago!\n\nSe abrió la pasarela de pago y la Multa #${payingMulta.id} ha sido registrada con el método Mercado Pago.`);
+        setPayingMulta(null);
         await fetchCarpetas();
       } catch (err) {
-        console.error("Error al pagar la multa:", err);
-        alert("Error al pagar la multa: " + (err.response?.data?.message || err.message));
+        console.error("Error al procesar pago con Mercado Pago:", err);
+        alert("Error al procesar con Mercado Pago: " + (err.response?.data?.message || err.message));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Procesar pago directo (Fallback para pruebas locales)
+    const procesarPagoDirecto = async () => {
+      if (!payingMulta) return;
+      try {
+        setLoading(true);
+        await pagarMultaRequest(payingMulta.id, { formaPago: 'Mercado Pago (Directo)' });
+        alert(`✅ ¡Multa #${payingMulta.id} acreditada exitosamente!`);
+        setPayingMulta(null);
+        await fetchCarpetas();
+      } catch (err) {
+        console.error("Error al abonar la multa:", err);
+        alert("Error al abonar la multa: " + (err.response?.data?.message || err.message));
       } finally {
         setLoading(false);
       }
@@ -422,6 +451,63 @@ function Home() {
             )}
           </div>
         </div>
+
+        {/* Modal de Pago con Mercado Pago */}
+        {payingMulta && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+            <div className="bg-[#1F1D2B] border border-cyan-500/40 rounded-2xl p-6 max-w-md w-full shadow-2xl relative animate-fadeIn text-white">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-xl font-bold flex items-center gap-2 text-white">
+                  💙 Pagar con Mercado Pago
+                </h3>
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                  Multa #{payingMulta.id}
+                </span>
+              </div>
+              <p className="text-gray-400 text-xs mb-4">
+                El pago será procesado y acreditado en la cuenta de Mercado Pago oficial.
+              </p>
+
+              <div className="bg-black/40 border border-white/10 rounded-xl p-3.5 mb-5 space-y-1">
+                <p className="text-xs text-gray-400">Motivo: <span className="text-white font-medium">{payingMulta.motivoMulta}</span></p>
+                <p className="text-xs text-gray-400">Monto total: <span className="text-emerald-400 font-bold text-base">${payingMulta.montoMulta?.toLocaleString()} ARS</span></p>
+              </div>
+
+              {/* Botón de Mercado Pago */}
+              <button
+                type="button"
+                onClick={procesarPagoMercadoPago}
+                disabled={loading}
+                className="w-full mb-3 py-3.5 px-4 rounded-xl bg-gradient-to-r from-sky-500 to-cyan-600 hover:from-sky-400 hover:to-cyan-500 text-white font-bold text-sm tracking-wide flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(6,182,212,0.35)] transition-all cursor-pointer border border-cyan-400/30"
+              >
+                <div className="w-6 h-6 rounded-full bg-white text-sky-600 flex items-center justify-center font-black text-xs">
+                  MP
+                </div>
+                <span>{loading ? 'Generando Preferencia...' : 'Abrir Mercado Pago (Checkout Pro)'}</span>
+              </button>
+
+              {/* Botón de Confirmación Directa */}
+              <button
+                type="button"
+                onClick={procesarPagoDirecto}
+                disabled={loading}
+                className="w-full mb-5 py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer border border-emerald-400/30"
+              >
+                <span>⚡ Confirmar Pago Directo (Sin Redirigir)</span>
+              </button>
+
+              <div className="flex gap-3 pt-3 border-t border-white/10">
+                <button
+                  type="button"
+                  onClick={() => setPayingMulta(null)}
+                  className="flex-1 px-4 py-2.5 rounded-xl border border-gray-600 text-gray-300 font-semibold hover:bg-gray-800 transition-colors cursor-pointer text-xs"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
     </MetahumanoLayout>
   );
 }

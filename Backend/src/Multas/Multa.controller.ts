@@ -271,25 +271,32 @@ async function crearPreferenciaMPAdmin(req: Request, res: Response) {
       items: [
         {
           id: `MULTA-${multa.id}`,
-          title: `Pago de Multa #${multa.id} - ${multa.motivoMulta}`,
+          title: `Multa #${multa.id} - ${multa.motivoMulta}`,
           description: `Cobro oficial de multa por ${multa.motivoMulta}`,
           quantity: 1,
           currency_id: 'ARS',
-          unit_price: Number(multa.montoMulta)
+          unit_price: Math.max(1, Number(multa.montoMulta) || 100)
         }
       ],
+      payer: {
+        name: "Usuario",
+        surname: "Metahumano",
+        email: "comprador_test@ejemplo.com"
+      },
       back_urls: {
         success: `${frontendUrl}/metahumano/carpetas?status=success&multa_id=${multa.id}`,
         failure: `${frontendUrl}/metahumano/carpetas?status=failure&multa_id=${multa.id}`,
         pending: `${frontendUrl}/metahumano/carpetas?status=pending&multa_id=${multa.id}`
       },
       auto_return: 'approved',
+      binary_mode: true,
       external_reference: `MULTA-${multa.id}`
     };
 
     let initPoint = '';
     let sandboxInitPoint = '';
     let preferenceId = '';
+    let checkoutUrl = '';
 
     if (mpAccessToken && !mpAccessToken.includes('TU_ACCESS_TOKEN')) {
       try {
@@ -302,27 +309,32 @@ async function crearPreferenciaMPAdmin(req: Request, res: Response) {
           body: JSON.stringify(preferenceBody)
         });
 
+        const mpData = await response.json();
         if (response.ok) {
-          const mpData = await response.json();
           initPoint = mpData.init_point;
           sandboxInitPoint = mpData.sandbox_init_point || mpData.init_point;
           preferenceId = mpData.id;
+          checkoutUrl = mpAccessToken.startsWith('TEST-') ? sandboxInitPoint : initPoint;
+        } else {
+          console.warn('Mercado Pago API error details:', mpData);
         }
       } catch (mpErr) {
         console.warn('Error al comunicarse con la API de Mercado Pago:', mpErr);
       }
     }
 
-    if (!initPoint) {
+    if (!checkoutUrl) {
       preferenceId = `PREF-${Date.now()}-${multa.id}`;
       sandboxInitPoint = `https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=${preferenceId}`;
       initPoint = sandboxInitPoint;
+      checkoutUrl = sandboxInitPoint;
     }
 
     res.status(200).json({
       message: 'Preferencia de pago creada para la cuenta del Admin',
       data: {
         preferenceId,
+        checkoutUrl,
         initPoint,
         sandboxInitPoint,
         multaId: multa.id,
