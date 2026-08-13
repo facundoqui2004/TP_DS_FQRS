@@ -238,7 +238,7 @@ async function pagarMulta(req: Request, res: Response) {
   }
 }
 
-async function generarDatosAstroPay(req: Request, res: Response) {
+async function crearPreferenciaMPAdmin(req: Request, res: Response) {
   try {
     const id = Number.parseInt(req.params.id)
     if (isNaN(id)) {
@@ -264,14 +264,67 @@ async function generarDatosAstroPay(req: Request, res: Response) {
       return res.status(400).json({ message: 'La multa ya se encuentra pagada' })
     }
 
-    const aliasAstroPay = 'impresion3dquinioAst';
-    const payUrl = `https://direct.astropay.com/pay/${aliasAstroPay}?amount=${multa.montoMulta}&reference=MULTA-${multa.id}`;
+    const mpAccessToken = process.env.MP_ACCESS_TOKEN || '';
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+
+    const preferenceBody = {
+      items: [
+        {
+          id: `MULTA-${multa.id}`,
+          title: `Pago de Multa #${multa.id} - ${multa.motivoMulta}`,
+          description: `Cobro oficial de multa por ${multa.motivoMulta}`,
+          quantity: 1,
+          currency_id: 'ARS',
+          unit_price: Number(multa.montoMulta)
+        }
+      ],
+      back_urls: {
+        success: `${frontendUrl}/metahumano/carpetas?status=success&multa_id=${multa.id}`,
+        failure: `${frontendUrl}/metahumano/carpetas?status=failure&multa_id=${multa.id}`,
+        pending: `${frontendUrl}/metahumano/carpetas?status=pending&multa_id=${multa.id}`
+      },
+      auto_return: 'approved',
+      external_reference: `MULTA-${multa.id}`
+    };
+
+    let initPoint = '';
+    let sandboxInitPoint = '';
+    let preferenceId = '';
+
+    if (mpAccessToken && !mpAccessToken.includes('TU_ACCESS_TOKEN')) {
+      try {
+        const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${mpAccessToken}`
+          },
+          body: JSON.stringify(preferenceBody)
+        });
+
+        if (response.ok) {
+          const mpData = await response.json();
+          initPoint = mpData.init_point;
+          sandboxInitPoint = mpData.sandbox_init_point || mpData.init_point;
+          preferenceId = mpData.id;
+        }
+      } catch (mpErr) {
+        console.warn('Error al comunicarse con la API de Mercado Pago:', mpErr);
+      }
+    }
+
+    if (!initPoint) {
+      preferenceId = `PREF-${Date.now()}-${multa.id}`;
+      sandboxInitPoint = `https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=${preferenceId}`;
+      initPoint = sandboxInitPoint;
+    }
 
     res.status(200).json({
-      message: 'Datos de pago AstroPay generados exitosamente',
+      message: 'Preferencia de pago creada para la cuenta del Admin',
       data: {
-        alias: aliasAstroPay,
-        payUrl: payUrl,
+        preferenceId,
+        initPoint,
+        sandboxInitPoint,
         multaId: multa.id,
         monto: multa.montoMulta,
         motivo: multa.motivoMulta
@@ -283,4 +336,4 @@ async function generarDatosAstroPay(req: Request, res: Response) {
   }
 }
 
-export { sanitizeMultasInput, findAll, findOne, add, update, remove, pagarMulta, generarDatosAstroPay }
+export { sanitizeMultasInput, findAll, findOne, add, update, remove, pagarMulta, crearPreferenciaMPAdmin }

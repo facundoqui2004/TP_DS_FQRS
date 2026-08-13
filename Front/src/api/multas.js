@@ -17,4 +17,4 @@ export const updateMultaRequest = (id, data) => api.put(`/multas/${id}`, data);
 
 export const pagarMultaRequest = (id, data) => api.post(`/multas/${id}/pagar`, data);
 
-export const obtenerDatosAstroPayRequest = (id) => api.post(`/multas/${id}/datos-astropay`);
+export const crearPreferenciaMPRequest = (id) => api.post(`/multas/${id}/crear-preferencia-mp`);

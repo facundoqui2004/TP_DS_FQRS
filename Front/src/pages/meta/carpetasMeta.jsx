@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect } from "react";
 import { getMetaId, getUserFromCookie}  from "../../utils/cookies";
 import { FaFolder, FaExclamationCircle } from "react-icons/fa";
 import { getBurocrataByIdRequest } from "../../api/burocratas";
-import { pagarMultaRequest, obtenerDatosAstroPayRequest } from "../../api/multas";
+import { pagarMultaRequest, crearPreferenciaMPRequest } from "../../api/multas";
 import MetahumanoLayout from "../../components/layouts/MetahumanoLayout";
 import { useAuth } from "../../context/AuthContext";
 
