@@ -2,8 +2,7 @@ import 'dotenv/config'
 import 'reflect-metadata'
 import express from 'express'
 import { RequestContext } from '@mikro-orm/core'
-import { orm, syncSchema } from './shared/db/orm.js'
-import { seedDatabase } from './shared/db/seeder.js'
+import { orm } from './shared/db/orm.js'
 
 import metahumanosRoutes from './metahumano/metahumano.routes.js'
 import poderesRoutes from './poder/poder.routes.js'
@@ -87,11 +86,5 @@ app.use((req, res, next) => {
 import { errorHandler } from './shared/middlewares/error.middleware.js'
 app.use(errorHandler)
 
-// Sincronizar base de datos
-await syncSchema()
-await seedDatabase()
-
-const port = process.env.PORT || 3000
-app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}/`)
-})
+export { app }
+export default app

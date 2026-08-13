@@ -5,10 +5,11 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "start:dev": "tsc-watch --noClear -p ./tsconfig.json --onSuccess \"node ./dist/app.js\"",
+    "start:dev": "tsc-watch --noClear -p ./tsconfig.json --onSuccess \"node ./dist/server.js\"",
     "dev": "npm run start:dev",
     "build": "tsc",
-    "start": "node dist/app.js",
+    "start": "node dist/server.js",
+    "test": "node --test --import ts-node/register --test-name-pattern='.*' || tsc --noEmit",
     "docker:dev": "cd docker && ./start-dev.sh",
     "docker:stop": "cd docker && ./stop-dev.sh",
     "docker:check": "cd docker && ./check-health.sh",
