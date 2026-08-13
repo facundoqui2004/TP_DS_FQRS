@@ -16,3 +16,6 @@ export const patchCarpetaEstadoRequest = (id, estado) =>
   api.patch(`/carpetas/${id}/estado`, { estado });
 export const GetCarpetasRequestByMetahumanoId = (metahumanoId) =>
   api.get(`/carpetas/metahumano/${metahumanoId}`);
+export const getCarpetasByMetahumanoIdRequest = (metahumanoId) =>
+  api.get(`/carpetas/metahumano/${metahumanoId}`);
+

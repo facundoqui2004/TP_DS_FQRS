@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { getMetaId, getUserFromCookie}  from "../../utils/cookies";
-import { FaFolder, FaExclamationCircle } from "react-icons/fa";
+import { FaFolder, FaExclamationCircle, FaSearch } from "react-icons/fa";
 import { getBurocrataByIdRequest } from "../../api/burocratas";
 import { pagarMultaRequest, crearPreferenciaMPRequest } from "../../api/multas";
 import MetahumanoLayout from "../../components/layouts/MetahumanoLayout";
@@ -13,11 +13,13 @@ function Home() {
   const [carpetas, setCarpetas] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [expandedCarpetas, setExpandedCarpetas] = useState({});
   const [expandedMultas, setExpandedMultas] = useState({});
   const [burocrataNombre, setBurocrataNombre] = useState(null);
   const [payingMulta, setPayingMulta] = useState(null);
   const { user } = useAuth();
+
  
 
   
@@ -224,15 +226,59 @@ function Home() {
             {/* Contenido de carpetas */}
             {!loading && !error && (
               <>
+                {/* 🔍 Buscador de carpetas */}
+                {carpetas.length > 0 && (
+                  <div className="mb-6 relative max-w-md">
+                    <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Buscar carpeta por ID, tipo, estado o descripción..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 bg-[#1F1D2B] border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-[#ec7c6a] transition text-sm"
+                    />
+                  </div>
+                )}
+
                 {carpetas.length === 0 ? (
                   <div className="text-center py-12">
                     <FaFolder className="text-6xl text-gray-400 mx-auto mb-4" />
                     <h3 className="text-xl font-semibold text-gray-300 mb-2">No tienes carpetas</h3>
                     <p className="text-gray-400 mb-6">Aún no se han creado carpetas para tu perfil de metahumano.</p>
                   </div>
+                ) : carpetas.filter((c) => {
+                    if (!searchQuery.trim()) return true;
+                    const q = searchQuery.trim().toLowerCase();
+                    return (
+                      c.id?.toString().includes(q) ||
+                      c.descripcion?.toLowerCase().includes(q) ||
+                      c.tipo?.toLowerCase().includes(q) ||
+                      c.estado?.toLowerCase().includes(q)
+                    );
+                  }).length === 0 ? (
+                  <div className="text-center py-8 bg-[#1F1D2B] rounded-lg border border-gray-700">
+                    <p className="text-gray-300 font-medium">No se encontraron carpetas que coincidan con "{searchQuery}"</p>
+                    <button
+                      onClick={() => setSearchQuery("")}
+                      className="mt-3 px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-xs text-white"
+                    >
+                      Limpiar búsqueda
+                    </button>
+                  </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {carpetas.map((carpeta) => {
+                    {carpetas
+                      .filter((c) => {
+                        if (!searchQuery.trim()) return true;
+                        const q = searchQuery.trim().toLowerCase();
+                        return (
+                          c.id?.toString().includes(q) ||
+                          c.descripcion?.toLowerCase().includes(q) ||
+                          c.tipo?.toLowerCase().includes(q) ||
+                          c.estado?.toLowerCase().includes(q)
+                        );
+                      })
+                      .map((carpeta) => {
                       const multas = obtenerMultasDeCarpeta(carpeta);
                       const multasPendientes = multas.filter(m => m.estado === 'PENDIENTE').length;
                       const isExpanded = expandedCarpetas[carpeta.id];

@@ -87,7 +87,7 @@ async function crearPerfilBurocrata(req: Request, res: Response) {
 async function getCarpetas(req: Request, res: Response){
   try {
     const burocrataId = Number.parseInt(req.params.id)
-    const burocrata = await em.findOneOrFail(Burocrata, {id : burocrataId}, {populate : ['carpetas.evidencias.multas']})
+    const burocrata = await em.findOneOrFail(Burocrata, {id : burocrataId}, {populate : ['carpetas.evidencias.multas', 'carpetas.metahumano']})
     if(!burocrata){
       return res.status(404).json({message : "Burocrata not found"})
     }

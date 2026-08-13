@@ -28,7 +28,10 @@ function sanitizeCarpetaInput(req: Request, res: Response, next: NextFunction) {
 async function getCarpetasByMetahumano(req: Request, res : Response){
   try{
     const idMetahumano = Number.parseInt(req.params.idMetahumano)
-    const carpetas = await em.find(Carpeta, {metahumano : idMetahumano}, {populate : ['evidencias.multas']})
+    if (isNaN(idMetahumano)) {
+      return res.status(400).json({ message: 'ID de Metahumano inválido' })
+    }
+    const carpetas = await em.find(Carpeta, {metahumano : idMetahumano}, {populate : ['evidencias.multas', 'metahumano', 'burocrata']})
     res.status(200).json({message : 'found carpetas by metahumano', data : carpetas})
   }
   catch(error: any){
@@ -38,8 +41,25 @@ async function getCarpetasByMetahumano(req: Request, res : Response){
 
 async function findAll(req:Request, res:Response){
     try {
-    const carpetas = await em.find(Carpeta, {}, {populate :['metahumano', 'burocrata', 'evidencias.multas']})
-    res.status(200).json({message : 'find All carpetas', data: carpetas})
+      const { metahumanoId, search } = req.query;
+      const filter: any = {};
+      if (metahumanoId) {
+        filter.metahumano = Number(metahumanoId);
+      }
+      const carpetas = await em.find(Carpeta, filter, {populate :['metahumano', 'burocrata', 'evidencias.multas']})
+      
+      let result = carpetas;
+      if (search) {
+        const q = String(search).toLowerCase().trim();
+        result = carpetas.filter((c: any) =>
+          c.id?.toString().includes(q) ||
+          c.descripcion?.toLowerCase().includes(q) ||
+          c.metahumano?.alias?.toLowerCase().includes(q) ||
+          c.metahumano?.nombre?.toLowerCase().includes(q)
+        );
+      }
+
+      res.status(200).json({message : 'find All carpetas', data: result})
     } catch (error : any) {
       res.status(500).json({error:error.message})  
     }
@@ -48,7 +68,7 @@ async function findAll(req:Request, res:Response){
 async function findOne(req:Request, res: Response){
   try {
     const id = Number.parseInt(req.params.id)
-    const carpeta = await em.findOneOrFail(Carpeta, { id }, {populate :['evidencias.multas']})
+    const carpeta = await em.findOneOrFail(Carpeta, { id }, {populate :['metahumano', 'burocrata', 'evidencias.multas']})
     res.status(200).json({message: 'find one carpeta', data : carpeta})
   } catch (error : any) {
     res.status(500).json({error:error.message})
