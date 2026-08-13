@@ -86,6 +86,7 @@ function App() {
           <Route path="/burocrata/perfil" element={<MiPerfilBuro />} />
           <Route path="/burocrata/soporte" element={<SoporteBuro />} />
           <Route path="/burocrata/noticias" element={<GestionNoticias />} />
+          <Route path="/burocrata/vigilar-mundo" element={<VigilarMundo />} />
 
           {/* Noticias metahumanos */}
           <Route path="/metahumano/noticias" element={<NoticiasMetahumano />} />

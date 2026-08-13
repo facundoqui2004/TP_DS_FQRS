@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect } from "react";
 import { getMetaId, getUserFromCookie}  from "../../utils/cookies";
 import { FaFolder, FaExclamationCircle } from "react-icons/fa";
 import { getBurocrataByIdRequest } from "../../api/burocratas";
-import { pagarMultaRequest } from "../../api/multas";
+import { pagarMultaRequest, obtenerDatosAstroPayRequest } from "../../api/multas";
 import MetahumanoLayout from "../../components/layouts/MetahumanoLayout";
 import { useAuth } from "../../context/AuthContext";
 
@@ -15,7 +15,7 @@ function Home() {
   const [error, setError] = useState("");
   const [expandedCarpetas, setExpandedCarpetas] = useState({});
   const [expandedMultas, setExpandedMultas] = useState({});
-  const [burocrataNombre, setBurocrataNombre] = useState(null)
+  const [burocrataNombre, setBurocrataNombre] = useState(null);
   const { user } = useAuth();
  
 
@@ -94,15 +94,15 @@ function Home() {
         }));
     };
     
-    // Función para pagar una multa
-    const handlePagarMulta = async (multaId) => {
+    // Función para pagar directamente una multa
+    const handlePagarMulta = async (multa) => {
+      const confirmacion = window.confirm(`¿Estás seguro de que deseas abonar la Multa #${multa.id} por $${multa.montoMulta?.toLocaleString()}?`);
+      if (!confirmacion) return;
+
       try {
-        const confirmPay = window.confirm("¿Deseas pagar esta multa?");
-        if (!confirmPay) return;
-        
         setLoading(true);
-        await pagarMultaRequest(multaId);
-        alert("✅ Multa pagada con éxito!");
+        await pagarMultaRequest(multa.id);
+        alert(`✅ Multa #${multa.id} pagada exitosamente!`);
         await fetchCarpetas();
       } catch (err) {
         console.error("Error al pagar la multa:", err);
@@ -140,15 +140,10 @@ function Home() {
         return null;
     };
 
-  const currentTheme = user?.tipoMeta || "";
-  const containerBg = currentTheme === 'heroe' || currentTheme === 'heróe'
-    ? 'bg-red-950/45 border border-red-800/30 backdrop-blur-md'
-    : currentTheme === 'villano'
-    ? 'bg-zinc-950/75 border border-zinc-800/40 backdrop-blur-md'
-    : 'bg-[#296588]';
+  const containerBg = 'bg-[#296588]';
 
   return (
-    <MetahumanoLayout theme={currentTheme}>
+    <MetahumanoLayout>
         {/* Contenido principal */}
         <div
           className={`p-4 ${containerBg} text-white rounded-lg shadow-lg h-full hover:shadow-xl transition-all duration-500
@@ -384,12 +379,19 @@ function Home() {
                                                           Vence: <span className={new Date(m.fechaVencimiento) < new Date() && m.estado !== 'PAGADA' ? 'text-red-400 font-bold' : 'text-gray-300'}>{new Date(m.fechaVencimiento).toLocaleDateString()}</span>
                                                         </div>
                                                       </div>
+
+                                                      {m.estado === 'PAGADA' && m.formaPago && (
+                                                        <div className="mt-3 text-xs font-semibold text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 rounded-lg px-3 py-1.5 flex items-center gap-2">
+                                                          <span>💳</span>
+                                                          <span>Forma de Pago: <strong className="text-white">{m.formaPago}</strong></span>
+                                                        </div>
+                                                      )}
                                                     </div>
 
                                                     {(m.estado === 'APROBADA') && (
                                                       <div className="flex items-center md:items-end justify-center md:justify-end border-t md:border-t-0 md:border-l border-white/10 pt-4 md:pt-0 md:pl-6">
                                                         <button
-                                                          onClick={() => handlePagarMulta(m.id)}
+                                                          onClick={() => handlePagarMulta(m)}
                                                           className="w-full md:w-auto relative inline-flex items-center justify-center px-6 py-3 font-bold text-white transition-all duration-300 bg-gradient-to-r from-emerald-500 to-green-600 rounded-lg hover:from-emerald-400 hover:to-green-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-600 focus:ring-offset-[#1F1D2B] shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] hover:-translate-y-1 overflow-hidden group/btn"
                                                         >
                                                           <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:animate-[shimmer_1.5s_infinite]"></div>

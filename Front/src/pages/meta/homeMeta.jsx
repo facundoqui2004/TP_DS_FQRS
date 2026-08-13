@@ -38,15 +38,10 @@ function Home() {
   const toggleUser = () => setShowUser(!showUser);
   const closeUser = () => setShowUser(false);
 
-  const currentTheme = user?.tipoMeta || "";
-  const containerBg = currentTheme === 'heroe' || currentTheme === 'heróe'
-    ? 'bg-red-950/45 border border-red-800/30 backdrop-blur-md'
-    : currentTheme === 'villano'
-    ? 'bg-zinc-950/75 border border-zinc-800/40 backdrop-blur-md'
-    : 'bg-[#296588]';
+  const containerBg = 'bg-[#296588]';
 
   return (
-    <MetahumanoLayout theme={currentTheme}>
+    <MetahumanoLayout>
       {/* Contenido principal */}
       <div
         className={`p-4 ${containerBg} text-white rounded-lg shadow-lg h-full hover:shadow-xl transition-all duration-500

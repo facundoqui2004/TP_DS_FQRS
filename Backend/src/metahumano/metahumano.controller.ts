@@ -355,15 +355,9 @@ async function definirEstiloVida(req: Request, res: Response) {
         }
       })
 
-      const unpaidMultas = multas.filter(m => m.estado !== 'PAGADA')
-      const expiredMultas = unpaidMultas.filter(m => m.fechaVencimiento && new Date(m.fechaVencimiento) < new Date())
-
-      let recompensa = Number(req.body.recompensa) || 0
-      // Si el villano no paga las multas (tiene multas no pagadas) o tiene acumuladas 2 o más multas vencidas
-      if (unpaidMultas.length > 0 || expiredMultas.length >= 2) {
-        // La recompensa se realiza en base a ese acumulado y no la puede definir él
-        recompensa = unpaidMultas.reduce((acc, m) => acc + (m.montoMulta || 0), 0)
-      }
+      const unpaidMultas = multas.filter(m => m.estado !== 'PAGADA' && m.estado !== 'RECHAZADA')
+      // La recompensa se establece por las deudas de multas no pagadas y no la elige el metahumano
+      const recompensa = unpaidMultas.reduce((acc, m) => acc + (m.montoMulta || 0), 0)
 
       await connection.execute(
         'UPDATE metahumano SET tipo_meta = ?, nivel_peligrosidad = ?, estado = ?, recompensa = ?, motivacion = ? WHERE id = ?',

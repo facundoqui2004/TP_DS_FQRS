@@ -4,6 +4,7 @@ import { orm } from '../shared/db/orm.js'
 import { sanitizeMetahumanoInput } from '../metahumano/metahumano.controller.js'
 import { Carpeta } from '../carpeta/carpeta.entity.js'
 import { AuthedRequest } from '../auth/auth.middleware.js'
+import { Multa } from '../Multas/Multa.entity.js'
 
 const em = orm.em
 
@@ -107,6 +108,22 @@ async function solicitarRehabilitacion(req: Request, res: Response) {
 
     if (villano.estado === 'rehabilitado') {
       return res.status(400).json({ message: 'El villano ya está rehabilitado' })
+    }
+
+    // Verificar que no tenga multas impagas para iniciar la rehabilitación
+    const multas = await em.find(Multa, {
+      evidencia: {
+        carpeta: {
+          metahumano: { id: villano.id }
+        }
+      }
+    })
+    const unpaidMultas = multas.filter(m => m.estado !== 'PAGADA' && m.estado !== 'RECHAZADA')
+    if (unpaidMultas.length > 0) {
+      const totalDeuda = unpaidMultas.reduce((acc, m) => acc + (m.montoMulta || 0), 0)
+      return res.status(400).json({
+        message: `No puedes solicitar la rehabilitación si tienes multas sin pagar (Deuda pendiente: $${totalDeuda.toLocaleString()}). Debes abonar todas tus multas antes de iniciar el trámite.`
+      })
     }
 
     // Cambiar estado a 'rehabilitando'

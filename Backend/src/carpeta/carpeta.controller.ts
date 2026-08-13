@@ -3,6 +3,7 @@ import { Carpeta } from "./carpeta.entity.js";
 import { Metahumano } from '../metahumano/metahumano.entity.js';
 import { orm } from "../shared/db/orm.js";
 import { Burocrata } from "../Burocratas/Burocrata.entity.js";
+import { Multa } from '../Multas/Multa.entity.js';
 
 
 const em = orm.em
@@ -83,6 +84,21 @@ async function updateEstado(req:Request, res: Response) {
           [new Date(), carpeta.metahumano.id]
         );
       } else if (tipo === 'TRAMITE_REHABILITACION' && carpeta.metahumano) {
+        // Verificar que no tenga multas impagas antes de aprobar la rehabilitación
+        const multas = await em.find(Multa, {
+          evidencia: {
+            carpeta: {
+              metahumano: { id: carpeta.metahumano.id }
+            }
+          }
+        });
+        const unpaidMultas = multas.filter(m => m.estado !== 'PAGADA' && m.estado !== 'RECHAZADA');
+        if (unpaidMultas.length > 0) {
+          return res.status(400).json({
+            message: 'No se puede aprobar el trámite de rehabilitación: el metahumano registra multas sin pagar.'
+          });
+        }
+
         await em.getConnection().execute(
           "UPDATE metahumano SET tipo_meta = 'heroe', estado = 'rehabilitado', nivel_fama = 'Bajo', estatus = 'activo', numero_victorias = 0 WHERE id = ?",
           [carpeta.metahumano.id]

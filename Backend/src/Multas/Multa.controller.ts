@@ -184,6 +184,8 @@ async function pagarMulta(req: Request, res: Response) {
       return res.status(400).json({ message: 'El usuario no tiene un perfil de metahumano asociado' })
     }
 
+    const formaPago = req.body?.formaPago || req.body?.metodoPago || req.body?.formaDePago || 'AstroPay';
+
     const multa = await em.findOneOrFail(Multa, { id }, {
       populate: ['evidencia.carpeta.metahumano']
     })
@@ -198,6 +200,7 @@ async function pagarMulta(req: Request, res: Response) {
     }
 
     multa.estado = 'PAGADA'
+    multa.formaPago = formaPago
     await em.flush()
 
     // Recalcular la recompensa del villano tras el pago
@@ -235,4 +238,49 @@ async function pagarMulta(req: Request, res: Response) {
   }
 }
 
-export { sanitizeMultasInput, findAll, findOne, add, update, remove, pagarMulta }
+async function generarDatosAstroPay(req: Request, res: Response) {
+  try {
+    const id = Number.parseInt(req.params.id)
+    if (isNaN(id)) {
+      return res.status(400).json({ message: 'ID de multa inválido' })
+    }
+
+    const authedReq = req as any
+    const metahumanoId = authedReq.perfilId
+
+    if (!metahumanoId) {
+      return res.status(400).json({ message: 'El usuario no tiene un perfil de metahumano asociado' })
+    }
+
+    const multa = await em.findOneOrFail(Multa, { id }, {
+      populate: ['evidencia.carpeta.metahumano']
+    })
+
+    if (multa.evidencia?.carpeta?.metahumano?.id !== metahumanoId) {
+      return res.status(403).json({ message: 'Acceso denegado: esta multa no te pertenece' })
+    }
+
+    if (multa.estado === 'PAGADA') {
+      return res.status(400).json({ message: 'La multa ya se encuentra pagada' })
+    }
+
+    const aliasAstroPay = 'impresion3dquinioAst';
+    const payUrl = `https://direct.astropay.com/pay/${aliasAstroPay}?amount=${multa.montoMulta}&reference=MULTA-${multa.id}`;
+
+    res.status(200).json({
+      message: 'Datos de pago AstroPay generados exitosamente',
+      data: {
+        alias: aliasAstroPay,
+        payUrl: payUrl,
+        multaId: multa.id,
+        monto: multa.montoMulta,
+        motivo: multa.motivoMulta
+      }
+    });
+
+  } catch (error: any) {
+    res.status(500).json({ message: error.message })
+  }
+}
+
+export { sanitizeMultasInput, findAll, findOne, add, update, remove, pagarMulta, generarDatosAstroPay }

@@ -373,12 +373,18 @@ const GestionarMultas = () => {
                         )}
                       </div>
 
-                      {/* Monto */}
+                      {/* Monto y Forma de Pago */}
                       <div className="bg-gradient-to-r from-amber-900/40 to-orange-900/40 border border-amber-600/30 rounded-lg p-3">
                         <p className="text-amber-200 text-xs font-medium mb-1">MONTO</p>
                         <p className="text-2xl font-bold text-amber-100">
                           {formatearMonto(multa)}
                         </p>
+                        {multa.estado === 'PAGADA' && multa.formaPago && (
+                          <div className="mt-2 text-xs text-emerald-300 font-semibold bg-emerald-950/60 border border-emerald-600/40 rounded px-2.5 py-1 flex items-center gap-1.5">
+                            <span>💳</span>
+                            <span>Forma de Pago: <strong className="text-white">{multa.formaPago}</strong></span>
+                          </div>
+                        )}
                       </div>
 
                       {/* Motivo/Descripción */}

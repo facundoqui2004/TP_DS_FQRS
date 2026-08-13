@@ -25,7 +25,9 @@ export class Multa extends BaseEntity{
   @Property({nullable:false})
   fechaVencimiento!:Date
 
-  
+  @Property({nullable:true})
+  formaPago?:string
+
   @ManyToOne(()=>Evidencia, {nullable:true})
   evidencia!:Rel<Evidencia>
 }

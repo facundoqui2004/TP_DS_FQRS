@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "../../context/AuthContext";
-import MetahumanoLayout from "../../components/layouts/MetahumanoLayout"
+import MetahumanoLayout from "../../components/layouts/MetahumanoLayout";
+import { getMetaId } from "../../utils/cookies";
 import { Meta } from "react-router-dom";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -24,7 +25,7 @@ function Home() {
   const [mision, setMision] = useState("");
   const [nivelPeligrosidad, setNivelPeligrosidad] = useState("Baja");
   const [motivacion, setMotivacion] = useState("");
-  const [recompensa, setRecompensa] = useState("");
+  const [deudaMultas, setDeudaMultas] = useState(0);
 
   const [showFormEnemy, setShowFormEnemy] = useState(false);
   const [villanosList, setVillanosList] = useState([]);
@@ -241,7 +242,7 @@ function Home() {
         tipoMeta: lifestyleRole,
         ...(lifestyleRole === 'HEROE' 
           ? { nivelFama, mision, numeroVictorias: 0, estatus: 'activo' }
-          : { nivelPeligrosidad, motivacion, recompensa: Number(recompensa) || 0, estado: 'activo' })
+          : { nivelPeligrosidad, motivacion, estado: 'activo' })
       };
       
       const response = await fetch('http://localhost:3000/api/metahumanos/estilo-vida', {
@@ -256,8 +257,38 @@ function Home() {
         throw new Error(errData.message || 'Error al definir estilo de vida');
       }
       
-      setSuccessMessage(`🎉 ¡Estilo de vida definido exitosamente como ${lifestyleRole}!`);
-      setShowFormLifestyle(false);
+  // Obtener deuda acumulada de multas no pagadas para mostrar en recompensa de villano
+  useEffect(() => {
+    if (showFormLifestyle && lifestyleRole === 'VILLANO') {
+      const calcularDeudaMultas = async () => {
+        try {
+          const metaId = getMetaId();
+          if (!metaId) return;
+          const res = await fetch(`http://localhost:3000/api/carpetas/idMetahumano/${metaId}`, {
+            credentials: 'include'
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const carpetas = data.data || [];
+            let acumulado = 0;
+            carpetas.forEach(c => {
+              c.evidencias?.forEach(ev => {
+                ev.multas?.forEach(m => {
+                  if (m.estado !== 'PAGADA' && m.estado !== 'RECHAZADA') {
+                    acumulado += (m.montoMulta || 0);
+                  }
+                });
+              });
+            });
+            setDeudaMultas(acumulado);
+          }
+        } catch (err) {
+          console.error("Error al calcular deuda de multas:", err);
+        }
+      };
+      calcularDeudaMultas();
+    }
+  }, [showFormLifestyle, lifestyleRole]);
       await fetchPerfilMetahumano();
       if (refreshProfile) {
         await refreshProfile();
@@ -312,6 +343,10 @@ function Home() {
   // Solicitar Rehabilitación de Villano
   const handleSolicitarRehabilitacion = async () => {
     try {
+      if (deudaMultas > 0) {
+        alert(`⚠️ No puedes solicitar la rehabilitación si tienes multas sin pagar (Deuda acumulada: $${deudaMultas.toLocaleString()}). Debes abonar todas tus multas antes de iniciar el trámite.`);
+        return;
+      }
       const confirmRehab = window.confirm("¿Estás seguro de que deseas iniciar tu trámite de rehabilitación para convertirte en Héroe?");
       if (!confirmRehab) return;
       
@@ -818,20 +853,11 @@ const solicitarPoder = async (poder) => {
     );
   }
 
-  const currentTheme = showFormLifestyle ? lifestyleRole.toLowerCase() : (metahumanoDetails?.tipoMeta || "");
-  const containerBg = currentTheme === 'heroe' || currentTheme === 'heróe'
-    ? 'bg-red-950/45 border border-red-800/30 backdrop-blur-md'
-    : currentTheme === 'villano'
-    ? 'bg-zinc-950/75 border border-zinc-800/40 backdrop-blur-md'
-    : 'bg-[#296588]';
-  const headerBg = currentTheme === 'heroe' || currentTheme === 'heróe'
-    ? 'bg-red-900/40 border border-red-800/30'
-    : currentTheme === 'villano'
-    ? 'bg-zinc-900/60 border border-zinc-800/20'
-    : 'bg-[#044b97]';
+  const containerBg = 'bg-[#296588]';
+  const headerBg = 'bg-[#044b97]';
 
   return (
-      <MetahumanoLayout theme={currentTheme}>
+      <MetahumanoLayout>
         {/* Contenido principal */}
         <div
           className={`p-4 ${containerBg} text-white rounded-lg shadow-lg h-full hover:shadow-xl transition-all duration-500
@@ -972,12 +998,14 @@ const solicitarPoder = async (poder) => {
                   {/* Botón Trámite de Rehabilitación */}
                   <button 
                     onClick={handleSolicitarRehabilitacion}
-                    disabled={metahumanoDetails.estado === 'rehabilitando' || metahumanoDetails.estado === 'rehabilitado'}
+                    disabled={metahumanoDetails.estado === 'rehabilitando' || metahumanoDetails.estado === 'rehabilitado' || deudaMultas > 0}
                     className={`group relative overflow-hidden text-white p-6 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 border cursor-pointer ${
                       metahumanoDetails.estado === 'rehabilitando'
                         ? 'bg-yellow-800/40 border-yellow-500/30 cursor-not-allowed opacity-80'
                         : metahumanoDetails.estado === 'rehabilitado'
                         ? 'bg-emerald-800/40 border-emerald-500/30 cursor-not-allowed opacity-80'
+                        : deudaMultas > 0
+                        ? 'bg-red-950/40 border-red-500/40 cursor-not-allowed opacity-90'
                         : 'bg-gradient-to-br from-emerald-600 to-emerald-800 hover:from-emerald-700 hover:to-emerald-900 border-emerald-500/30'
                     }`}
                   >
@@ -987,6 +1015,7 @@ const solicitarPoder = async (poder) => {
                         <h2 className="text-xl font-bold text-left">
                           {metahumanoDetails.estado === 'rehabilitando' ? '⏳ Rehabilitación en Proceso' :
                            metahumanoDetails.estado === 'rehabilitado' ? '🕊️ Rehabilitación Completada' :
+                           deudaMultas > 0 ? '⚠️ Multas Pendientes' :
                            '🕊️ Solicitar Rehabilitación'}
                         </h2>
                         <div className="w-8 h-8 bg-emerald-500/30 rounded-full flex items-center justify-center group-hover:bg-emerald-400/50 transition-colors">
@@ -996,6 +1025,7 @@ const solicitarPoder = async (poder) => {
                       <p className="text-emerald-100 text-sm text-left leading-relaxed">
                         {metahumanoDetails.estado === 'rehabilitando' ? 'Tu trámite de transición a Héroe está siendo evaluado por las autoridades.' :
                          metahumanoDetails.estado === 'rehabilitado' ? '¡Felicitaciones! Has completado el proceso de reinserción a la sociedad.' :
+                         deudaMultas > 0 ? `Debes saldar tu deuda de multas ($${deudaMultas.toLocaleString()}) antes de poder solicitar la rehabilitación.` :
                          'Inicia el proceso paso a paso supervisado por el gobierno para convertirte en Héroe.'}
                       </p>
                     </div>
@@ -1168,13 +1198,10 @@ const solicitarPoder = async (poder) => {
                           <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">
                             Recompensa por captura ($)
                           </label>
-                          <input
-                            type="number"
-                            value={recompensa}
-                            onChange={(e) => setRecompensa(e.target.value)}
-                            placeholder="Ej: 50000"
-                            className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-red-500"
-                          />
+                          <div className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-amber-300 font-bold flex items-center justify-between">
+                            <span>${deudaMultas.toLocaleString()}</span>
+                            <span className="text-[11px] text-gray-400 font-normal italic">Calculada por deudas de multas no pagadas</span>
+                          </div>
                         </div>
                       </div>
                       <div>

@@ -11,14 +11,7 @@ export default function MetahumanoLayout({ children, theme, hideFooter = false, 
   const [showUser, setShowUser] = useState(false);
   const { user } = useAuth();
 
-  const currentTheme = theme || user?.tipoMeta || "";
-
-  let bgClass = "bg-[#296588]"; // default blue
-  if (currentTheme === "heroe" || currentTheme === "heróe") {
-    bgClass = "bg-gradient-to-br from-[#450a0a] via-[#7f1d1d] to-[#991b1b]";
-  } else if (currentTheme === "villano") {
-    bgClass = "bg-gradient-to-br from-[#09090b] via-[#18181b] to-[#27272a]";
-  }
+  let bgClass = "bg-[#296588]"; // default background for all metahumanos
 
   const toggleMenu = () => {
     setShowMenu(!showMenu);

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import MetahumanoLayout from "../../components/layouts/MetahumanoLayout";
+import BurocrataLayout from "../../components/layouts/BurocrataLayout";
 import { useAuth } from "../../context/AuthContext";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -71,6 +72,9 @@ export default function VigilarMundoMeta() {
         }
     }, [isAuthenticated, user]);
 
+    const isBurocrata = user?.role === 'burocrata' || user?.perfil === 'burocrata' || user?.role === 'admin';
+    const LayoutComponent = isBurocrata ? BurocrataLayout : MetahumanoLayout;
+
     // 1. Inicialización del Mapa (Solo se ejecuta una vez al montar)
     useEffect(() => {
         if (!isAuthenticated) return;
@@ -116,8 +120,11 @@ export default function VigilarMundoMeta() {
             osmDark.addTo(mapInstance);
         }
 
-        // 4. Graficar Metahumanos registrados
+        // 4. Graficar Metahumanos
         metahumanosList.forEach(m => {
+            // Si es metahumano comun/heroe, NO puede ver villanos
+            if (!isBurocrata && m.tipoMeta === 'villano') return;
+
             if (m.latitud && m.longitud) {
                 const emoji = m.tipoMeta === 'heroe' || m.tipoMeta === 'heróe' ? '🦸‍♂️' : m.tipoMeta === 'villano' ? '🦹' : '👤';
                 const icon = L.divIcon({
@@ -133,14 +140,38 @@ export default function VigilarMundoMeta() {
               <strong style="font-size: 13px;">${m.alias || 'Metahumano'}</strong><br/>
               <span style="font-size: 11px; color: #666;">Nombre: ${m.nombre}</span><br/>
               <span style="font-size: 11px; font-weight: bold; color: ${m.tipoMeta === 'heroe' || m.tipoMeta === 'heróe' ? '#3b82f6' : m.tipoMeta === 'villano' ? '#ef4444' : '#10b981'}">
-                ${m.tipoMeta === 'heroe' || m.tipoMeta === 'heróe' ? '🦸‍♂️ HÉROE' : m.tipoMeta === 'villano' ? '🦹 VILLANO' : '👤 SIN DEFINIR'}
+                ${m.tipoMeta === 'heroe' || m.tipoMeta === 'heróe' ? '🦸‍♂️ HÉROE' : m.tipoMeta === 'villano' ? '🦹 VILLANO' : '👤 METAHUMANO'}
               </span>
             </div>
           `);
             }
         });
 
-        // 5. Graficar Evidencias registradas
+        // 6. Graficar Burócratas (Solo visibles para burócratas)
+        if (isBurocrata) {
+            burocratasList.forEach(b => {
+                if (b.latitud && b.longitud) {
+                    const { id, nombre, latitud, longitud } = b;
+                    const icon = L.divIcon({
+                        html: `<div style="font-size: 26px; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.5));">👨‍💼</div>`,
+                        iconSize: [26, 26],
+                        iconAnchor: [13, 13]
+                    });
+
+                    L.marker([latitud, longitud], { icon })
+                        .addTo(mapInstance)
+                        .bindPopup(`
+                            <div style="font-family: sans-serif; color: #333; min-width: 160px; padding: 2px;">
+                                <strong style="font-size: 13px; color: #1e293b;">Burócrata ID: ${id}</strong><br/>
+                                <hr style="margin: 4px 0; border: 0; border-top: 1px solid #e2e8f0;"/>
+                                <span style="font-size: 11px; color: #475569;">
+                                    👨‍💼 <b>Nombre:</b> ${nombre}
+                                </span>
+                            </div>
+                        `);
+                }
+            });
+        }
         console.log('Graficando evidencias en el mapa, cantidad:', evidenciasList.length);
         evidenciasList.forEach(ev => {
             console.log('Procesando evidencia:', ev);
@@ -176,35 +207,6 @@ export default function VigilarMundoMeta() {
                 console.log(`Marcador de evidencia ${id} agregado al mapa en coordenadas:`, [latitud, longitud]);
             } else {
                 console.warn(`Evidencia ${ev.id} no tiene coordenadas lat/long válidas:`, ev.latitud, ev.longitud);
-            }
-        });
-        // Graficar burocratas
-        console.log('Graficando burocratas en el mapa, cantidad:', burocratasList.length);
-        burocratasList.forEach(b => {
-            console.log('Procesando burocrata:', b);
-            if (b.latitud && b.longitud) {
-                const { id, nombre, latitud, longitud } = b;
-
-                const icon = L.divIcon({
-                    html: `<div style="font-size: 26px; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.5));">👨‍💼</div>`,
-                    iconSize: [26, 26],
-                    iconAnchor: [13, 13]
-                });
-
-                L.marker([latitud, longitud], { icon })
-                    .addTo(mapInstance)
-                    .bindPopup(`
-                        <div style="font-family: sans-serif; color: #333; min-width: 160px; padding: 2px;">
-                            <strong style="font-size: 13px; color: #1e293b;">Burocrata ID: ${id}</strong><br/>
-                            <hr style="margin: 4px 0; border: 0; border-top: 1px solid #e2e8f0;"/>
-                            <span style="font-size: 11px; color: #475569;">
-                                👨‍💼 <b>Nombre:</b> ${nombre}
-                            </span>
-                        </div>
-                    `);
-                console.log(`Marcador de burocrata ${id} agregado al mapa en coordenadas:`, [latitud, longitud]);
-            } else {
-                console.warn(`Burocrata ${b.id} no tiene coordenadas lat/long válidas:`, b.latitud, b.longitud);
             }
         });
 
@@ -258,7 +260,7 @@ export default function VigilarMundoMeta() {
     }, [metahumanosList, carpetasDestruccion, evidenciasList, burocratasList, isAuthenticated, mapTheme]);
 
     return (
-        <MetahumanoLayout hideFooter={true} fullScreen={true}>
+        <LayoutComponent hideFooter={true} fullScreen={true}>
             <div className="px-4 h-full flex flex-col">
                 {/* Encabezado */}
                 <section className="text-white mb-4 flex justify-center items-center">
@@ -290,6 +292,6 @@ export default function VigilarMundoMeta() {
                     <div id="vigilar-map" className="absolute inset-0 z-10"></div>
                 </div>
             </div>
-        </MetahumanoLayout>
+        </LayoutComponent>
     );
 }
