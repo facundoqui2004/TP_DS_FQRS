@@ -16,7 +16,7 @@ import {
   sanitizeMetaPoderInput,
   assignPoderToMetahumano
 } from '../metaPoder/metaPoder.controller.js'
-import { requireAuth } from '../auth/auth.middleware.js'
+import { requireAuth, requireRoles } from '../auth/auth.middleware.js'
 
 const router = express.Router()
 
@@ -29,7 +29,7 @@ router.post('/estilo-vida', requireAuth, definirEstiloVida) // Definir si es HER
 router.post('/', sanitizeMetahumanoInput, add)
 router.put('/poderes', requireAuth, actualizarPoderesMetahumano) // Agregar/modificar habilidades
 router.put('/:id', sanitizeMetahumanoInput, update)
-router.delete('/:id', remove)
+router.delete('/:id', requireAuth, requireRoles(['ADMIN']), remove)
 
 // MetaPoder relacionado al metahumano
 router.get('/:id/metapoder', findAllForMetahumano)

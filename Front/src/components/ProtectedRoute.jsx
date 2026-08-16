@@ -2,11 +2,11 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-// normalizar roles
-const normalizeRole = (role) => {
+// Normalizar roles
+export const normalizeRole = (role) => {
     if (!role) return null;
     
-    const roleUpper = role.toUpperCase();
+    const roleUpper = String(role).toUpperCase().trim();
     
     switch (roleUpper) {
         case 'METAHUMANO':
@@ -17,39 +17,35 @@ const normalizeRole = (role) => {
             return 'BUROCRATA';
         case 'ADMIN':
         case 'ADMINISTRATOR':
-            return 'admin';
+            return 'ADMIN';
         default:
-            return role;
+            return roleUpper;
     }
 };
 
-const ProtectedRoute = ({ children, requiredRole = null }) => {
+const ProtectedRoute = ({ children, requiredRole = null, allowedRoles = [] }) => {
     const { isAuthenticated, user } = useAuth();
 
-    // normalizar rol de usuario
-    const userRole = normalizeRole(user?.role);
-
-    console.log('Verificando acceso:', { 
-        isAuthenticated, 
-        user, 
-        requiredRole,
-        originalRole: user?.role,
-        normalizedUserRole: userRole
-    });
-
-    // si no esta autenticado, redirigir al login
+    // Si no está autenticado, redirigir al login
     if (!isAuthenticated) {
-        console.log('Usuario no autenticado, redirigiendo a /login');
         return <Navigate to="/login" replace />;
     }
 
-    // Si se requiere rol
-    if (requiredRole && userRole !== requiredRole) {
-        console.log(`Usuario no tiene el rol requerido: ${requiredRole}, tiene: ${userRole} (original: ${user?.role})`);
+    const userRole = normalizeRole(user?.role);
+
+    // Combinar requiredRole y allowedRoles en una lista normalizada
+    const allowedList = [
+        ...(Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles]),
+        ...(requiredRole ? [requiredRole] : [])
+    ]
+        .filter(Boolean)
+        .map(r => normalizeRole(r));
+
+    // Si se especificaron roles permitidos, verificar pertenencia
+    if (allowedList.length > 0 && (!userRole || !allowedList.includes(userRole))) {
         return <Navigate to="/" replace />;
     }
 
-    console.log('✅ Acceso permitido a la ruta protegida');
     return children;
 };
 

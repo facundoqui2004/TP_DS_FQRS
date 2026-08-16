@@ -5,10 +5,11 @@ import { Burocrata } from '../Burocratas/Burocrata.entity.js'
 import { orm } from '../shared/db/orm.js'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
+import { UsuarioService } from './usuario.service.js'
+import { config } from '../config/environment.js'
 
 const em = orm.em
-const JWT_SECRET = process.env.JWT_SECRET || 'tu_secreto_aqui' // usar .env en producción
-import { UsuarioService } from './usuario.service.js'
+const JWT_SECRET = config.jwtSecret
 
 /**
  * Crear usuario básico (solo datos comunes, sin perfil)

@@ -1,8 +1,15 @@
-import { test, describe } from 'node:test'
+import { test, describe, after } from 'node:test'
 import assert from 'node:assert'
 import { app } from '../app.js'
+import { orm } from '../shared/db/orm.js'
 
 describe('Backend Express API Architecture', () => {
+  after(async () => {
+    try {
+      await orm.close(true)
+    } catch {}
+  })
+
   test('App Instance is initialized properly', () => {
     assert.strictEqual(typeof app, 'function')
     assert.strictEqual(typeof app.listen, 'function')

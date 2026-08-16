@@ -20,10 +20,10 @@ import cors from 'cors'
 import { requireAuth } from './auth/auth.middleware.js';
 
 // Importar controladores para rutas de usuarios legacy
-import { 
-  crearUsuarioBasico as registrarUsuario, 
-  login as loginUsuario, 
-  obtenerPerfil as obtenerUsuarioActual, 
+import {
+  crearUsuarioBasico as registrarUsuario,
+  login as loginUsuario,
+  obtenerPerfil as obtenerUsuarioActual,
   logout as logoutUsuario,
   listarUsuarios as obtenerTodosLosUsuarios,
   obtenerUsuarioPorId
@@ -48,8 +48,9 @@ app.use(cors({
 }))
 app.use(express.json({ limit: '50mb' }))
 app.use(express.urlencoded({ limit: '50mb', extended: true }))
-app.use(cookieParser()) 
-
+app.use(cookieParser())
+//>----------------------------------------------------------------------------------------------------------------
+// TODO : El usuario legacy ta dificil Mano
 // Contexto de EntityManager por request
 app.use((req, res, next) => {
   RequestContext.create(orm.em, next)
@@ -62,8 +63,13 @@ usuariosLegacyRouter.get('/:id(\\d+)', obtenerUsuarioPorId);
 usuariosLegacyRouter.post('/register', registrarUsuario)
 usuariosLegacyRouter.post('/login', loginUsuario)
 usuariosLegacyRouter.post('/logout', logoutUsuario)
+//================================================================================================================
 
+//>---------------------------------------------------------------------------------------------------------------
 // Rutas principales
+// Todo este codigo es  lo que usamos para conectar con las carpetas, traemos los Router y entonces
+// llamamos a los controladores, el /api es como la raiz de la aplicacion 
+//---------------------------------------------------------------------------------------------------------------
 app.use('/api/usuarios', usuariosLegacyRouter)
 app.use('/api/metahumanos', metahumanosRoutes)
 app.use('/api/poderes', poderesRoutes)
@@ -72,11 +78,11 @@ app.use('/api/burocratas', burocratasRouter)
 app.use('/api/multas', multasRouter)
 app.use('/api/evidencias', evidenciaRouter)
 app.use('/api/carpetas', carpetaRouter)
-app.use('/api/auth', usuarioRouter) 
+app.use('/api/auth', usuarioRouter)
 app.use('/api/villanos', villanoRoutes)
 app.use('/api/heroes', heroeRoutes)
 app.use('/api/noticias', noticiaRouter)
-
+//=================================================================================================================
 // 404 handler
 app.use((req, res, next) => {
   res.status(404).json({ message: 'Resource not found' })

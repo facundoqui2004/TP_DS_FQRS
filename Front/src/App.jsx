@@ -44,6 +44,7 @@ import GestionarPoderes from './pages/admin/tramites/gestionar-poderes';
 import GestionarMultas from './pages/admin/tramites/gestionar-multas';
 
 import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
@@ -51,45 +52,46 @@ function App() {
       <AuthProvider>
         <Routes>
 
-          {/* Generales */}
+          {/* Generales (Públicas) */}
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
 
-          {/* Admin */}
-          <Route path="/admin" element={<HomeAdmin />} />
-          <Route path="/admin/usuarios" element={<GestionarUsuarios />} />
-          <Route path="/admin/metahumanos" element={<GestionarMetahumanos />} />
-          <Route path="/admin/burocratas" element={<GestionarBurocratas />} />
-          <Route path="/admin/tramites" element={<Tramites />} />
-          <Route path="/admin/tramites/crear-poderes" element={<CrearPoderes />} />
-          <Route path="/admin/tramites/gestionar-poderes" element={<GestionarPoderes />} />
-          <Route path="/admin/tramites/gestionar-multas" element={<GestionarMultas />} />
-          <Route path="/admin/tramites/aprobar-tramites" element={<AprobarTramites />} />
-          <Route path="/admin/perfil" element={<MiPerfilAdmin />} />
-          <Route path="/admin/soporte" element={<SoporteAdmin />} />
+          {/* Admin (Protegidas: ADMIN) */}
+          <Route path="/admin" element={<ProtectedRoute allowedRoles={['ADMIN']}><HomeAdmin /></ProtectedRoute>} />
+          <Route path="/admin/usuarios" element={<ProtectedRoute allowedRoles={['ADMIN']}><GestionarUsuarios /></ProtectedRoute>} />
+          <Route path="/admin/metahumanos" element={<ProtectedRoute allowedRoles={['ADMIN']}><GestionarMetahumanos /></ProtectedRoute>} />
+          <Route path="/admin/burocratas" element={<ProtectedRoute allowedRoles={['ADMIN']}><GestionarBurocratas /></ProtectedRoute>} />
+          <Route path="/admin/tramites" element={<ProtectedRoute allowedRoles={['ADMIN']}><Tramites /></ProtectedRoute>} />
+          <Route path="/admin/tramites/crear-poderes" element={<ProtectedRoute allowedRoles={['ADMIN']}><CrearPoderes /></ProtectedRoute>} />
+          <Route path="/admin/tramites/gestionar-poderes" element={<ProtectedRoute allowedRoles={['ADMIN']}><GestionarPoderes /></ProtectedRoute>} />
+          <Route path="/admin/tramites/gestionar-multas" element={<ProtectedRoute allowedRoles={['ADMIN']}><GestionarMultas /></ProtectedRoute>} />
+          <Route path="/admin/tramites/aprobar-tramites" element={<ProtectedRoute allowedRoles={['ADMIN']}><AprobarTramites /></ProtectedRoute>} />
+          <Route path="/admin/perfil" element={<ProtectedRoute allowedRoles={['ADMIN']}><MiPerfilAdmin /></ProtectedRoute>} />
+          <Route path="/admin/soporte" element={<ProtectedRoute allowedRoles={['ADMIN']}><SoporteAdmin /></ProtectedRoute>} />
 
-          {/* Metahumanos */}
-          <Route path="/metahumano" element={<HomeMeta />} />
-          <Route path="/metahumano/tramites" element={<TramitesMetaHumano />} />
-          <Route path="/metahumano/carpetas" element={<CarpetasMeta />} />
-          <Route path="/metahumano/poderes/crear" element={<CrearPoderes />} />
-          <Route path="/metahumano/soporte" element={<SoporteMeta />} />
-          <Route path="/metahumano/perfil" element={<MiPerfilMeta />} />
-          <Route path="/metahumano/vigilar-mundo" element={<VigilarMundo />} />
+          {/* Metahumanos (Protegidas: METAHUMANO, ADMIN) */}
+          <Route path="/metahumano" element={<ProtectedRoute allowedRoles={['METAHUMANO', 'ADMIN']}><HomeMeta /></ProtectedRoute>} />
+          <Route path="/metahumano/tramites" element={<ProtectedRoute allowedRoles={['METAHUMANO', 'ADMIN']}><TramitesMetaHumano /></ProtectedRoute>} />
+          <Route path="/metahumano/carpetas" element={<ProtectedRoute allowedRoles={['METAHUMANO', 'ADMIN']}><CarpetasMeta /></ProtectedRoute>} />
+          <Route path="/metahumano/poderes/crear" element={<ProtectedRoute allowedRoles={['METAHUMANO', 'ADMIN']}><CrearPoderes /></ProtectedRoute>} />
+          <Route path="/metahumano/soporte" element={<ProtectedRoute allowedRoles={['METAHUMANO', 'ADMIN']}><SoporteMeta /></ProtectedRoute>} />
+          <Route path="/metahumano/perfil" element={<ProtectedRoute allowedRoles={['METAHUMANO', 'ADMIN']}><MiPerfilMeta /></ProtectedRoute>} />
+          <Route path="/metahumano/vigilar-mundo" element={<ProtectedRoute allowedRoles={['METAHUMANO', 'ADMIN']}><VigilarMundo /></ProtectedRoute>} />
+          <Route path="/metahumano/noticias" element={<ProtectedRoute allowedRoles={['METAHUMANO', 'ADMIN']}><NoticiasMetahumano /></ProtectedRoute>} />
 
-          {/* Burócratas */}
-          <Route path="/burocrata" element={<HomeBurocrata />} />
-          <Route path="/burocrata/carpetas" element={<CarpetasList />} />
-          <Route path="/burocrata/carpeta/crear" element={<CrearCarpeta />} />
-          <Route path="/burocrata/carpeta/:id" element={<CarpetaDetalle />} />
-          <Route path="/burocrata/perfil" element={<MiPerfilBuro />} />
-          <Route path="/burocrata/soporte" element={<SoporteBuro />} />
-          <Route path="/burocrata/noticias" element={<GestionNoticias />} />
-          <Route path="/burocrata/vigilar-mundo" element={<VigilarMundo />} />
+          {/* Burócratas (Protegidas: BUROCRATA, ADMIN) */}
+          <Route path="/burocrata" element={<ProtectedRoute allowedRoles={['BUROCRATA', 'ADMIN']}><HomeBurocrata /></ProtectedRoute>} />
+          <Route path="/burocrata/carpetas" element={<ProtectedRoute allowedRoles={['BUROCRATA', 'ADMIN']}><CarpetasList /></ProtectedRoute>} />
+          <Route path="/burocrata/carpeta/crear" element={<ProtectedRoute allowedRoles={['BUROCRATA', 'ADMIN']}><CrearCarpeta /></ProtectedRoute>} />
+          <Route path="/burocrata/carpeta/:id" element={<ProtectedRoute allowedRoles={['BUROCRATA', 'ADMIN']}><CarpetaDetalle /></ProtectedRoute>} />
+          <Route path="/burocrata/perfil" element={<ProtectedRoute allowedRoles={['BUROCRATA', 'ADMIN']}><MiPerfilBuro /></ProtectedRoute>} />
+          <Route path="/burocrata/soporte" element={<ProtectedRoute allowedRoles={['BUROCRATA', 'ADMIN']}><SoporteBuro /></ProtectedRoute>} />
+          <Route path="/burocrata/noticias" element={<ProtectedRoute allowedRoles={['BUROCRATA', 'ADMIN']}><GestionNoticias /></ProtectedRoute>} />
+          <Route path="/burocrata/vigilar-mundo" element={<ProtectedRoute allowedRoles={['BUROCRATA', 'ADMIN']}><VigilarMundo /></ProtectedRoute>} />
 
-          {/* Noticias metahumanos */}
-          <Route path="/metahumano/noticias" element={<NoticiasMetahumano />} />
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

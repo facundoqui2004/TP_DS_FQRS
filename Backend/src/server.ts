@@ -1,16 +1,16 @@
-import 'dotenv/config'
 import { app } from './app.js'
 import { syncSchema } from './shared/db/orm.js'
 import { seedDatabase } from './shared/db/seeder.js'
+import { config } from './config/environment.js'
 
 async function startServer() {
   try {
     await syncSchema()
     await seedDatabase()
 
-    const port = process.env.PORT || 3000
+    const port = config.port
     app.listen(port, () => {
-      console.log(`Server running on http://localhost:${port}/`)
+      console.log(`Server running on http://localhost:${port}/ [Environment: ${config.env}]`)
     })
   } catch (error) {
     console.error('Error starting server:', error)

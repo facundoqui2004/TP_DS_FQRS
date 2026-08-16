@@ -8,9 +8,7 @@
     "start:dev": "tsc-watch --noClear -p ./tsconfig.json --onSuccess \"node ./dist/server.js\"",
     "dev": "npm run start:dev",
     "build": "tsc",
-    "start": "node dist/server.js",
-    "test": "node --test --import ts-node/register --test-name-pattern='.*' || tsc --noEmit",
-    "docker:dev": "cd docker && ./start-dev.sh",
+    "test": "npm run build && node --test dist/__tests__/*.test.js",
     "docker:stop": "cd docker && ./stop-dev.sh",
     "docker:check": "cd docker && ./check-health.sh",
     "docker:test": "cd docker && ./test-api.sh",
@@ -41,7 +39,10 @@
     "@types/express": "^4.17.17",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "20.5.0",
+    "@types/supertest": "^7.2.1",
+    "supertest": "^7.2.2",
     "tsc-watch": "6.0.4",
+    "tsx": "^4.23.12",
     "typescript": "^5.1.6"
   }
 }

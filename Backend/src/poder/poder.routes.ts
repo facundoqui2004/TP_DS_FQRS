@@ -7,13 +7,14 @@ import {
   update,
   remove
 } from './poder.controller.js'
+import { requireAuth, requireRoles } from '../auth/auth.middleware.js'
 
 const router = express.Router()
 
 router.get('/', findAll)
 router.get('/:id', findOne)
-router.post('/', sanitizePoderInput, add)
-router.put('/:id', sanitizePoderInput, update)
-router.delete('/:id', remove)
+router.post('/', requireAuth, requireRoles(['BUROCRATA', 'ADMIN']), sanitizePoderInput, add)
+router.put('/:id', requireAuth, requireRoles(['BUROCRATA', 'ADMIN']), sanitizePoderInput, update)
+router.delete('/:id', requireAuth, requireRoles(['ADMIN']), remove)
 
 export default router

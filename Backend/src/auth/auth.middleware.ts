@@ -2,8 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { orm } from '../shared/db/orm.js';
 import { Metahumano } from '../metahumano/metahumano.entity.js';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'tu_secreto_aqui';
+import { config } from '../config/environment.js';
 
 export interface AuthedRequest extends Request {
   usuarioId?: number;
@@ -15,12 +14,21 @@ export interface AuthedRequest extends Request {
 
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
   try {
-    const token = req.cookies?.auth_token;
-    if (!token) {
-      return res.status(401).json({ message: 'No autenticado (falta auth_token)' });
+    let token = req.cookies?.auth_token;
+
+    // Soportar también header Authorization: Bearer <token>
+    if (!token && req.headers.authorization) {
+      const parts = req.headers.authorization.split(' ');
+      if (parts.length === 2 && parts[0] === 'Bearer') {
+        token = parts[1];
+      }
     }
 
-    const payload = jwt.verify(token, JWT_SECRET) as any;
+    if (!token) {
+      return res.status(401).json({ message: 'No autenticado (falta auth_token o token Bearer)' });
+    }
+
+    const payload = jwt.verify(token, config.jwtSecret) as any;
 
     (req as AuthedRequest).usuarioId = payload.usuarioId;
     (req as AuthedRequest).role      = payload.role;
