@@ -278,18 +278,11 @@ async function crearPreferenciaMPAdmin(req: Request, res: Response) {
           unit_price: Math.max(1, Number(multa.montoMulta) || 100)
         }
       ],
-      payer: {
-        name: "Usuario",
-        surname: "Metahumano",
-        email: "comprador_test@ejemplo.com"
-      },
       back_urls: {
         success: `${frontendUrl}/metahumano/carpetas?status=success&multa_id=${multa.id}`,
         failure: `${frontendUrl}/metahumano/carpetas?status=failure&multa_id=${multa.id}`,
         pending: `${frontendUrl}/metahumano/carpetas?status=pending&multa_id=${multa.id}`
       },
-      auto_return: 'approved',
-      binary_mode: true,
       external_reference: `MULTA-${multa.id}`
     };
 
@@ -299,6 +292,8 @@ async function crearPreferenciaMPAdmin(req: Request, res: Response) {
     let checkoutUrl = '';
 
     if (mpAccessToken && !mpAccessToken.includes('TU_ACCESS_TOKEN')) {
+      console.log('[MP] Token prefix:', mpAccessToken.substring(0, 8));
+      console.log('[MP] Body enviado a MP:', JSON.stringify(preferenceBody, null, 2));
       try {
         const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
           method: 'POST',
@@ -310,20 +305,27 @@ async function crearPreferenciaMPAdmin(req: Request, res: Response) {
         });
 
         const mpData = await response.json();
+        console.log('[MP] HTTP Status:', response.status);
+        console.log('[MP] Respuesta de MP:', JSON.stringify(mpData, null, 2));
+
         if (response.ok) {
           initPoint = mpData.init_point;
           sandboxInitPoint = mpData.sandbox_init_point || mpData.init_point;
           preferenceId = mpData.id;
           checkoutUrl = mpAccessToken.startsWith('TEST-') ? sandboxInitPoint : initPoint;
+          console.log('[MP] ✅ Preferencia creada OK. checkoutUrl:', checkoutUrl);
         } else {
-          console.warn('Mercado Pago API error details:', mpData);
+          console.error('[MP] ❌ Error de MP API:', mpData);
         }
       } catch (mpErr) {
-        console.warn('Error al comunicarse con la API de Mercado Pago:', mpErr);
+        console.error('[MP] ❌ Error de red al llamar a MP:', mpErr);
       }
+    } else {
+      console.warn('[MP] ⚠️ Token no configurado o es placeholder. Se usará URL de fallback.');
     }
 
     if (!checkoutUrl) {
+      console.warn('[MP] ⚠️ USANDO URL FALSA DE FALLBACK — esto significa que la llamada a MP falló.');
       preferenceId = `PREF-${Date.now()}-${multa.id}`;
       sandboxInitPoint = `https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=${preferenceId}`;
       initPoint = sandboxInitPoint;
@@ -348,4 +350,63 @@ async function crearPreferenciaMPAdmin(req: Request, res: Response) {
   }
 }
 
-export { sanitizeMultasInput, findAll, findOne, add, update, remove, pagarMulta, crearPreferenciaMPAdmin }
+async function verificarPagoMP(req: Request, res: Response) {
+  try {
+    const id = Number.parseInt(req.params.id)
+    if (isNaN(id)) return res.status(400).json({ message: 'ID de multa inválido' })
+
+    const authedReq = req as any
+    const metahumanoId = authedReq.perfilId
+    if (!metahumanoId) return res.status(400).json({ message: 'El usuario no tiene perfil de metahumano' })
+
+    const multa = await em.findOneOrFail(Multa, { id }, { populate: ['evidencia.carpeta.metahumano'] })
+
+    if (multa.evidencia?.carpeta?.metahumano?.id !== metahumanoId) {
+      return res.status(403).json({ message: 'Acceso denegado: esta multa no te pertenece' })
+    }
+    if (multa.estado === 'PAGADA') {
+      return res.status(200).json({ message: 'La multa ya estaba pagada', alreadyPaid: true })
+    }
+
+    const mpAccessToken = process.env.MP_ACCESS_TOKEN || ''
+    if (!mpAccessToken || mpAccessToken.includes('TU_ACCESS_TOKEN')) {
+      return res.status(400).json({ message: 'MP no configurado' })
+    }
+
+    // Buscar en MP un pago aprobado con el external_reference de esta multa
+    const searchRes = await fetch(
+      `https://api.mercadopago.com/v1/payments/search?sort=date_created&criteria=desc&external_reference=MULTA-${id}`,
+      { headers: { Authorization: `Bearer ${mpAccessToken}` } }
+    )
+    const searchData = await searchRes.json()
+    console.log('[MP Verify] Resultados para MULTA-' + id + ':', JSON.stringify(searchData?.results?.map((p: any) => ({ id: p.id, status: p.status }))))
+
+    const approvedPayment = searchData.results?.find((p: any) => p.status === 'approved')
+
+    if (!approvedPayment) {
+      return res.status(400).json({ message: 'No se encontró un pago aprobado en Mercado Pago para esta multa. Si ya pagaste, esperá unos segundos e intentá de nuevo.' })
+    }
+
+    // Pago confirmado por MP → marcar como PAGADA
+    multa.estado = 'PAGADA'
+    multa.formaPago = 'Mercado Pago'
+    await em.flush()
+
+    // Recalcular recompensa del villano si corresponde
+    try {
+      const metahumano = multa.evidencia.carpeta.metahumano
+      if (metahumano?.tipoMeta === 'villano') {
+        const multas = await em.find(Multa, { evidencia: { carpeta: { metahumano: { id: metahumano.id } } } })
+        const unpaidMultas = multas.filter(m => m.estado === 'APROBADA')
+        const recompensa = unpaidMultas.length > 0 ? unpaidMultas.reduce((acc, m) => acc + (m.montoMulta || 0), 0) : 0
+        await em.getConnection().execute('UPDATE metahumano SET recompensa = ? WHERE id = ?', [recompensa, metahumano.id])
+      }
+    } catch (e) { console.error('Error recalculando recompensa:', e) }
+
+    res.status(200).json({ message: 'Pago verificado y multa marcada como PAGADA', data: multa })
+  } catch (error: any) {
+    res.status(500).json({ message: error.message })
+  }
+}
+
+export { sanitizeMultasInput, findAll, findOne, add, update, remove, pagarMulta, crearPreferenciaMPAdmin, verificarPagoMP }

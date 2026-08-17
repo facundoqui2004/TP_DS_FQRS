@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect } from "react";
 import { getMetaId, getUserFromCookie}  from "../../utils/cookies";
 import { FaFolder, FaExclamationCircle, FaSearch } from "react-icons/fa";
 import { getBurocrataByIdRequest } from "../../api/burocratas";
-import { pagarMultaRequest, crearPreferenciaMPRequest } from "../../api/multas";
+import { pagarMultaRequest, crearPreferenciaMPRequest, verificarPagoMPRequest } from "../../api/multas";
 import MetahumanoLayout from "../../components/layouts/MetahumanoLayout";
 import { useAuth } from "../../context/AuthContext";
 
@@ -18,6 +18,7 @@ function Home() {
   const [expandedMultas, setExpandedMultas] = useState({});
   const [burocrataNombre, setBurocrataNombre] = useState(null);
   const [payingMulta, setPayingMulta] = useState(null);
+  const [pendingVerification, setPendingVerification] = useState(null); // multaId esperando confirmación de MP
   const { user } = useAuth();
 
  
@@ -75,6 +76,57 @@ function Home() {
     fetchData();
   }, [fetchCarpetas]);
 
+  // Detectar retorno desde MercadoPago y confirmar pago solo si MP lo aprobó
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get('status');
+    const multaId = params.get('multa_id');
+
+    if (status === 'success' && multaId) {
+      // Limpiar los query params de la URL sin recargar la página
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, cleanUrl);
+
+      // Marcar la multa como PAGADA ahora que MP confirmó el pago
+      pagarMultaRequest(Number(multaId), { formaPago: 'Mercado Pago' })
+        .then(() => {
+          alert(`✅ ¡Pago confirmado por Mercado Pago!\nLa Multa #${multaId} ha sido registrada como PAGADA.`);
+          fetchCarpetas();
+        })
+        .catch((err) => {
+          console.error('Error al confirmar pago tras retorno de MP:', err);
+          alert('Mercado Pago aprobó el pago, pero ocurrió un error al registrarlo. Contactá a soporte.');
+        });
+    } else if (status === 'failure' && multaId) {
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, cleanUrl);
+      alert(`❌ El pago de la Multa #${multaId} fue rechazado por Mercado Pago.`);
+    } else if (status === 'pending' && multaId) {
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, cleanUrl);
+      alert(`⏳ El pago de la Multa #${multaId} está pendiente de acreditación.`);
+    }
+  }, [fetchCarpetas]);
+
+  // Polling automático: consulta MP cada 4 seg mientras haya un pago pendiente de confirmar
+  useEffect(() => {
+    if (!pendingVerification) return;
+
+    const interval = setInterval(async () => {
+      try {
+        await verificarPagoMPRequest(pendingVerification);
+        // Pago aprobado detectado automáticamente
+        clearInterval(interval);
+        setPendingVerification(null);
+        await fetchCarpetas();
+      } catch {
+        // 400 = pago aún no registrado en MP, seguir esperando
+      }
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [pendingVerification, fetchCarpetas]);
+
 
 
     const toggleMenu = () => setShowMenu(!showMenu);
@@ -111,16 +163,33 @@ function Home() {
         const checkoutUrl = resPref.data?.data?.checkoutUrl || resPref.data?.data?.sandboxInitPoint || resPref.data?.data?.initPoint;
 
         if (checkoutUrl) {
+          const multaId = payingMulta.id;
+          setPayingMulta(null);
+          setPendingVerification(multaId); // quedar esperando confirmación
           window.open(checkoutUrl, '_blank');
+        } else {
+          alert('No se pudo generar el link de pago. Intentá de nuevo.');
         }
-
-        await pagarMultaRequest(payingMulta.id, { formaPago: 'Mercado Pago' });
-        alert(`💙 ¡Preferencia de Checkout generada en Mercado Pago!\n\nSe abrió la pasarela de pago y la Multa #${payingMulta.id} ha sido registrada con el método Mercado Pago.`);
-        setPayingMulta(null);
-        await fetchCarpetas();
       } catch (err) {
         console.error("Error al procesar pago con Mercado Pago:", err);
         alert("Error al procesar con Mercado Pago: " + (err.response?.data?.message || err.message));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Confirmar pago consultando la API de MP
+    const confirmarPagoMP = async () => {
+      if (!pendingVerification) return;
+      try {
+        setLoading(true);
+        await verificarPagoMPRequest(pendingVerification);
+        alert(`✅ ¡Pago confirmado por Mercado Pago!\nLa Multa #${pendingVerification} ha sido registrada como PAGADA.`);
+        setPendingVerification(null);
+        await fetchCarpetas();
+      } catch (err) {
+        const msg = err.response?.data?.message || err.message;
+        alert(`⚠️ ${msg}`);
       } finally {
         setLoading(false);
       }
@@ -551,6 +620,39 @@ function Home() {
                   Cancelar
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal de confirmación post-pago MP */}
+        {pendingVerification && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+            <div className="bg-[#1F1D2B] border border-cyan-500/40 rounded-2xl p-6 max-w-md w-full shadow-2xl text-white">
+              <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
+                💙 Esperando pago en Mercado Pago
+              </h3>
+              <p className="text-gray-400 text-sm mb-5">
+                Completá el pago en la pestaña de Mercado Pago. Cuando lo confirmemos, el estado se actualizará automáticamente.
+              </p>
+
+              {/* Spinner animado */}
+              <div className="flex items-center justify-center gap-3 bg-black/30 rounded-xl py-4 mb-5">
+                <svg className="animate-spin h-5 w-5 text-cyan-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                </svg>
+                <span className="text-cyan-300 text-sm font-medium">Verificando con Mercado Pago cada 4 segundos...</span>
+              </div>
+
+              <p className="text-xs text-gray-500 text-center mb-4">Multa #{pendingVerification}</p>
+
+              <button
+                type="button"
+                onClick={() => setPendingVerification(null)}
+                className="w-full py-2.5 px-4 rounded-xl border border-gray-600 text-gray-400 hover:text-gray-200 hover:bg-gray-800 transition-colors cursor-pointer text-xs"
+              >
+                Cancelar (no voy a pagar ahora)
+              </button>
             </div>
           </div>
         )}

@@ -349,9 +349,9 @@ export default function NoticiasMetahumano() {
                 )}
               </div>
               
-              <div className="prose prose-invert prose-p:text-white/70 prose-p:leading-relaxed max-w-none">
+              <div className="text-white/90 leading-relaxed max-w-none">
                 {noticiaDetalle.descripcion.split('\n').map((paragraph, idx) => (
-                  <p key={idx} className="mb-4">{paragraph}</p>
+                  <p key={idx} className="mb-4 text-white" style={{ color: "white" }}>{paragraph}</p>
                 ))}
               </div>
             </div>

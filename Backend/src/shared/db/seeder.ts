@@ -16,8 +16,17 @@ export async function seedDatabase() {
 
   console.log('--- Database Seeder & Cleanup Started ---')
 
-  // 0. CLEANUP: Delete all non-admin users and associated data
+  // Guard: si ya existen usuarios no-admin, la DB ya fue inicializada → no hacer nada
   const conn = em.getConnection()
+  const [existingUsers] = await conn.execute("SELECT COUNT(*) as count FROM `usuario` WHERE role != 'admin'") as any[]
+  if (existingUsers.count > 0) {
+    console.log(`--- Seeder omitido: ya existen ${existingUsers.count} usuarios en la DB ---`)
+    return
+  }
+
+  console.log('--- DB vacía detectada, ejecutando seed completo ---')
+
+  // 0. CLEANUP: Delete all non-admin users and associated data
   await conn.execute('SET FOREIGN_KEY_CHECKS = 0;')
   await conn.execute('DELETE FROM `multa`;')
   await conn.execute('DELETE FROM `evidencia`;')

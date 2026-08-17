@@ -457,6 +457,7 @@ export default function GestionNoticias() {
                   onChange={(e) => setForm((f) => ({ ...f, titulo: e.target.value }))}
                   placeholder="Título de la noticia"
                   className="w-full bg-black/30 border border-white/15 text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#f1a035] transition placeholder-white/30"
+                  style={{ color: "white" }}
                 />
               </div>
 
@@ -471,6 +472,7 @@ export default function GestionNoticias() {
                   onChange={(e) => setForm((f) => ({ ...f, descripcion: e.target.value }))}
                   placeholder="Cuerpo completo de la noticia..."
                   className="w-full bg-black/30 border border-white/15 text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#f1a035] transition placeholder-white/30 resize-none"
+                  style={{ color: "white" }}
                 />
               </div>
 
@@ -485,6 +487,7 @@ export default function GestionNoticias() {
                     value={form.fecha}
                     onChange={(e) => setForm((f) => ({ ...f, fecha: e.target.value }))}
                     className="cursor-pointer w-full bg-black/30 border border-white/15 text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#f1a035] transition"
+                    style={{ color: "white" }}
                   />
                 </div>
                 <div>
@@ -495,9 +498,10 @@ export default function GestionNoticias() {
                     value={form.clasificacion}
                     onChange={(e) => setForm((f) => ({ ...f, clasificacion: e.target.value }))}
                     className="cursor-pointer w-full bg-black/30 border border-white/15 text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#f1a035] transition"
+                    style={{ color: "white" }}
                   >
                     {CLASIFICACIONES.map((c) => (
-                      <option key={c} value={c} className="bg-slate-800">
+                      <option key={c} value={c} className="bg-slate-800 text-white" style={{ color: "white" }}>
                         {CLASIFICACION_CONFIG[c].icon} {c}
                       </option>
                     ))}
@@ -515,9 +519,10 @@ export default function GestionNoticias() {
                     value={form.estado}
                     onChange={(e) => setForm((f) => ({ ...f, estado: e.target.value }))}
                     className="cursor-pointer w-full bg-black/30 border border-white/15 text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#f1a035] transition"
+                    style={{ color: "white" }}
                   >
                     {ESTADOS.map((s) => (
-                      <option key={s} value={s} className="bg-slate-800">
+                      <option key={s} value={s} className="bg-slate-800 text-white" style={{ color: "white" }}>
                         {ESTADO_CONFIG[s].label}
                       </option>
                     ))}
