@@ -2,38 +2,43 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../../../components/layouts/AdminLayout';
 import { getAllMultasRequest, updateMultaRequest } from '../../../api/multas';
+import { getCarpetaByIdRequest } from '../../../api/carpetas';
 
 const GestionarMultas = () => {
   const navigate = useNavigate();
   const [multas, setMultas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [busqueda, setBusqueda] = useState('');
-  const [filtroEstado, setFiltroEstado] = useState('todos');
+  // Por defecto, mostrar solo las PENDIENTES
+  const [filtroEstado, setFiltroEstado] = useState('PENDIENTE');
+
+  // Estado para el modal de visualización de Carpeta / Expediente
+  const [selectedMulta, setSelectedMulta] = useState(null);
+  const [carpetaData, setCarpetaData] = useState(null);
+  const [loadingCarpeta, setLoadingCarpeta] = useState(false);
+  const [showCarpetaModal, setShowCarpetaModal] = useState(false);
+
+  // Estado para zoom de imagen / lightbox
+  const [previewImage, setPreviewImage] = useState(null);
 
   useEffect(() => {
-    console.log('Iniciando carga de multas...');
     cargarMultas();
   }, []);
 
   const cargarMultas = async () => {
     try {
       setLoading(true);
-      console.log('Obteniendo multas del backend...');
-      
       const response = await getAllMultasRequest();
       const multasData = response.data?.data || response.data || [];
-      
-      // Ordenar multas
+
+      // Ordenar por fecha (más reciente o por fecha de emisión)
       const multasOrdenadas = multasData.sort((a, b) => {
         const fechaA = new Date(a.fechaEmision || a.createdAt || 0);
         const fechaB = new Date(b.fechaEmision || b.createdAt || 0);
-        return fechaA - fechaB;
+        return fechaB - fechaA; // Orden cronológico descendente
       });
-      
+
       setMultas(multasOrdenadas);
-      console.log('Multas cargadas y ordenadas:', multasOrdenadas);
-      console.log('Total de multas:', multasOrdenadas.length);
-      console.log('Pendientes:', multasOrdenadas.filter(m => m.estado === 'PENDIENTE').length);
     } catch (error) {
       console.error('Error al cargar multas:', error);
       setMultas([]);
@@ -46,8 +51,10 @@ const GestionarMultas = () => {
     if (window.confirm('¿Estás seguro de que quieres aprobar esta multa?')) {
       try {
         await updateMultaRequest(multaId, { estado: 'APROBADA' });
-        // Actualización instantánea local
         setMultas(prev => prev.map(m => m.id === multaId ? { ...m, estado: 'APROBADA' } : m));
+        if (selectedMulta && selectedMulta.id === multaId) {
+          setSelectedMulta(prev => ({ ...prev, estado: 'APROBADA' }));
+        }
       } catch (error) {
         console.error('Error al aprobar multa:', error);
         const errMsg = error.response?.data?.message || error.response?.data?.error || error.message || 'Error desconocido';
@@ -61,8 +68,10 @@ const GestionarMultas = () => {
     if (window.confirm('¿Estás seguro de que quieres rechazar esta multa?')) {
       try {
         await updateMultaRequest(multaId, { estado: 'RECHAZADA' });
-        // Actualización instantánea local
         setMultas(prev => prev.map(m => m.id === multaId ? { ...m, estado: 'RECHAZADA' } : m));
+        if (selectedMulta && selectedMulta.id === multaId) {
+          setSelectedMulta(prev => ({ ...prev, estado: 'RECHAZADA' }));
+        }
       } catch (error) {
         console.error('Error al rechazar multa:', error);
         const errMsg = error.response?.data?.message || error.response?.data?.error || error.message || 'Error desconocido';
@@ -72,8 +81,33 @@ const GestionarMultas = () => {
     }
   };
 
+  const handleAbrirCarpeta = async (multa) => {
+    setSelectedMulta(multa);
+    setShowCarpetaModal(true);
+    setCarpetaData(null);
+
+    const carpetaId = multa.evidencia?.carpeta?.id || multa.evidencia?.carpetaId;
+
+    if (carpetaId) {
+      try {
+        setLoadingCarpeta(true);
+        const res = await getCarpetaByIdRequest(carpetaId);
+        const fetchedCarpeta = res.data?.data || res.data;
+        setCarpetaData(fetchedCarpeta);
+      } catch (err) {
+        console.warn('No se pudo cargar la carpeta por ID, usando datos locales:', err);
+        // Fallback usando los datos ya poblados en la multa
+        setCarpetaData(multa.evidencia?.carpeta || null);
+      } finally {
+        setLoadingCarpeta(false);
+      }
+    } else if (multa.evidencia?.carpeta) {
+      setCarpetaData(multa.evidencia.carpeta);
+    }
+  };
+
   const multasFiltradas = multas.filter(multa => {
-    const coincideBusqueda = !busqueda || 
+    const coincideBusqueda = !busqueda ||
       multa.descripcion?.toLowerCase().includes(busqueda.toLowerCase()) ||
       multa.motivoMulta?.toLowerCase().includes(busqueda.toLowerCase()) ||
       multa.metahumano?.alias?.toLowerCase().includes(busqueda.toLowerCase()) ||
@@ -94,18 +128,18 @@ const GestionarMultas = () => {
   const multasAprobadas = multas.filter(m => m.estado?.toUpperCase() === 'APROBADA').length;
   const multasRechazadas = multas.filter(m => m.estado?.toUpperCase() === 'RECHAZADA').length;
 
-  const getEstadoColor = (estado) => {
+  const getEstadoBadge = (estado) => {
     switch (estado?.toUpperCase()) {
       case 'PENDIENTE':
-        return 'bg-yellow-600 text-yellow-100';
+        return 'bg-amber-500/10 text-amber-400 border border-amber-500/30';
       case 'APROBADA':
-        return 'bg-green-600 text-green-100';
+        return 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30';
       case 'RECHAZADA':
-        return 'bg-red-600 text-red-100';
+        return 'bg-rose-500/10 text-rose-400 border border-rose-500/30';
       case 'PAGADA':
-        return 'bg-blue-600 text-blue-100';
+        return 'bg-sky-500/10 text-sky-400 border border-sky-500/30';
       default:
-        return 'bg-gray-600 text-gray-100';
+        return 'bg-slate-700/50 text-slate-300 border border-slate-600';
     }
   };
 
@@ -120,7 +154,7 @@ const GestionarMultas = () => {
       case 'PAGADA':
         return '💰';
       default:
-        return '❓';
+        return '•';
     }
   };
 
@@ -140,377 +174,617 @@ const GestionarMultas = () => {
   };
 
   const formatearMonto = (multa) => {
-    // El campo correcto es "montoMulta" según tu backend
     const monto = multa?.montoMulta || multa?.monto;
-    
     if (!monto && monto !== 0) return 'N/A';
-    
     return new Intl.NumberFormat('es-ES', {
       style: 'currency',
       currency: 'USD'
     }).format(monto);
   };
 
+  // Helper para metahumano
+  const getMetahumanoInfo = (multa) => {
+    return multa.evidencia?.carpeta?.metahumano || multa.metahumano || null;
+  };
+
   return (
     <AdminLayout title="Gestionar Multas">
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="max-w-7xl mx-auto space-y-6">
+        
+        {/* Header Minimalista */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-2 border-b border-slate-800">
           <div>
-            <h2 className="text-2xl font-bold text-white mb-2">Gestión de Multas</h2>
-            <p className="text-gray-400">Aprueba o rechaza multas de metahumanos</p>
+            <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2.5">
+              <span>💰</span> Gestión de Multas
+            </h1>
+            <p className="text-sm text-slate-400 mt-1">
+              Revisión, auditoría de expedientes y aprobación de infracciones por daños
+            </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex items-center gap-2.5">
             <button
               onClick={() => navigate('/admin/tramites')}
-              className="px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg transition-colors flex items-center gap-2"
+              className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold rounded-lg border border-slate-700 transition-all flex items-center gap-1.5"
             >
-              <span>←</span>
-              Volver
+              <span>←</span> Volver
             </button>
             <button
               onClick={cargarMultas}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2"
+              disabled={loading}
+              className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-slate-300 hover:text-white text-xs font-semibold rounded-lg border border-slate-700 transition-all flex items-center gap-1.5"
             >
-              <span>🔄</span>
-              Refrescar
+              <span>🔄</span> Refrescar
             </button>
           </div>
         </div>
 
-        {/* Estadísticas */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-gradient-to-br from-blue-600 to-cyan-600 rounded-xl p-4 shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-100 text-sm font-medium">Total Multas</p>
-                <p className="text-3xl font-bold text-white mt-1">{totalMultas}</p>
-              </div>
-              <div className="text-4xl opacity-80">📋</div>
-            </div>
+        {/* Métricas Minimalistas */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+          <div className="bg-slate-900/60 border border-slate-800/80 rounded-xl p-3.5">
+            <p className="text-xs font-medium text-slate-400">Total Multas</p>
+            <p className="text-2xl font-bold text-slate-100 mt-1">{totalMultas}</p>
           </div>
-
-          <div className="bg-gradient-to-br from-yellow-600 to-orange-600 rounded-xl p-4 shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-yellow-100 text-sm font-medium">Pendientes</p>
-                <p className="text-3xl font-bold text-white mt-1">{multasPendientes}</p>
-              </div>
-              <div className="text-4xl opacity-80">⏳</div>
-            </div>
+          <div 
+            onClick={() => setFiltroEstado('PENDIENTE')}
+            className={`bg-slate-900/60 border rounded-xl p-3.5 cursor-pointer transition-all ${
+              filtroEstado === 'PENDIENTE' ? 'border-amber-500/50 bg-amber-500/5' : 'border-slate-800/80 hover:border-slate-700'
+            }`}
+          >
+            <p className="text-xs font-medium text-amber-400 flex items-center justify-between">
+              <span>Pendientes</span>
+              <span>⏳</span>
+            </p>
+            <p className="text-2xl font-bold text-amber-300 mt-1">{multasPendientes}</p>
           </div>
-
-          <div className="bg-gradient-to-br from-green-600 to-emerald-600 rounded-xl p-4 shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-100 text-sm font-medium">Aprobadas</p>
-                <p className="text-3xl font-bold text-white mt-1">{multasAprobadas}</p>
-              </div>
-              <div className="text-4xl opacity-80">✅</div>
-            </div>
+          <div 
+            onClick={() => setFiltroEstado('APROBADA')}
+            className={`bg-slate-900/60 border rounded-xl p-3.5 cursor-pointer transition-all ${
+              filtroEstado === 'APROBADA' ? 'border-emerald-500/50 bg-emerald-500/5' : 'border-slate-800/80 hover:border-slate-700'
+            }`}
+          >
+            <p className="text-xs font-medium text-emerald-400 flex items-center justify-between">
+              <span>Aprobadas</span>
+              <span>✅</span>
+            </p>
+            <p className="text-2xl font-bold text-emerald-300 mt-1">{multasAprobadas}</p>
           </div>
+          <div 
+            onClick={() => setFiltroEstado('RECHAZADA')}
+            className={`bg-slate-900/60 border rounded-xl p-3.5 cursor-pointer transition-all ${
+              filtroEstado === 'RECHAZADA' ? 'border-rose-500/50 bg-rose-500/5' : 'border-slate-800/80 hover:border-slate-700'
+            }`}
+          >
+            <p className="text-xs font-medium text-rose-400 flex items-center justify-between">
+              <span>Rechazadas</span>
+              <span>❌</span>
+            </p>
+            <p className="text-2xl font-bold text-rose-300 mt-1">{multasRechazadas}</p>
+          </div>
+        </div>
 
-          <div className="bg-gradient-to-br from-red-600 to-pink-600 rounded-xl p-4 shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-red-100 text-sm font-medium">Rechazadas</p>
-                <p className="text-3xl font-bold text-white mt-1">{multasRechazadas}</p>
-              </div>
-              <div className="text-4xl opacity-80">❌</div>
+        {/* Barra de Filtros */}
+        <div className="bg-slate-900/70 border border-slate-800 rounded-xl p-3.5 flex flex-col md:flex-row gap-3 items-center">
+          <div className="relative flex-1 w-full">
+            <span className="absolute left-3.5 top-2.5 text-slate-500 text-sm">🔍</span>
+            <input
+              type="text"
+              placeholder="Buscar por motivo, metahumano, DNI o ID..."
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              className="w-full pl-9 pr-3.5 py-2 bg-slate-800/80 border border-slate-700/70 text-sm text-slate-100 placeholder-slate-500 rounded-lg focus:outline-none focus:border-cyan-500 transition-colors"
+            />
+          </div>
+          <div className="flex gap-2.5 w-full md:w-auto">
+            <select
+              value={filtroEstado}
+              onChange={(e) => setFiltroEstado(e.target.value)}
+              className="px-3.5 py-2 bg-slate-800/80 border border-slate-700/70 text-xs font-semibold text-slate-200 rounded-lg focus:outline-none focus:border-cyan-500 cursor-pointer"
+            >
+              <option value="PENDIENTE">⏳ Solo Pendientes</option>
+              <option value="todos">📋 Todas las Multas</option>
+              <option value="APROBADA">✅ Aprobadas</option>
+              <option value="RECHAZADA">❌ Rechazadas</option>
+              <option value="PAGADA">💰 Pagadas</option>
+            </select>
+            <div className="flex items-center px-3 py-2 bg-slate-800/50 border border-slate-700/50 rounded-lg text-xs text-slate-400">
+              <span>Resultados: <strong className="text-slate-200 font-mono ml-1">{multasFiltradas.length}</strong></span>
             </div>
           </div>
         </div>
 
-        {/* Filtros */}
-        <div className="bg-[#1e293b] rounded-xl p-6 border border-slate-600">
-          <div className="flex flex-col md:flex-row gap-4 items-center">
-            <div className="relative flex-1 w-full">
-              <input
-                type="text"
-                placeholder="Buscar por motivo, metahumano, DNI, burócrata o ID..."
-                value={busqueda}
-                onChange={(e) => setBusqueda(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-[#334155] border border-slate-600 text-white rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none"
-              />
-              <span className="absolute left-3 top-3.5 text-gray-400 text-xl">🔍</span>
-            </div>
-
-            <div className="flex gap-3 w-full md:w-auto">
-              <select
-                value={filtroEstado}
-                onChange={(e) => setFiltroEstado(e.target.value)}
-                className="flex-1 md:flex-none px-4 py-3 bg-[#334155] border border-slate-600 text-white rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none"
-              >
-                <option value="todos">Todos los Estados</option>
-                <option value="PENDIENTE">⏳ Pendientes</option>
-                <option value="APROBADA">✅ Aprobadas</option>
-                <option value="RECHAZADA">❌ Rechazadas</option>
-                <option value="PAGADA">💰 Pagadas</option>
-              </select>
-
-              <div className="flex items-center gap-2 px-4 py-3 bg-[#334155] border border-slate-600 rounded-lg">
-                <span className="text-gray-400 text-sm">Resultados:</span>
-                <span className="text-white font-bold">{multasFiltradas.length}</span>
-              </div>
-            </div>
+        {/* Listado de Multas Minimalista */}
+        {loading ? (
+          <div className="py-20 text-center">
+            <div className="animate-spin rounded-full h-10 w-10 border-2 border-cyan-400 border-t-transparent mx-auto mb-3"></div>
+            <p className="text-slate-400 text-xs font-medium">Cargando multas...</p>
           </div>
-        </div>
-
-        {/* Lista de Multas */}
-        <div className="bg-[#1e293b] rounded-xl border border-slate-600 overflow-hidden">
-          <div className="p-6 border-b border-slate-600 flex items-center justify-between">
-            <h3 className="text-xl font-semibold text-white flex items-center gap-2">
-              <span>💰</span>
-              Multas ({multasFiltradas.length})
+        ) : multasFiltradas.length === 0 ? (
+          <div className="bg-slate-900/40 border border-slate-800 rounded-xl p-12 text-center">
+            <div className="text-4xl mb-2">💰</div>
+            <h3 className="text-base font-semibold text-slate-200 mb-1">
+              {filtroEstado === 'PENDIENTE' ? 'No hay multas pendientes de revisión' : 'No se encontraron multas'}
             </h3>
-            <div className="flex items-center gap-2 text-sm text-gray-400">
-              <span>📅</span>
-              <span>Ordenadas por fecha (más antigua → más nueva)</span>
-            </div>
+            <p className="text-xs text-slate-400 max-w-md mx-auto">
+              {filtroEstado === 'PENDIENTE' 
+                ? 'Todas las infracciones han sido resueltas. Cambia el filtro a "Todas" para revisar el historial.'
+                : 'Intenta ajustando el término de búsqueda o el estado seleccionado.'}
+            </p>
           </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {multasFiltradas.map((multa) => {
+              const meta = getMetahumanoInfo(multa);
+              const evidencia = multa.evidencia;
+              const tieneFoto = Boolean(evidencia?.imagen);
 
-          {loading ? (
-            <div className="p-12 text-center">
-              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-500 mx-auto mb-4"></div>
-              <p className="text-gray-400 text-lg">Cargando multas...</p>
-            </div>
-          ) : multasFiltradas.length === 0 ? (
-            <div className="p-12 text-center">
-              <span className="text-6xl block mb-4">💰</span>
-              <h3 className="text-xl font-medium text-white mb-2">
-                {busqueda || filtroEstado !== 'todos'
-                  ? 'No se encontraron multas' 
-                  : 'No hay multas registradas'}
-              </h3>
-              <p className="text-gray-400 mb-4">
-                {busqueda || filtroEstado !== 'todos'
-                  ? 'Intenta con otros filtros de búsqueda'
-                  : 'Las multas aparecerán aquí cuando se generen'}
-              </p>
-              {multas.length > 0 && (
-                <div className="mt-4 p-4 bg-blue-900/30 border border-blue-600/50 rounded-lg inline-block">
-                  <p className="text-blue-200 text-sm">
-                    ℹ️ Hay {multas.length} multas totales, pero no coinciden con los filtros actuales
-                  </p>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="p-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                {multasFiltradas.map((multa) => (
-                  <div 
-                    key={multa.id} 
-                    className="bg-[#334155] rounded-xl border border-slate-600 overflow-hidden hover:shadow-xl transition-all duration-300"
-                  >
-                    {/* Header */}
-                    <div className="bg-gradient-to-r from-slate-700 to-slate-800 p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-2xl">💰</span>
-                          <div>
-                            <h4 className="font-bold text-white">Multa #{multa.id}</h4>
-                            <p className="text-gray-300 text-xs">
-                              {formatearFecha(multa.fechaEmision || multa.createdAt)}
-                            </p>
-                          </div>
-                        </div>
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${getEstadoColor(multa.estado)}`}>
-                          {getEstadoIcon(multa.estado)} {multa.estado}
+              return (
+                <div 
+                  key={multa.id}
+                  className="bg-slate-900/60 border border-slate-800 hover:border-slate-700/90 rounded-xl p-4 flex flex-col justify-between transition-all duration-200 shadow-sm group"
+                >
+                  {/* Top Bar: ID + Fecha + Badge */}
+                  <div>
+                    <div className="flex items-center justify-between gap-2 pb-3 mb-3 border-b border-slate-800/80">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs font-bold text-slate-300">#{multa.id}</span>
+                        <span className="text-[11px] text-slate-500">•</span>
+                        <span className="text-[11px] text-slate-400">
+                          {formatearFecha(multa.fechaEmision || multa.createdAt)}
                         </span>
+                      </div>
+                      <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-wide flex items-center gap-1 ${getEstadoBadge(multa.estado)}`}>
+                        <span>{getEstadoIcon(multa.estado)}</span>
+                        <span>{multa.estado}</span>
+                      </span>
+                    </div>
+
+                    {/* Metahumano row */}
+                    <div className="flex items-start justify-between gap-3 mb-3 bg-slate-800/40 p-2.5 rounded-lg border border-slate-800/60">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs text-slate-400 font-medium">Metahumano Infractor</p>
+                        <p className="text-sm font-bold text-slate-100 truncate">
+                          {meta?.alias || meta?.nombre || 'Desconocido'}
+                        </p>
+                        {meta?.nombre && meta?.alias && (
+                          <p className="text-xs text-slate-400 truncate">{meta.nombre}</p>
+                        )}
+                      </div>
+                      {meta?.dni && (
+                        <span className="text-[10px] font-mono bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700/60">
+                          DNI: {meta.dni}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Monto & Motivo */}
+                    <div className="mb-3">
+                      <div className="flex items-baseline justify-between mb-1.5">
+                        <span className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Monto</span>
+                        <span className="text-lg font-bold text-amber-300 font-mono">
+                          {formatearMonto(multa)}
+                        </span>
+                      </div>
+                      <div className="bg-slate-950/40 border border-slate-800/80 p-2.5 rounded-lg">
+                        <p className="text-xs text-slate-300 line-clamp-2 leading-relaxed">
+                          {multa.motivoMulta || multa.descripcion || 'Sin motivo detallado'}
+                        </p>
                       </div>
                     </div>
 
-                    {/* Contenido */}
-                    <div className="p-4 space-y-3">
-                      {/* METAHUMANO */}
-                      <div className="bg-gradient-to-r from-blue-900/50 to-purple-900/50 border-2 border-blue-600/50 rounded-lg p-3">
-                        <p className="text-blue-200 text-xs font-bold mb-2 flex items-center gap-1">
-                          <span>🦸</span>
-                          METAHUMANO INFRACTOR
-                        </p>
-                        {multa.evidencia?.carpeta?.metahumano ? (
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-2">
-                              <span className="text-xl">🦸</span>
-                              <div className="flex-1">
-                                <p className="text-white font-bold">
-                                  {multa.evidencia.carpeta.metahumano.alias || 'Sin alias'}
-                                </p>
-                                <p className="text-gray-300 text-sm">
-                                  {multa.evidencia.carpeta.metahumano.nombre || 'Sin nombre'}
-                                </p>
-                              </div>
-                            </div>
-                            
-                            <div className="grid grid-cols-2 gap-2 text-xs bg-slate-800/50 rounded p-2">
-                              {multa.evidencia.carpeta.metahumano.dni && (
-                                <div>
-                                  <p className="text-gray-400">DNI:</p>
-                                  <p className="text-white font-medium">{multa.evidencia.carpeta.metahumano.dni}</p>
-                                </div>
-                              )}
-                              {multa.evidencia.carpeta.metahumano.edad && (
-                                <div>
-                                  <p className="text-gray-400">Edad:</p>
-                                  <p className="text-white font-medium">{multa.evidencia.carpeta.metahumano.edad} años</p>
-                                </div>
-                              )}
-                              {multa.evidencia.carpeta.metahumano.nacionalidad && (
-                                <div className="col-span-2">
-                                  <p className="text-gray-400">Nacionalidad:</p>
-                                  <p className="text-white font-medium">{multa.evidencia.carpeta.metahumano.nacionalidad}</p>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="bg-yellow-900/30 border border-yellow-600/50 rounded p-3">
-                            <p className="text-yellow-200 text-sm">
-                              ⚠️ No se encontró información del metahumano
-                            </p>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Monto y Forma de Pago */}
-                      <div className="bg-gradient-to-r from-amber-900/40 to-orange-900/40 border border-amber-600/30 rounded-lg p-3">
-                        <p className="text-amber-200 text-xs font-medium mb-1">MONTO</p>
-                        <p className="text-2xl font-bold text-amber-100">
-                          {formatearMonto(multa)}
-                        </p>
-                        {multa.estado === 'PAGADA' && multa.formaPago && (
-                          <div className="mt-2 text-xs text-emerald-300 font-semibold bg-emerald-950/60 border border-emerald-600/40 rounded px-2.5 py-1 flex items-center gap-1.5">
-                            <span>💳</span>
-                            <span>Forma de Pago: <strong className="text-white">{multa.formaPago}</strong></span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Motivo/Descripción */}
-                      <div>
-                        <p className="text-gray-400 text-xs mb-1 font-medium">MOTIVO DE LA MULTA</p>
-                        <p className="text-gray-200 text-sm">
-                          {multa.motivoMulta || multa.descripcion || 'Sin descripción'}
-                        </p>
-                      </div>
-
-                      {/* Info de la carpeta */}
-                      <div className="bg-slate-800 rounded-lg p-3">
-                        <p className="text-gray-400 text-xs font-medium mb-1">CARPETA ASOCIADA</p>
-                        {multa.evidencia?.carpeta ? (
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                              <span className="text-purple-400">📁</span>
-                              <span className="text-white text-sm">
-                                #{multa.evidencia.carpeta.id} - {multa.evidencia.carpeta.descripcion || 'Sin descripción'}
-                              </span>
-                            </div>
-                            <p className="text-gray-400 text-xs">
-                              Estado: <span className="text-gray-300 capitalize">{multa.evidencia.carpeta.estado}</span>
-                            </p>
-                          </div>
-                        ) : (
-                          <p className="text-gray-500 text-xs">No disponible</p>
-                        )}
-                      </div>
-
-                      {/* Burócrata y Evidencia */}
-                      <div className="grid grid-cols-2 gap-2">
-                        {/* Burócrata */}
-                        {multa.burocrata && (
-                          <div className="bg-slate-800 rounded-lg p-2">
-                            <p className="text-gray-400 text-[10px] font-semibold mb-1">EMITIDA POR</p>
-                            <div className="flex items-center gap-1">
-                              <span className="text-sm">👨‍💼</span>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-white text-xs font-medium truncate">
-                                  {multa.burocrata.nomBurocrata || `ID: ${multa.burociataId}`}
-                                </p>
-                                <p className="text-gray-400 text-[10px] truncate">
-                                  {multa.burocrata.cargo || 'Burócrata'}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Evidencia */}
-                        {multa.evidencia && (
-                          <div className="bg-slate-800 rounded-lg p-2">
-                            <p className="text-gray-400 text-[10px] font-semibold mb-1">EVIDENCIA</p>
-                            <div className="flex items-center gap-1">
-                              <span className="text-sm">🔍</span>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-white text-xs truncate">
-                                  {multa.evidencia.descripcion || 'Sin descripción'}
-                                </p>
-                                <p className="text-gray-400 text-[10px]">
-                                  {formatearFecha(multa.evidencia.fechaRecoleccion)}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Fechas */}
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        {multa.fechaLimite && (
-                          <div>
-                            <p className="text-gray-400 font-medium">Fecha Límite:</p>
-                            <p className="text-white">{formatearFecha(multa.fechaLimite)}</p>
-                          </div>
-                        )}
-                        {multa.fechaPago && (
-                          <div>
-                            <p className="text-gray-400 font-medium">Fecha Pago:</p>
-                            <p className="text-white">{formatearFecha(multa.fechaPago)}</p>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Acciones */}
-                      {multa.estado?.toUpperCase() === 'PENDIENTE' && (
-                        <div className="flex gap-2 pt-3">
-                          <button
-                            onClick={() => handleAprobarMulta(multa.id)}
-                            className="flex-1 px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg transition-all transform hover:scale-105 text-sm font-medium flex items-center justify-center gap-2"
-                          >
-                            <span>✅</span>
-                            Aprobar
-                          </button>
-                          <button
-                            onClick={() => handleRechazarMulta(multa.id)}
-                            className="flex-1 px-4 py-3 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white rounded-lg transition-all transform hover:scale-105 text-sm font-medium flex items-center justify-center gap-2"
-                          >
-                            <span>❌</span>
-                            Rechazar
-                          </button>
+                    {/* Metadata chips (Burócrata / Evidencia / Carpeta) */}
+                    <div className="space-y-1.5 text-xs text-slate-400 mb-4">
+                      {multa.burocrata && (
+                        <div className="flex items-center gap-1.5 text-[11px] text-slate-400 truncate">
+                          <span>👨‍💼</span>
+                          <span className="truncate">Emitida por: <strong className="text-slate-300">{multa.burocrata.nomBurocrata || multa.burocrata.nombre}</strong></span>
                         </div>
                       )}
-
-                      {/* Estado procesado */}
-                      {multa.estado?.toUpperCase() !== 'PENDIENTE' && (
-                        <div className={`p-3 rounded-lg border ${
-                          multa.estado?.toUpperCase() === 'APROBADA' || multa.estado?.toUpperCase() === 'PAGADA'
-                            ? 'bg-green-900/30 border-green-600/50 text-green-200' 
-                            : 'bg-red-900/30 border-red-600/50 text-red-200'
-                        }`}>
-                          <p className="text-sm font-medium text-center">
-                            {multa.estado?.toUpperCase() === 'APROBADA' && '✅ Multa aprobada'}
-                            {multa.estado?.toUpperCase() === 'PAGADA' && '💰 Multa pagada'}
-                            {multa.estado?.toUpperCase() === 'RECHAZADA' && '❌ Multa rechazada'}
-                          </p>
+                      {evidencia?.descripcion && (
+                        <div className="flex items-center gap-1.5 text-[11px] text-slate-400 truncate">
+                          <span>🔍</span>
+                          <span className="truncate">Evidencia: <strong className="text-slate-300">{evidencia.descripcion}</strong></span>
                         </div>
                       )}
                     </div>
                   </div>
-                ))}
+
+                  {/* Bottom Actions */}
+                  <div className="space-y-2 pt-2 border-t border-slate-800/80">
+                    {/* Botón para Abrir Expediente / Carpeta */}
+                    <button
+                      type="button"
+                      onClick={() => handleAbrirCarpeta(multa)}
+                      className="w-full py-2 px-3 bg-cyan-950/40 hover:bg-cyan-900/60 border border-cyan-800/40 hover:border-cyan-600/60 text-cyan-300 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <span>📂</span>
+                      <span>Ver Expediente & Evidencias</span>
+                      {tieneFoto && (
+                        <span className="text-[10px] bg-cyan-800/60 text-cyan-100 px-1.5 py-0.2 rounded font-mono">
+                          📷 Foto
+                        </span>
+                      )}
+                    </button>
+
+                    {/* Botones de acción si es PENDIENTE */}
+                    {multa.estado?.toUpperCase() === 'PENDIENTE' && (
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleRechazarMulta(multa.id)}
+                          className="py-1.5 px-3 bg-rose-950/30 hover:bg-rose-900/50 border border-rose-800/40 text-rose-300 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1"
+                        >
+                          <span>✕</span>
+                          <span>Rechazar</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleAprobarMulta(multa.id)}
+                          className="py-1.5 px-3 bg-emerald-950/30 hover:bg-emerald-900/50 border border-emerald-800/40 text-emerald-300 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1"
+                        >
+                          <span>✓</span>
+                          <span>Aprobar</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Modal de Carpeta & Evidencias del Metahumano */}
+        {showCarpetaModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
+            <div className="bg-[#0f172a] border border-slate-700/80 rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+              
+              {/* Modal Header */}
+              <div className="px-6 py-4 border-b border-slate-800 bg-slate-900/80 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-xl">
+                    📁
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-white flex items-center gap-2">
+                      <span>Expediente del Caso</span>
+                      {carpetaData?.id && <span className="font-mono text-cyan-400 text-sm">#{carpetaData.id}</span>}
+                    </h3>
+                    <p className="text-xs text-slate-400">
+                      Revisión detallada de evidencias, pruebas fotográficas y multas vinculadas
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCarpetaModal(false);
+                    setSelectedMulta(null);
+                    setCarpetaData(null);
+                  }}
+                  className="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                >
+                  ✕
+                </button>
               </div>
+
+              {/* Modal Body (Scrollable) */}
+              <div className="p-6 overflow-y-auto space-y-6 flex-1 custom-scrollbar">
+                
+                {loadingCarpeta ? (
+                  <div className="py-16 text-center">
+                    <div className="animate-spin rounded-full h-10 w-10 border-2 border-cyan-400 border-t-transparent mx-auto mb-3"></div>
+                    <p className="text-xs text-slate-400">Cargando expediente y evidencias completas...</p>
+                  </div>
+                ) : (
+                  <>
+                    {/* Ficha Metahumano + Ficha Carpeta */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      
+                      {/* Metahumano Info */}
+                      {(() => {
+                        const meta = carpetaData?.metahumano || selectedMulta?.evidencia?.carpeta?.metahumano || selectedMulta?.metahumano;
+                        return (
+                          <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4 space-y-2.5">
+                            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                              <span className="text-xs uppercase tracking-wider font-bold text-cyan-400 flex items-center gap-1.5">
+                                <span>🦸</span> Perfil del Metahumano
+                              </span>
+                              {meta?.tipoMeta && (
+                                <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded border ${
+                                  meta.tipoMeta === 'villano' ? 'bg-rose-500/10 text-rose-300 border-rose-500/20' : 'bg-blue-500/10 text-blue-300 border-blue-500/20'
+                                }`}>
+                                  {meta.tipoMeta}
+                                </span>
+                              )}
+                            </div>
+                            {meta ? (
+                              <div className="space-y-1.5 text-xs">
+                                <div className="flex justify-between">
+                                  <span className="text-slate-400">Alias:</span>
+                                  <span className="font-bold text-slate-100">{meta.alias || 'Sin alias'}</span>
+                                </div>
+                                {meta.nombre && (
+                                  <div className="flex justify-between">
+                                    <span className="text-slate-400">Nombre Real:</span>
+                                    <span className="text-slate-200">{meta.nombre}</span>
+                                  </div>
+                                )}
+                                {meta.dni && (
+                                  <div className="flex justify-between">
+                                    <span className="text-slate-400">DNI:</span>
+                                    <span className="font-mono text-slate-200">{meta.dni}</span>
+                                  </div>
+                                )}
+                                {meta.edad && (
+                                  <div className="flex justify-between">
+                                    <span className="text-slate-400">Edad:</span>
+                                    <span className="text-slate-200">{meta.edad} años</span>
+                                  </div>
+                                )}
+                                {meta.recompensa != null && (
+                                  <div className="flex justify-between">
+                                    <span className="text-slate-400">Recompensa actual:</span>
+                                    <span className="font-mono text-amber-300 font-bold">${meta.recompensa}</span>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <p className="text-xs text-slate-500 italic">No hay datos asociados del metahumano</p>
+                            )}
+                          </div>
+                        );
+                      })()}
+
+                      {/* Carpeta Header Info */}
+                      <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4 space-y-2.5">
+                        <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                          <span className="text-xs uppercase tracking-wider font-bold text-purple-400 flex items-center gap-1.5">
+                            <span>📁</span> Datos de la Carpeta
+                          </span>
+                          {carpetaData?.estado && (
+                            <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+                              {carpetaData.estado}
+                            </span>
+                          )}
+                        </div>
+                        <div className="space-y-1.5 text-xs">
+                          <div className="flex justify-between">
+                            <span className="text-slate-400">Tipo de Trámite/Caso:</span>
+                            <span className="font-semibold text-slate-200">{carpetaData?.tipo || selectedMulta?.evidencia?.carpeta?.tipo || 'General'}</span>
+                          </div>
+                          {carpetaData?.burocrata && (
+                            <div className="flex justify-between">
+                              <span className="text-slate-400">Burócrata a cargo:</span>
+                              <span className="text-slate-200">{carpetaData.burocrata.nomBurocrata || carpetaData.burocrata.nombre}</span>
+                            </div>
+                          )}
+                          {carpetaData?.createdAt && (
+                            <div className="flex justify-between">
+                              <span className="text-slate-400">Apertura:</span>
+                              <span className="text-slate-200">{formatearFecha(carpetaData.createdAt)}</span>
+                            </div>
+                          )}
+                          {carpetaData?.descripcion && (
+                            <div className="pt-1">
+                              <span className="text-slate-400 block mb-0.5">Descripción:</span>
+                              <p className="text-slate-300 text-xs bg-slate-950/40 p-2 rounded border border-slate-800/80 line-clamp-3">
+                                {carpetaData.descripcion}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Sección de Evidencias y Fotos */}
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-sm font-bold text-slate-200 flex items-center gap-2">
+                          <span>🔍</span> Evidencias y Pruebas Registradas
+                        </h4>
+                        <span className="text-xs text-slate-400">
+                          {carpetaData?.evidencias?.length ? `${carpetaData.evidencias.length} evidencias adjuntas` : '1 evidencia'}
+                        </span>
+                      </div>
+
+                      {/* Lista de Evidencias */}
+                      {(() => {
+                        const evidenciasList = carpetaData?.evidencias && carpetaData.evidencias.length > 0
+                          ? carpetaData.evidencias
+                          : (selectedMulta?.evidencia ? [selectedMulta.evidencia] : []);
+
+                        if (evidenciasList.length === 0) {
+                          return (
+                            <div className="bg-slate-900/40 border border-slate-800 rounded-xl p-8 text-center text-slate-400 text-xs">
+                              No hay evidencias adjuntas a este expediente.
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <div className="grid grid-cols-1 gap-4">
+                            {evidenciasList.map((ev, idx) => {
+                              const esLaMultaSeleccionada = selectedMulta?.evidencia?.id === ev.id;
+
+                              return (
+                                <div 
+                                  key={ev.id || idx}
+                                  className={`bg-slate-900/90 border rounded-xl p-4 transition-all ${
+                                    esLaMultaSeleccionada ? 'border-cyan-500/40 bg-slate-900' : 'border-slate-800'
+                                  }`}
+                                >
+                                  {/* Encabezado Evidencia */}
+                                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-2 mb-3 border-b border-slate-800">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-mono text-xs font-bold text-cyan-400">Evidencia #{ev.id || idx + 1}</span>
+                                      {esLaMultaSeleccionada && (
+                                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">
+                                          Multa Actual
+                                        </span>
+                                      )}
+                                    </div>
+                                    <span className="text-xs text-slate-400">
+                                      📅 {formatearFecha(ev.fechaRecoleccion || ev.createdAt)}
+                                    </span>
+                                  </div>
+
+                                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                                    
+                                    {/* Info y Descripción */}
+                                    <div className={`space-y-3 ${ev.imagen ? 'lg:col-span-7' : 'lg:col-span-12'}`}>
+                                      <div>
+                                        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Descripción del Hecho</p>
+                                        <p className="text-xs text-slate-200 leading-relaxed bg-slate-950/40 p-3 rounded-lg border border-slate-800/80">
+                                          {ev.descripcion || 'Sin descripción'}
+                                        </p>
+                                      </div>
+
+                                      {/* Coordenadas */}
+                                      {ev.latitud && ev.longitud && (
+                                        <div className="flex items-center gap-2 text-xs text-amber-300/90 bg-amber-500/5 border border-amber-500/20 px-3 py-1.5 rounded-lg">
+                                          <span>📍</span>
+                                          <span>Ubicación: Lat {Number(ev.latitud).toFixed(4)}, Lng {Number(ev.longitud).toFixed(4)}</span>
+                                        </div>
+                                      )}
+
+                                      {/* Multas asociadas a esta evidencia */}
+                                      {ev.multas && ev.multas.length > 0 && (
+                                        <div>
+                                          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+                                            Multas Asociadas ({ev.multas.length})
+                                          </p>
+                                          <div className="space-y-1.5">
+                                            {ev.multas.map((m) => (
+                                              <div 
+                                                key={m.id}
+                                                className="flex items-center justify-between p-2 rounded bg-slate-950/50 border border-slate-800 text-xs"
+                                              >
+                                                <div className="truncate mr-2">
+                                                  <span className="font-bold text-slate-200">{m.motivoMulta || m.descripcion}</span>
+                                                </div>
+                                                <div className="flex items-center gap-2 shrink-0">
+                                                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${getEstadoBadge(m.estado)}`}>
+                                                    {m.estado}
+                                                  </span>
+                                                  <span className="font-mono font-bold text-amber-300">
+                                                    ${m.montoMulta || m.monto}
+                                                  </span>
+                                                </div>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    {/* Fotografía / Adjunto */}
+                                    {ev.imagen && (
+                                      <div className="lg:col-span-5 flex flex-col justify-center">
+                                        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                                          📷 Fotografía de Evidencia
+                                        </p>
+                                        <div className="relative group rounded-xl overflow-hidden border border-slate-700/80 bg-slate-950/60">
+                                          <img 
+                                            src={ev.imagen} 
+                                            alt="Prueba de evidencia" 
+                                            className="w-full h-44 object-cover object-center transition-transform duration-300 group-hover:scale-105"
+                                          />
+                                          <div className="absolute inset-0 bg-slate-950/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                            <button
+                                              type="button"
+                                              onClick={() => setPreviewImage(ev.imagen)}
+                                              className="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded-lg shadow-lg transition-transform hover:scale-105 cursor-pointer flex items-center gap-1.5"
+                                            >
+                                              <span>🔍</span>
+                                              <span>Ampliar</span>
+                                            </button>
+                                          </div>
+                                        </div>
+                                        <p className="text-[10px] text-slate-500 mt-1 text-center">
+                                          Haz clic en Ampliar para ver la foto en tamaño completo
+                                        </p>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Modal Footer */}
+              <div className="px-6 py-4 border-t border-slate-800 bg-slate-900/80 flex flex-col sm:flex-row justify-between items-center gap-3">
+                <div className="text-xs text-slate-400">
+                  {selectedMulta && (
+                    <span>Multa actual: <strong className="text-slate-200">#{selectedMulta.id}</strong> ({formatearMonto(selectedMulta)})</span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+                  {selectedMulta?.estado?.toUpperCase() === 'PENDIENTE' && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => handleRechazarMulta(selectedMulta.id)}
+                        className="px-4 py-2 bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/60 text-rose-300 text-xs font-bold rounded-lg transition-colors cursor-pointer"
+                      >
+                        ✕ Rechazar Multa
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleAprobarMulta(selectedMulta.id)}
+                        className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg transition-colors shadow-lg cursor-pointer"
+                      >
+                        ✓ Aprobar Multa
+                      </button>
+                    </>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowCarpetaModal(false);
+                      setSelectedMulta(null);
+                      setCarpetaData(null);
+                    }}
+                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-lg transition-colors cursor-pointer"
+                  >
+                    Cerrar
+                  </button>
+                </div>
+              </div>
+
             </div>
-          )}
-        </div>
+          </div>
+        )}
+
+        {/* Modal Lightbox de Foto Ampliada */}
+        {previewImage && (
+          <div 
+            className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fadeIn"
+            onClick={() => setPreviewImage(null)}
+          >
+            <div className="relative max-w-5xl max-h-[90vh] flex flex-col items-center">
+              <button
+                type="button"
+                onClick={() => setPreviewImage(null)}
+                className="absolute -top-10 right-0 text-white hover:text-rose-400 text-xl font-bold bg-slate-800/80 px-3 py-1 rounded-lg border border-slate-700 cursor-pointer"
+              >
+                ✕ Cerrar
+              </button>
+              <img 
+                src={previewImage} 
+                alt="Evidencia Ampliada" 
+                className="max-h-[85vh] max-w-full rounded-xl border border-slate-700 shadow-2xl object-contain"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+          </div>
+        )}
+
       </div>
     </AdminLayout>
   );

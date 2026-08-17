@@ -1,12 +1,10 @@
 import { app } from './app.js'
 import { syncSchema } from './shared/db/orm.js'
-import { seedDatabase } from './shared/db/seeder.js'
 import { config } from './config/environment.js'
 
 async function startServer() {
   try {
     await syncSchema()
-    await seedDatabase()
 
     const port = config.port
     app.listen(port, () => {

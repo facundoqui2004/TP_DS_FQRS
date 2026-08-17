@@ -1,44 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../../../components/layouts/AdminLayout';
-import { getPoderes, createPoder, updatePoder, deletePoder } from '../../../api/poderes';
+import { getPoderes } from '../../../api/poderes';
+import { api } from '../../../api/client';
 
 const GestionarPoderes = () => {
   const navigate = useNavigate();
   const [poderes, setPoderes] = useState([]);
   const [metapoderes, setMetapoderes] = useState([]);
-  const [showModal, setShowModal] = useState(false);
-  const [modalMode, setModalMode] = useState('create');
-  const [selectedPoder, setSelectedPoder] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [loadingPoderes, setLoadingPoderes] = useState(true);
-  const [vistaActual, setVistaActual] = useState('solicitudes');
   const [busqueda, setBusqueda] = useState('');
   const [filtroCategoria, setFiltroCategoria] = useState('todos');
-  const [filtroEstado, setFiltroEstado] = useState('todos');
-  const [formData, setFormData] = useState({
-    nomPoder: '',
-    descPoder: '',
-    categoria: '',
-    debilidad: '',
-    descDebilidad: '',
-    costoMulta: 0
-  });
+  // Por defecto, mostrar solo las solicitudes pendientes (SOLICITADO)
+  const [filtroEstado, setFiltroEstado] = useState('SOLICITADO');
 
   const categorias = [
-    { value: 'Físico', label: 'Físico', icon: '💪', color: 'from-green-500 to-emerald-600' },
-    { value: 'Mental', label: 'Mental', icon: '🧠', color: 'from-blue-500 to-cyan-600' },
-    { value: 'Elemental', label: 'Elemental', icon: '🔥', color: 'from-orange-500 to-red-600' },
-    { value: 'Tecnológico', label: 'Tecnológico', icon: '🤖', color: 'from-gray-500 to-slate-600' },
-    { value: 'Mágico', label: 'Mágico', icon: '✨', color: 'from-purple-500 to-pink-600' },
-    { value: 'Psíquico', label: 'Psíquico', icon: '🔮', color: 'from-violet-500 to-purple-600' },
-    { value: 'Temporal', label: 'Temporal', icon: '⏰', color: 'from-indigo-500 to-blue-600' },
-    { value: 'Espacial', label: 'Espacial', icon: '🌌', color: 'from-pink-500 to-rose-600' },
-    { value: 'Otro', label: 'Otro', icon: '⚡', color: 'from-yellow-500 to-amber-600' }
+    { value: 'Físico', label: 'Físico', icon: '💪' },
+    { value: 'Mental', label: 'Mental', icon: '🧠' },
+    { value: 'Elemental', label: 'Elemental', icon: '🔥' },
+    { value: 'Tecnológico', label: 'Tecnológico', icon: '🤖' },
+    { value: 'Mágico', label: 'Mágico', icon: '✨' },
+    { value: 'Psíquico', label: 'Psíquico', icon: '🔮' },
+    { value: 'Temporal', label: 'Temporal', icon: '⏰' },
+    { value: 'Espacial', label: 'Espacial', icon: '🌌' },
+    { value: 'Otro', label: 'Otro', icon: '⚡' }
   ];
 
   useEffect(() => {
-    console.log('Iniciando carga de datos del panel de poderes...');
     cargarPoderes();
     cargarMetapoderes();
   }, []);
@@ -48,7 +36,6 @@ const GestionarPoderes = () => {
       setLoadingPoderes(true);
       const response = await getPoderes();
       setPoderes(response.data || response || []);
-      console.log('Poderes cargados:', response.data || response);
     } catch (error) {
       console.error('Error al cargar poderes:', error);
     } finally {
@@ -58,144 +45,112 @@ const GestionarPoderes = () => {
 
   const cargarMetapoderes = async () => {
     try {
-      console.log('Iniciando carga de metapoderes...');
-      const response = await fetch('http://localhost:3000/api/metapoderes', {
-        credentials: 'include'
+      setLoadingPoderes(true);
+      let metapoderesData = [];
+      try {
+        const res = await api.get('/metapoderes');
+        metapoderesData = res.data?.data || res.data || [];
+      } catch {
+        const response = await fetch('http://localhost:3000/api/metapoderes', { credentials: 'include' });
+        const data = await response.json();
+        metapoderesData = data.data || data || [];
+      }
+
+      // Ordenar por fecha o ID (más reciente primero)
+      const ordenados = metapoderesData.sort((a, b) => {
+        const fechaA = new Date(a.fechaAdquisicion || a.createdAt || 0);
+        const fechaB = new Date(b.fechaAdquisicion || b.createdAt || 0);
+        if (fechaB - fechaA !== 0) return fechaB - fechaA;
+        return (b.id || 0) - (a.id || 0);
       });
-      
-      if (!response.ok) {
-        throw new Error('Error al obtener metapoderes');
-      }
-      
-      const data = await response.json();
-      const metapoderesData = data.data || data || [];
-      
-      if (metapoderesData.length > 0) {
-        console.log('Estructura del primer metapoder:', metapoderesData[0]);
-        console.log('Claves disponibles:', Object.keys(metapoderesData[0]));
-        
-        if (metapoderesData[0].poder) {
-          console.log('Los metapoderes YA incluyen la información del poder');
-        } else {
-          console.log('Los metapoderes NO incluyen información del poder, solo tienen poderId:', metapoderesData[0].poderId);
-        }
-      }
-      
-      console.log('Pendientes:', metapoderesData.filter(mp => mp.estado === 'SOLICITADO').length);
-      
-      setMetapoderes(metapoderesData);
+
+      setMetapoderes(ordenados);
     } catch (error) {
       console.error('Error al cargar metapoderes:', error);
       setMetapoderes([]);
+    } finally {
+      setLoadingPoderes(false);
     }
   };
 
   const getCategoriaInfo = (categoriaValue) => {
-    return categorias.find(c => c.value === categoriaValue) || categorias[categorias.length - 1];
+    return categorias.find(c => c.value?.toLowerCase() === categoriaValue?.toLowerCase()) || { label: categoriaValue || 'General', icon: '⚡' };
   };
 
   const handleAprobarPoder = async (metapoderId) => {
     if (window.confirm('¿Estás seguro de que quieres aprobar este poder?')) {
       try {
-        const response = await fetch(`http://localhost:3000/api/metapoderes/${metapoderId}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify({
-            estado: 'APROBADO'
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error('Error al aprobar el poder');
+        try {
+          await api.put(`/metapoderes/${metapoderId}`, { estado: 'APROBADO' });
+        } catch {
+          await fetch(`http://localhost:3000/api/metapoderes/${metapoderId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ estado: 'APROBADO' })
+          });
         }
-
-        alert('Poder aprobado exitosamente');
-        await cargarMetapoderes();
+        setMetapoderes(prev => prev.map(mp => mp.id === metapoderId ? { ...mp, estado: 'APROBADO' } : mp));
       } catch (error) {
         console.error('Error al aprobar poder:', error);
         alert('Error al aprobar el poder: ' + error.message);
+        await cargarMetapoderes();
       }
     }
   };
 
   const handleRechazarPoder = async (metapoderId) => {
-    if (window.confirm('¿Estás seguro de que quieres rechazar este poder?')) {
+    if (window.confirm('¿Estás seguro de que quieres rechazar esta solicitud de poder?')) {
       try {
-        const response = await fetch(`http://localhost:3000/api/metapoderes/${metapoderId}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify({
-            estado: 'RECHAZADO'
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error('Error al rechazar el poder');
+        try {
+          await api.put(`/metapoderes/${metapoderId}`, { estado: 'RECHAZADO' });
+        } catch {
+          await fetch(`http://localhost:3000/api/metapoderes/${metapoderId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ estado: 'RECHAZADO' })
+          });
         }
-
-        alert('Poder rechazado exitosamente');
-        await cargarMetapoderes();
+        setMetapoderes(prev => prev.map(mp => mp.id === metapoderId ? { ...mp, estado: 'RECHAZADO' } : mp));
       } catch (error) {
         console.error('Error al rechazar poder:', error);
         alert('Error al rechazar el poder: ' + error.message);
+        await cargarMetapoderes();
       }
     }
   };
 
   const metapoderesFiltrados = metapoderes.filter(metapoder => {
-    // Obtener el poder
     const poder = metapoder.poder || poderes.find(p => p.id === metapoder.poderId);
-    
-    if (!poder && metapoder.poderId) {
-      console.warn(`No se encontró poder con ID ${metapoder.poderId} para metapoder ${metapoder.id}`);
-      console.log('Poderes disponibles:', poderes.map(p => ({ id: p.id, nombre: p.nomPoder })));
-    }
-    
-    if (!metapoder.poderId) {
-      console.error(`Metapoder ${metapoder.id} NO tiene poderId definido:`, metapoder);
-    }
     
     const coincideBusqueda = !busqueda || 
       poder?.nomPoder?.toLowerCase().includes(busqueda.toLowerCase()) ||
       metapoder.metahumano?.alias?.toLowerCase().includes(busqueda.toLowerCase()) ||
-      metapoder.estado?.toLowerCase().includes(busqueda.toLowerCase());
+      metapoder.metahumano?.nombre?.toLowerCase().includes(busqueda.toLowerCase()) ||
+      metapoder.id?.toString().includes(busqueda);
 
-    const coincideCategoria = filtroCategoria === 'todos' || poder?.categoria === filtroCategoria;
-    const coincideEstado = filtroEstado === 'todos' || metapoder.estado === filtroEstado;
+    const coincideCategoria = filtroCategoria === 'todos' || poder?.categoria?.toLowerCase() === filtroCategoria?.toLowerCase();
+    const coincideEstado = filtroEstado === 'todos' || metapoder.estado?.toUpperCase() === filtroEstado?.toUpperCase();
 
     return coincideBusqueda && coincideCategoria && coincideEstado;
   });
-
-  // Log para debugging
-  console.log('Metapoderes totales:', metapoderes.length);
-  console.log('Metapoderes filtrados:', metapoderesFiltrados.length);
-  console.log('Poderes disponibles:', poderes.length);
-  
-  if (metapoderes.length > 0) {
-    console.log('Primer metapoder completo:', metapoderes[0]);
-  }
 
   const totalSolicitudes = metapoderes.length;
   const solicitudesPendientes = metapoderes.filter(mp => mp.estado === 'SOLICITADO').length;
   const solicitudesAprobadas = metapoderes.filter(mp => mp.estado === 'APROBADO').length;
   const solicitudesRechazadas = metapoderes.filter(mp => mp.estado === 'RECHAZADO').length;
 
-  const getEstadoColor = (estado) => {
+  const getEstadoBadge = (estado) => {
     switch (estado) {
       case 'SOLICITADO':
-        return 'bg-yellow-600 text-yellow-100';
+        return 'bg-amber-500/10 text-amber-400 border border-amber-500/30';
       case 'APROBADO':
-        return 'bg-green-600 text-green-100';
+        return 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30';
       case 'RECHAZADO':
-        return 'bg-red-600 text-red-100';
+        return 'bg-rose-500/10 text-rose-400 border border-rose-500/30';
       default:
-        return 'bg-gray-600 text-gray-100';
+        return 'bg-slate-700/50 text-slate-300 border border-slate-600';
     }
   };
 
@@ -208,301 +163,291 @@ const GestionarPoderes = () => {
       case 'RECHAZADO':
         return '❌';
       default:
-        return '❓';
+        return '•';
+    }
+  };
+
+  const formatearFecha = (fecha) => {
+    if (!fecha) return 'N/A';
+    try {
+      return new Date(fecha).toLocaleDateString('es-ES', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch {
+      return 'Fecha inválida';
     }
   };
 
   return (
     <AdminLayout title="Gestionar Poderes">
-      <div className="space-y-6">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="max-w-7xl mx-auto space-y-6">
+        
+        {/* Header Minimalista */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-2 border-b border-slate-800">
           <div>
-            <h2 className="text-2xl font-bold text-white mb-2">Gestión de Poderes Metahumanos</h2>
-            <p className="text-gray-400">Aprueba o rechaza solicitudes de poderes</p>
+            <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2.5">
+              <span>⚡</span> Gestión de Poderes Metahumanos
+            </h1>
+            <p className="text-sm text-slate-400 mt-1">
+              Revisión y aprobación de solicitudes de habilidades para héroes y villanos
+            </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex items-center gap-2.5">
             <button
               onClick={() => navigate('/admin/tramites')}
-              className="px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg transition-colors flex items-center gap-2"
+              className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold rounded-lg border border-slate-700 transition-all flex items-center gap-1.5"
             >
-              <span>←</span>
-              Volver
+              <span>←</span> Volver
             </button>
             <button
-              onClick={cargarMetapoderes}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2"
+              onClick={() => { cargarPoderes(); cargarMetapoderes(); }}
+              disabled={loadingPoderes}
+              className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-slate-300 hover:text-white text-xs font-semibold rounded-lg border border-slate-700 transition-all flex items-center gap-1.5"
             >
-              <span>🔄</span>
-              Refrescar
+              <span>🔄</span> Refrescar
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-gradient-to-br from-blue-600 to-cyan-600 rounded-xl p-4 shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-100 text-sm font-medium">Total Solicitudes</p>
-                <p className="text-3xl font-bold text-white mt-1">{totalSolicitudes}</p>
-              </div>
-              <div className="text-4xl opacity-80">📋</div>
-            </div>
+        {/* Métricas Minimalistas */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+          <div className="bg-slate-900/60 border border-slate-800/80 rounded-xl p-3.5">
+            <p className="text-xs font-medium text-slate-400">Total Solicitudes</p>
+            <p className="text-2xl font-bold text-slate-100 mt-1">{totalSolicitudes}</p>
           </div>
-
-          <div className="bg-gradient-to-br from-yellow-600 to-orange-600 rounded-xl p-4 shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-yellow-100 text-sm font-medium">Pendientes</p>
-                <p className="text-3xl font-bold text-white mt-1">{solicitudesPendientes}</p>
-              </div>
-              <div className="text-4xl opacity-80">⏳</div>
-            </div>
+          <div 
+            onClick={() => setFiltroEstado('SOLICITADO')}
+            className={`bg-slate-900/60 border rounded-xl p-3.5 cursor-pointer transition-all ${
+              filtroEstado === 'SOLICITADO' ? 'border-amber-500/50 bg-amber-500/5' : 'border-slate-800/80 hover:border-slate-700'
+            }`}
+          >
+            <p className="text-xs font-medium text-amber-400 flex items-center justify-between">
+              <span>Pendientes</span>
+              <span>⏳</span>
+            </p>
+            <p className="text-2xl font-bold text-amber-300 mt-1">{solicitudesPendientes}</p>
           </div>
-
-          <div className="bg-gradient-to-br from-green-600 to-emerald-600 rounded-xl p-4 shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-100 text-sm font-medium">Aprobadas</p>
-                <p className="text-3xl font-bold text-white mt-1">{solicitudesAprobadas}</p>
-              </div>
-              <div className="text-4xl opacity-80">✅</div>
-            </div>
+          <div 
+            onClick={() => setFiltroEstado('APROBADO')}
+            className={`bg-slate-900/60 border rounded-xl p-3.5 cursor-pointer transition-all ${
+              filtroEstado === 'APROBADO' ? 'border-emerald-500/50 bg-emerald-500/5' : 'border-slate-800/80 hover:border-slate-700'
+            }`}
+          >
+            <p className="text-xs font-medium text-emerald-400 flex items-center justify-between">
+              <span>Aprobados</span>
+              <span>✅</span>
+            </p>
+            <p className="text-2xl font-bold text-emerald-300 mt-1">{solicitudesAprobadas}</p>
           </div>
+          <div 
+            onClick={() => setFiltroEstado('RECHAZADO')}
+            className={`bg-slate-900/60 border rounded-xl p-3.5 cursor-pointer transition-all ${
+              filtroEstado === 'RECHAZADO' ? 'border-rose-500/50 bg-rose-500/5' : 'border-slate-800/80 hover:border-slate-700'
+            }`}
+          >
+            <p className="text-xs font-medium text-rose-400 flex items-center justify-between">
+              <span>Rechazados</span>
+              <span>❌</span>
+            </p>
+            <p className="text-2xl font-bold text-rose-300 mt-1">{solicitudesRechazadas}</p>
+          </div>
+        </div>
 
-          <div className="bg-gradient-to-br from-red-600 to-pink-600 rounded-xl p-4 shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-red-100 text-sm font-medium">Rechazadas</p>
-                <p className="text-3xl font-bold text-white mt-1">{solicitudesRechazadas}</p>
-              </div>
-              <div className="text-4xl opacity-80">❌</div>
+        {/* Barra de Filtros */}
+        <div className="bg-slate-900/70 border border-slate-800 rounded-xl p-3.5 flex flex-col md:flex-row gap-3 items-center">
+          <div className="relative flex-1 w-full">
+            <span className="absolute left-3.5 top-2.5 text-slate-500 text-sm">🔍</span>
+            <input
+              type="text"
+              placeholder="Buscar por poder, metahumano o ID..."
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              className="w-full pl-9 pr-3.5 py-2 bg-slate-800/80 border border-slate-700/70 text-sm text-slate-100 placeholder-slate-500 rounded-lg focus:outline-none focus:border-cyan-500 transition-colors"
+            />
+          </div>
+          <div className="flex flex-wrap sm:flex-nowrap gap-2.5 w-full md:w-auto">
+            <select
+              value={filtroCategoria}
+              onChange={(e) => setFiltroCategoria(e.target.value)}
+              className="flex-1 sm:flex-none px-3.5 py-2 bg-slate-800/80 border border-slate-700/70 text-xs font-semibold text-slate-200 rounded-lg focus:outline-none focus:border-cyan-500 cursor-pointer"
+            >
+              <option value="todos">Todas las Categorías</option>
+              {categorias.map(cat => (
+                <option key={cat.value} value={cat.value}>
+                  {cat.icon} {cat.label}
+                </option>
+              ))}
+            </select>
+            <select
+              value={filtroEstado}
+              onChange={(e) => setFiltroEstado(e.target.value)}
+              className="flex-1 sm:flex-none px-3.5 py-2 bg-slate-800/80 border border-slate-700/70 text-xs font-semibold text-slate-200 rounded-lg focus:outline-none focus:border-cyan-500 cursor-pointer"
+            >
+              <option value="SOLICITADO">⏳ Solo Pendientes</option>
+              <option value="todos">📋 Todas las Solicitudes</option>
+              <option value="APROBADO">✅ Aprobados</option>
+              <option value="RECHAZADO">❌ Rechazados</option>
+            </select>
+            <div className="flex items-center px-3 py-2 bg-slate-800/50 border border-slate-700/50 rounded-lg text-xs text-slate-400">
+              <span>Resultados: <strong className="text-slate-200 font-mono ml-1">{metapoderesFiltrados.length}</strong></span>
             </div>
           </div>
         </div>
 
-        <div className="bg-[#1e293b] rounded-xl p-6 border border-slate-600">
-          <div className="flex flex-col md:flex-row gap-4 items-center">
-            <div className="relative flex-1 w-full">
-              <input
-                type="text"
-                placeholder="Buscar por poder, metahumano o estado..."
-                value={busqueda}
-                onChange={(e) => setBusqueda(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-[#334155] border border-slate-600 text-white rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none"
-              />
-              <span className="absolute left-3 top-3.5 text-gray-400 text-xl">🔍</span>
-            </div>
-
-            <div className="flex gap-3 w-full md:w-auto">
-              <select
-                value={filtroCategoria}
-                onChange={(e) => setFiltroCategoria(e.target.value)}
-                className="flex-1 md:flex-none px-4 py-3 bg-[#334155] border border-slate-600 text-white rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none"
-              >
-                <option value="todos">Todas las Categorías</option>
-                {categorias.map(cat => (
-                  <option key={cat.value} value={cat.value}>
-                    {cat.icon} {cat.label}
-                  </option>
-                ))}
-              </select>
-
-              <select
-                value={filtroEstado}
-                onChange={(e) => setFiltroEstado(e.target.value)}
-                className="flex-1 md:flex-none px-4 py-3 bg-[#334155] border border-slate-600 text-white rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none"
-              >
-                <option value="todos">Todos los Estados</option>
-                <option value="SOLICITADO">⏳ Pendientes</option>
-                <option value="APROBADO">✅ Aprobados</option>
-                <option value="RECHAZADO">❌ Rechazados</option>
-              </select>
-
-              <div className="flex items-center gap-2 px-4 py-3 bg-[#334155] border border-slate-600 rounded-lg">
-                <span className="text-gray-400 text-sm">Resultados:</span>
-                <span className="text-white font-bold">{metapoderesFiltrados.length}</span>
-              </div>
-            </div>
+        {/* Listado de Solicitudes Minimalistas */}
+        {loadingPoderes ? (
+          <div className="py-20 text-center">
+            <div className="animate-spin rounded-full h-10 w-10 border-2 border-cyan-400 border-t-transparent mx-auto mb-3"></div>
+            <p className="text-slate-400 text-xs font-medium">Cargando solicitudes de poderes...</p>
           </div>
-        </div>
-
-        <div className="bg-[#1e293b] rounded-xl border border-slate-600 overflow-hidden">
-          <div className="p-6 border-b border-slate-600 flex items-center justify-between">
-            <h3 className="text-xl font-semibold text-white flex items-center gap-2">
-              <span>📋</span>
-              Solicitudes de Poderes ({metapoderesFiltrados.length})
+        ) : metapoderesFiltrados.length === 0 ? (
+          <div className="bg-slate-900/40 border border-slate-800 rounded-xl p-12 text-center">
+            <div className="text-4xl mb-2">⚡</div>
+            <h3 className="text-base font-semibold text-slate-200 mb-1">
+              {filtroEstado === 'SOLICITADO' ? 'No hay solicitudes de poderes pendientes' : 'No se encontraron solicitudes'}
             </h3>
+            <p className="text-xs text-slate-400 max-w-md mx-auto">
+              {filtroEstado === 'SOLICITADO'
+                ? 'Todas las solicitudes de poderes han sido procesadas. Cambia el filtro a "Todas" para revisar el historial.'
+                : 'Intenta ajustando el filtro de categoría o la búsqueda.'}
+            </p>
           </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {metapoderesFiltrados.map((metapoder) => {
+              const poder = metapoder.poder || poderes.find(p => p.id === metapoder.poderId);
+              const categoriaInfo = poder ? getCategoriaInfo(poder.categoria) : { label: 'Desconocido', icon: '❓' };
+              const meta = metapoder.metahumano;
 
-          {loadingPoderes ? (
-            <div className="p-12 text-center">
-              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-500 mx-auto mb-4"></div>
-              <p className="text-gray-400 text-lg">Cargando solicitudes...</p>
-            </div>
-          ) : metapoderesFiltrados.length === 0 ? (
-            <div className="p-12 text-center">
-              <span className="text-6xl block mb-4">📋</span>
-              <h3 className="text-xl font-medium text-white mb-2">
-                {busqueda || filtroCategoria !== 'todos' || filtroEstado !== 'todos'
-                  ? 'No se encontraron solicitudes' 
-                  : 'No hay solicitudes de poderes'}
-              </h3>
-              <p className="text-gray-400 mb-4">
-                {busqueda || filtroCategoria !== 'todos' || filtroEstado !== 'todos'
-                  ? 'Intenta con otros filtros de búsqueda'
-                  : 'Las solicitudes aparecerán aquí cuando los metahumanos soliciten poderes'}
-              </p>
-              {metapoderes.length > 0 && (
-                <div className="mt-4 p-4 bg-blue-900/30 border border-blue-600/50 rounded-lg inline-block">
-                  <p className="text-blue-200 text-sm">
-                    ℹ️ Hay {metapoderes.length} solicitudes totales, pero no coinciden con los filtros actuales
-                  </p>
-                </div>
-              )}
-              <div className="mt-6 text-xs text-gray-500">
-                <p>Debug: {metapoderes.length} metapoderes cargados | {poderes.length} poderes disponibles</p>
-              </div>
-            </div>
-          ) : (
-            <div className="p-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {metapoderesFiltrados.map((metapoder) => {
-                  let poder = null;
-                  
-                  // metapoder información del poder
-                  if (metapoder.poder) {
-                    poder = metapoder.poder;
-                    console.log('✅ Usando poder incluido en metapoder:', poder);
-                  } 
-                  // si no, buscar en el array de poderes con poderId
-                  else if (metapoder.poderId) {
-                    poder = poderes.find(p => p.id === metapoder.poderId);
-                    if (poder) {
-                      console.log('Encontrado poder en array local:', poder);
-                    } else {
-                      console.warn(`No se encontró poder con ID ${metapoder.poderId}`);
-                    }
-                  }
-                  
-                  const categoriaInfo = poder ? getCategoriaInfo(poder.categoria) : { icon: '❓', color: 'from-gray-500 to-slate-600' };
-                  
-                  return (
-                    <div 
-                      key={metapoder.id} 
-                      className="bg-[#334155] rounded-xl border border-slate-600 overflow-hidden hover:shadow-xl transition-all duration-300"
-                    >
-                      <div className="bg-gradient-to-r from-slate-700 to-slate-800 p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h4 className="font-bold text-white text-lg">
-                              {metapoder.metahumano?.alias || `Metahumano ID: ${metapoder.metahumanoId}`}
-                            </h4>
-                            <p className="text-gray-300 text-sm">
-                              Solicitud #{metapoder.id}
-                              {metapoder.poderId && ` • Poder ID: ${metapoder.poderId}`}
-                              {poder && ` • ${poder.nomPoder}`}
-                            </p>
-                          </div>
-                          <span className={`px-3 py-1 rounded-full text-sm font-bold ${getEstadoColor(metapoder.estado)}`}>
-                            {getEstadoIcon(metapoder.estado)} {metapoder.estado}
+              return (
+                <div
+                  key={metapoder.id}
+                  className="bg-slate-900/60 border border-slate-800 hover:border-slate-700/90 rounded-xl p-4 flex flex-col justify-between transition-all duration-200 shadow-sm"
+                >
+                  <div>
+                    {/* Top Bar: ID + Fecha + Status */}
+                    <div className="flex items-center justify-between gap-2 pb-3 mb-3 border-b border-slate-800/80">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs font-bold text-slate-300">Solicitud #{metapoder.id}</span>
+                        <span className="text-[11px] text-slate-500">•</span>
+                        <span className="text-[11px] text-slate-400">
+                          {formatearFecha(metapoder.fechaAdquisicion || metapoder.createdAt)}
+                        </span>
+                      </div>
+                      <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-wide flex items-center gap-1 ${getEstadoBadge(metapoder.estado)}`}>
+                        <span>{getEstadoIcon(metapoder.estado)}</span>
+                        <span>{metapoder.estado}</span>
+                      </span>
+                    </div>
+
+                    {/* Metahumano Info */}
+                    <div className="flex items-center justify-between gap-2 mb-3 bg-slate-800/40 p-2.5 rounded-lg border border-slate-800/60">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[11px] text-slate-400 font-medium">Metahumano Solicitante</p>
+                        <p className="text-sm font-bold text-slate-100 truncate">
+                          {meta?.alias || meta?.nombre || `ID: ${metapoder.metahumanoId || 'N/A'}`}
+                        </p>
+                      </div>
+                      {meta?.dni && (
+                        <span className="text-[10px] font-mono bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700/60">
+                          DNI: {meta.dni}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Detalle del Poder */}
+                    <div className="bg-slate-950/40 border border-slate-800/80 p-3 rounded-lg mb-3 space-y-2">
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-2xl">{categoriaInfo.icon}</span>
+                        <div className="min-w-0 flex-1">
+                          <h4 className="text-sm font-bold text-white truncate">
+                            {poder ? poder.nomPoder : (metapoder.poderId ? `Poder #${metapoder.poderId}` : 'Poder No Identificado')}
+                          </h4>
+                          <span className="text-[11px] text-cyan-400 font-medium">
+                            {categoriaInfo.label}
                           </span>
                         </div>
                       </div>
 
-                      <div className="p-4 space-y-4">
-                        <div className="flex items-center gap-3 p-3 bg-slate-800 rounded-lg">
-                          <span className="text-3xl">{categoriaInfo.icon}</span>
-                          <div className="flex-1">
-                            <h5 className="font-bold text-white">
-                              {poder ? poder.nomPoder : (metapoder.poderId ? `Poder ID: ${metapoder.poderId}` : 'Poder no identificado')}
-                            </h5>
-                            <span className="text-gray-400 text-sm">
-                              {poder ? poder.categoria : 'Categoría desconocida'}
-                            </span>
+                      {/* Métricas de Dominio / Control */}
+                      <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/60 text-xs">
+                        <div>
+                          <span className="text-slate-400 text-[11px] block">Dominio</span>
+                          <span className="text-slate-200 font-semibold">{metapoder.dominio || 'Estándar'}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400 text-[11px] block">Nivel de Control</span>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <div className="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-cyan-400 rounded-full" 
+                                style={{ width: `${Math.min(metapoder.nivelControl || 0, 100)}%` }}
+                              />
+                            </div>
+                            <span className="font-mono text-[11px] text-cyan-300 font-bold">{metapoder.nivelControl || 0}%</span>
                           </div>
                         </div>
+                      </div>
+                    </div>
 
-                        <div className="grid grid-cols-2 gap-4 text-sm">
+                    {/* Descripción & Debilidad */}
+                    {poder && (
+                      <div className="space-y-1.5 text-xs mb-3">
+                        {poder.descPoder && (
                           <div>
-                            <p className="text-gray-400 font-medium">Dominio:</p>
-                            <p className="text-white">{metapoder.dominio || 'No especificado'}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-400 font-medium">Control:</p>
-                            <p className="text-white">{metapoder.nivelControl || 0}%</p>
-                          </div>
-                        </div>
-
-                        {poder && (
-                          <div>
-                            <p className="text-gray-400 text-xs mb-1 font-medium">DESCRIPCIÓN DEL PODER</p>
-                            <p className="text-gray-300 text-sm">{poder.descPoder}</p>
+                            <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Habilidad:</span>
+                            <p className="text-slate-300 line-clamp-2 mt-0.5 leading-relaxed">{poder.descPoder}</p>
                           </div>
                         )}
-
-                        {!poder && (
-                          <div className="bg-yellow-900/30 border border-yellow-600/50 rounded-lg p-3">
-                            <p className="text-yellow-200 text-xs font-medium mb-1">
-                              ⚠️ Información del poder no disponible
-                            </p>
-                            <p className="text-yellow-100 text-xs">
-                              {metapoder.poderId 
-                                ? `El poder con ID ${metapoder.poderId} no se encuentra en el catálogo` 
-                                : 'Esta solicitud no tiene un poderId asignado'}
-                              {' • '}Poderes cargados: {poderes.length}
-                            </p>
-                          </div>
-                        )}
-
-                        {metapoder.fechaAdquisicion && (
-                          <div>
-                            <p className="text-gray-400 text-xs mb-1 font-medium">FECHA DE SOLICITUD</p>
-                            <p className="text-gray-300 text-sm">
-                              {new Date(metapoder.fechaAdquisicion).toLocaleDateString('es-ES')}
-                            </p>
-                          </div>
-                        )}
-
-                        {metapoder.estado === 'SOLICITADO' && (
-                          <div className="flex gap-2 pt-3">
-                            <button
-                              onClick={() => handleAprobarPoder(metapoder.id)}
-                              className="flex-1 px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg transition-all transform hover:scale-105 text-sm font-medium flex items-center justify-center gap-2"
-                            >
-                              <span>✅</span>
-                              Aprobar
-                            </button>
-                            <button
-                              onClick={() => handleRechazarPoder(metapoder.id)}
-                              className="flex-1 px-4 py-3 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white rounded-lg transition-all transform hover:scale-105 text-sm font-medium flex items-center justify-center gap-2"
-                            >
-                              <span>❌</span>
-                              Rechazar
-                            </button>
-                          </div>
-                        )}
-
-                        {metapoder.estado !== 'SOLICITADO' && (
-                          <div className={`p-3 rounded-lg border ${
-                            metapoder.estado === 'APROBADO' 
-                              ? 'bg-green-900/30 border-green-600/50 text-green-200' 
-                              : 'bg-red-900/30 border-red-600/50 text-red-200'
-                          }`}>
-                            <p className="text-sm font-medium text-center">
-                              {metapoder.estado === 'APROBADO' 
-                                ? '✅ Este poder ha sido aprobado' 
-                                : '❌ Esta solicitud fue rechazada'}
-                            </p>
+                        {poder.debilidad && (
+                          <div className="pt-1 text-[11px] text-rose-300/90 flex items-start gap-1">
+                            <span>⚠️</span>
+                            <span>Debilidad: <strong className="text-rose-200">{poder.debilidad}</strong></span>
                           </div>
                         )}
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
+                    )}
+                  </div>
+
+                  {/* Acciones */}
+                  <div className="pt-2 border-t border-slate-800/80">
+                    {metapoder.estado === 'SOLICITADO' ? (
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleRechazarPoder(metapoder.id)}
+                          className="py-1.5 px-3 bg-rose-950/30 hover:bg-rose-900/50 border border-rose-800/40 text-rose-300 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1"
+                        >
+                          <span>✕</span>
+                          <span>Rechazar</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleAprobarPoder(metapoder.id)}
+                          className="py-1.5 px-3 bg-emerald-950/30 hover:bg-emerald-900/50 border border-emerald-800/40 text-emerald-300 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1"
+                        >
+                          <span>✓</span>
+                          <span>Aprobar</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <div className={`p-2 rounded-lg text-center text-xs font-medium ${
+                        metapoder.estado === 'APROBADO' 
+                          ? 'bg-emerald-950/20 text-emerald-300 border border-emerald-800/30' 
+                          : 'bg-rose-950/20 text-rose-300 border border-rose-800/30'
+                      }`}>
+                        {metapoder.estado === 'APROBADO' ? '✅ Poder aprobado y asignado' : '❌ Solicitud rechazada'}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
       </div>
     </AdminLayout>
   );
