@@ -16,6 +16,7 @@ import {
   sanitizeMetaPoderInput,
   assignPoderToMetahumano
 } from '../metaPoder/metaPoder.controller.js'
+// TODO: Determinar como responde estas Functions
 import { requireAuth, requireRoles } from '../auth/auth.middleware.js'
 
 const router = express.Router()
