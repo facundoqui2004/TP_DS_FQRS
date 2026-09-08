@@ -3,4 +3,3 @@ dist
 .git
 .env.local
 npm-debug.log
-docker
