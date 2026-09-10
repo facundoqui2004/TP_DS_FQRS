@@ -1,17 +1,12 @@
 FROM node:20-alpine
 
-WORKDIR /deps
+WORKDIR /app
 
 COPY package*.json ./
 
 RUN npm ci
 
-WORKDIR /app
-
 COPY . .
-
-ENV NODE_PATH=/deps/node_modules
-ENV PATH="/deps/node_modules/.bin:${PATH}"
 
 EXPOSE 3000
 
