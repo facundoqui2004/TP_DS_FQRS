@@ -1,17 +1,18 @@
 FROM node:20-alpine
 
-WORKDIR /app
+WORKDIR /deps
 
-# Copiar dependencias e instalarlas
 COPY package*.json ./
 
-RUN npm install
+RUN npm ci
 
-# Copiar el código del frontend
+WORKDIR /app
+
 COPY . .
 
-# Exponer el puerto del servidor de desarrollo de Vite
+ENV NODE_PATH=/deps/node_modules
+ENV PATH="/deps/node_modules/.bin:${PATH}"
+
 EXPOSE 5173
 
-# Arrancar Vite accesible externamente (0.0.0.0)
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]
+CMD ["vite", "--host", "0.0.0.0", "--port", "5173"]

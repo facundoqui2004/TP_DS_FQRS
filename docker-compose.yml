@@ -56,8 +56,6 @@ services:
       DB_PASSWORD: dsw
     volumes:
       - ./Backend:/app
-      - /app/node_modules
-      - /app/dist
     networks:
       - metahumano-network
     depends_on:
@@ -79,7 +77,6 @@ services:
       VITE_APP_ENV: development
     volumes:
       - ./Front:/app
-      - /app/node_modules
     networks:
       - metahumano-network
     depends_on:

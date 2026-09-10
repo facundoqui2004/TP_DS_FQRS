@@ -1,17 +1,18 @@
 FROM node:20-alpine
 
-WORKDIR /app
+WORKDIR /deps
 
-# Instalar dependencias necesarias para compilar si hiciera falta
 COPY package*.json ./
 
-RUN npm install
+RUN npm ci
 
-# Copiar el resto del código
+WORKDIR /app
+
 COPY . .
 
-# Exponer el puerto de la API
+ENV NODE_PATH=/deps/node_modules
+ENV PATH="/deps/node_modules/.bin:${PATH}"
+
 EXPOSE 3000
 
-# Iniciar en modo desarrollo
 CMD ["npm", "run", "dev"]
