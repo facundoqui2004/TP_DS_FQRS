@@ -267,6 +267,10 @@ async function crearPreferenciaMPAdmin(req: Request, res: Response) {
     const mpAccessToken = process.env.MP_ACCESS_TOKEN || '';
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
 
+    if (!mpAccessToken || mpAccessToken.includes('TU_ACCESS_TOKEN')) {
+      return res.status(500).json({ message: 'MercadoPago no está configurado. Contactá al administrador del sistema.' });
+    }
+
     const preferenceBody = {
       items: [
         {
@@ -286,54 +290,36 @@ async function crearPreferenciaMPAdmin(req: Request, res: Response) {
       external_reference: `MULTA-${multa.id}`
     };
 
-    let initPoint = '';
-    let sandboxInitPoint = '';
-    let preferenceId = '';
-    let checkoutUrl = '';
+    console.log('[MP] Token prefix:', mpAccessToken.substring(0, 8));
+    console.log('[MP] Body enviado a MP:', JSON.stringify(preferenceBody, null, 2));
 
-    if (mpAccessToken && !mpAccessToken.includes('TU_ACCESS_TOKEN')) {
-      console.log('[MP] Token prefix:', mpAccessToken.substring(0, 8));
-      console.log('[MP] Body enviado a MP:', JSON.stringify(preferenceBody, null, 2));
-      try {
-        const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${mpAccessToken}`
-          },
-          body: JSON.stringify(preferenceBody)
-        });
+    const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${mpAccessToken}`
+      },
+      body: JSON.stringify(preferenceBody)
+    });
 
-        const mpData = await response.json();
-        console.log('[MP] HTTP Status:', response.status);
-        console.log('[MP] Respuesta de MP:', JSON.stringify(mpData, null, 2));
+    const mpData = await response.json();
+    console.log('[MP] HTTP Status:', response.status);
+    console.log('[MP] Respuesta de MP:', JSON.stringify(mpData, null, 2));
 
-        if (response.ok) {
-          initPoint = mpData.init_point;
-          sandboxInitPoint = mpData.sandbox_init_point || mpData.init_point;
-          preferenceId = mpData.id;
-          checkoutUrl = mpAccessToken.startsWith('TEST-') ? sandboxInitPoint : initPoint;
-          console.log('[MP] ✅ Preferencia creada OK. checkoutUrl:', checkoutUrl);
-        } else {
-          console.error('[MP] ❌ Error de MP API:', mpData);
-        }
-      } catch (mpErr) {
-        console.error('[MP] ❌ Error de red al llamar a MP:', mpErr);
-      }
-    } else {
-      console.warn('[MP] ⚠️ Token no configurado o es placeholder. Se usará URL de fallback.');
+    if (!response.ok) {
+      console.error('[MP] ❌ Error de MP API:', mpData);
+      return res.status(502).json({ message: `Error al crear preferencia en MercadoPago: ${mpData?.message || mpData?.error || 'Error desconocido'}` });
     }
 
-    if (!checkoutUrl) {
-      console.warn('[MP] ⚠️ USANDO URL FALSA DE FALLBACK — esto significa que la llamada a MP falló.');
-      preferenceId = `PREF-${Date.now()}-${multa.id}`;
-      sandboxInitPoint = `https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=${preferenceId}`;
-      initPoint = sandboxInitPoint;
-      checkoutUrl = sandboxInitPoint;
-    }
+    const initPoint: string = mpData.init_point;
+    const sandboxInitPoint: string = mpData.sandbox_init_point || mpData.init_point;
+    const preferenceId: string = mpData.id;
+    const checkoutUrl: string = mpAccessToken.startsWith('TEST-') ? sandboxInitPoint : initPoint;
+
+    console.log('[MP] ✅ Preferencia creada OK. checkoutUrl:', checkoutUrl);
 
     res.status(200).json({
-      message: 'Preferencia de pago creada para la cuenta del Admin',
+      message: 'Preferencia de pago creada correctamente',
       data: {
         preferenceId,
         checkoutUrl,

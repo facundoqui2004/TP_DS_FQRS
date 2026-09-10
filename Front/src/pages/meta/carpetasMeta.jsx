@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect } from "react";
 import { getMetaId, getUserFromCookie}  from "../../utils/cookies";
 import { FaFolder, FaExclamationCircle, FaSearch } from "react-icons/fa";
 import { getBurocrataByIdRequest } from "../../api/burocratas";
-import { pagarMultaRequest, crearPreferenciaMPRequest, verificarPagoMPRequest } from "../../api/multas";
+import { crearPreferenciaMPRequest, verificarPagoMPRequest } from "../../api/multas";
 import MetahumanoLayout from "../../components/layouts/MetahumanoLayout";
 import { useAuth } from "../../context/AuthContext";
 
@@ -76,7 +76,7 @@ function Home() {
     fetchData();
   }, [fetchCarpetas]);
 
-  // Detectar retorno desde MercadoPago y confirmar pago solo si MP lo aprobó
+  // Detectar retorno desde MercadoPago y confirmar pago verificando con la API de MP
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const status = params.get('status');
@@ -87,15 +87,15 @@ function Home() {
       const cleanUrl = window.location.pathname;
       window.history.replaceState({}, document.title, cleanUrl);
 
-      // Marcar la multa como PAGADA ahora que MP confirmó el pago
-      pagarMultaRequest(Number(multaId), { formaPago: 'Mercado Pago' })
+      // Verificar con la API de MP que el pago realmente fue aprobado antes de marcarlo como PAGADA
+      verificarPagoMPRequest(Number(multaId))
         .then(() => {
           alert(`✅ ¡Pago confirmado por Mercado Pago!\nLa Multa #${multaId} ha sido registrada como PAGADA.`);
           fetchCarpetas();
         })
         .catch((err) => {
-          console.error('Error al confirmar pago tras retorno de MP:', err);
-          alert('Mercado Pago aprobó el pago, pero ocurrió un error al registrarlo. Contactá a soporte.');
+          console.error('Error al verificar pago tras retorno de MP:', err);
+          alert('Mercado Pago indicó éxito, pero no se pudo verificar el pago. Intentá confirmar manualmente o contactá a soporte.');
         });
     } else if (status === 'failure' && multaId) {
       const cleanUrl = window.location.pathname;
@@ -104,7 +104,7 @@ function Home() {
     } else if (status === 'pending' && multaId) {
       const cleanUrl = window.location.pathname;
       window.history.replaceState({}, document.title, cleanUrl);
-      alert(`⏳ El pago de la Multa #${multaId} está pendiente de acreditación.`);
+      alert(`⏳ El pago de la Multa #${multaId} está pendiente de acreditación en Mercado Pago.`);
     }
   }, [fetchCarpetas]);
 
@@ -160,7 +160,7 @@ function Home() {
       try {
         setLoading(true);
         const resPref = await crearPreferenciaMPRequest(payingMulta.id);
-        const checkoutUrl = resPref.data?.data?.checkoutUrl || resPref.data?.data?.sandboxInitPoint || resPref.data?.data?.initPoint;
+        const checkoutUrl = resPref.data?.data?.checkoutUrl;
 
         if (checkoutUrl) {
           const multaId = payingMulta.id;
@@ -178,40 +178,7 @@ function Home() {
       }
     };
 
-    // Confirmar pago consultando la API de MP
-    const confirmarPagoMP = async () => {
-      if (!pendingVerification) return;
-      try {
-        setLoading(true);
-        await verificarPagoMPRequest(pendingVerification);
-        alert(`✅ ¡Pago confirmado por Mercado Pago!\nLa Multa #${pendingVerification} ha sido registrada como PAGADA.`);
-        setPendingVerification(null);
-        await fetchCarpetas();
-      } catch (err) {
-        const msg = err.response?.data?.message || err.message;
-        alert(`⚠️ ${msg}`);
-      } finally {
-        setLoading(false);
-      }
-    };
 
-    // Procesar pago directo (Fallback para pruebas locales)
-    const procesarPagoDirecto = async () => {
-      if (!payingMulta) return;
-      try {
-        setLoading(true);
-        await pagarMultaRequest(payingMulta.id, { formaPago: 'Mercado Pago (Directo)' });
-        alert(`✅ ¡Multa #${payingMulta.id} acreditada exitosamente!`);
-        setPayingMulta(null);
-        await fetchCarpetas();
-      } catch (err) {
-        console.error("Error al abonar la multa:", err);
-        alert("Error al abonar la multa: " + (err.response?.data?.message || err.message));
-      } finally {
-        setLoading(false);
-      }
-    };
-    
     // todas las multas de una carpeta
   const obtenerMultasDeCarpeta = (carpeta) => {
     const totalMultas = [];
@@ -601,15 +568,7 @@ function Home() {
                 <span>{loading ? 'Generando Preferencia...' : 'Abrir Mercado Pago (Checkout Pro)'}</span>
               </button>
 
-              {/* Botón de Confirmación Directa */}
-              <button
-                type="button"
-                onClick={procesarPagoDirecto}
-                disabled={loading}
-                className="w-full mb-5 py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer border border-emerald-400/30"
-              >
-                <span>⚡ Confirmar Pago Directo (Sin Redirigir)</span>
-              </button>
+
 
               <div className="flex gap-3 pt-3 border-t border-white/10">
                 <button
