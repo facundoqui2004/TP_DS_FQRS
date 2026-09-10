@@ -119,3 +119,49 @@ Para ingresar a **Adminer** en [http://localhost:8080](http://localhost:8080):
   ```bash
   docker compose restart
   ```
+
+---
+
+## Ejecucion de Tests
+
+### Backend con Docker
+
+```bash
+docker exec -it metahumano-backend npm test
+docker exec -it metahumano-backend npm run test:1
+docker exec -it metahumano-backend npm run test:2
+docker exec -it metahumano-backend npm run test:3
+docker exec -it metahumano-backend npm run test:4
+docker exec -it metahumano-backend npm run test:app
+docker exec -it metahumano-backend npm run test:api
+```
+
+### Frontend con Docker
+
+```bash
+docker exec -it metahumano-frontend npm test
+docker exec -it metahumano-frontend npx vitest run src/__tests__/LoginPage.test.jsx
+docker exec -it metahumano-frontend npx vitest run src/__tests__/ProtectedRoute.test.jsx
+docker exec -it metahumano-frontend npx vitest run src/__tests__/e2e_frontend_flow.test.jsx
+docker exec -it metahumano-frontend npx vitest run src/__tests__/environment.test.js
+```
+
+### Backend en Local (sin Docker)
+
+```bash
+npm --prefix Backend test
+npm --prefix Backend run test:1
+npm --prefix Backend run test:2
+npm --prefix Backend run test:3
+npm --prefix Backend run test:4
+npm --prefix Backend run test:app
+npm --prefix Backend run test:api
+```
+
+### Frontend en Local (sin Docker)
+
+```bash
+npm --prefix Front test
+npm --prefix Front run test:watch
+```
+
