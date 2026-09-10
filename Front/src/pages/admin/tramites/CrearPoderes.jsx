@@ -14,8 +14,7 @@ const CrearPoderes = () => {
     descPoder: '',
     categoria: '',
     debilidad: '',
-    descDebilidad: '',
-    costoMulta: 0
+    descDebilidad: ''
   });
 
   const tiposPoder = [
@@ -66,8 +65,7 @@ const CrearPoderes = () => {
         descPoder: formData.descPoder,
         categoria: formData.categoria,
         debilidad: formData.debilidad,
-        descDebilidad: formData.descDebilidad,
-        costoMulta: parseFloat(formData.costoMulta) || 0
+        descDebilidad: formData.descDebilidad
       };
 
       const response = await createPoder(nuevoPoderData);
@@ -80,8 +78,7 @@ const CrearPoderes = () => {
         descPoder: '',
         categoria: '',
         debilidad: '',
-        descDebilidad: '',
-        costoMulta: 0
+        descDebilidad: ''
       });
       setShowForm(false);
       
@@ -278,11 +275,6 @@ const CrearPoderes = () => {
                       <span className={`px-3 py-1 rounded-full text-xs font-medium ${getNivelColor(poder.categoria)}`}>
                         {poder.categoria}
                       </span>
-                      {poder.costoMulta > 0 && (
-                        <span className="text-yellow-400 text-sm font-medium">
-                          ${poder.costoMulta}
-                        </span>
-                      )}
                     </div>
                   </div>
                 ))}
@@ -375,22 +367,6 @@ const CrearPoderes = () => {
                   rows={3}
                   className="w-full px-3 py-2 border border-slate-600 bg-[#334155] text-white rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   placeholder="Explica cómo afecta esta debilidad al poder..."
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Costo de Multa (opcional)
-                </label>
-                <input
-                  type="number"
-                  name="costoMulta"
-                  value={formData.costoMulta}
-                  onChange={handleInputChange}
-                  min="0"
-                  step="0.01"
-                  className="w-full px-3 py-2 border border-slate-600 bg-[#334155] text-white rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="0.00"
                 />
               </div>
 
