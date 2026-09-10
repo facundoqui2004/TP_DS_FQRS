@@ -7,7 +7,7 @@ describe('Backend Express API Architecture', () => {
   after(async () => {
     try {
       await orm.close(true)
-    } catch {}
+    } catch { }
   })
 
   test('App Instance is initialized properly', () => {
@@ -25,3 +25,4 @@ describe('Backend Express API Architecture', () => {
     assert.ok(routerStack.length > 0)
   })
 })
+//Funcionando
