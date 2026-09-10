@@ -217,7 +217,9 @@ const AprobarTramites = () => {
       c.metahumano?.nombre?.toLowerCase().includes(busqueda.toLowerCase()) ||
       c.id?.toString().includes(busqueda);
 
-    const coincideEstado = filtroEstado === 'todos' || c.estado?.toUpperCase() === filtroEstado.toUpperCase();
+    const estadoUpper = (c.estado || '').toUpperCase();
+    const coincideEstado = filtroEstado === 'todos' || 
+      (filtroEstado === 'PENDIENTE' ? estadoUpper.startsWith('PENDIENTE') : estadoUpper === filtroEstado.toUpperCase());
     const coincideTipo = filtroTipo === 'todos' || c.tipo?.toLowerCase() === filtroTipo.toLowerCase();
     
     return coincideBusqueda && coincideEstado && coincideTipo;
@@ -238,16 +240,11 @@ const AprobarTramites = () => {
   };
 
   const getEstadoBadge = (estado) => {
-    switch (estado?.toUpperCase()) {
-      case 'APROBADA':
-        return 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30';
-      case 'RECHAZADA':
-        return 'bg-rose-500/10 text-rose-400 border border-rose-500/30';
-      case 'PENDIENTE':
-        return 'bg-amber-500/10 text-amber-400 border border-amber-500/30';
-      default:
-        return 'bg-slate-700/50 text-slate-300 border border-slate-600';
-    }
+    const est = (estado || '').toUpperCase();
+    if (est === 'APROBADA') return 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30';
+    if (est === 'RECHAZADA') return 'bg-rose-500/10 text-rose-400 border border-rose-500/30';
+    if (est.startsWith('PENDIENTE')) return 'bg-amber-500/10 text-amber-400 border border-amber-500/30';
+    return 'bg-slate-700/50 text-slate-300 border border-slate-600';
   };
 
   const formatearFecha = (fecha) => {
@@ -362,7 +359,7 @@ const AprobarTramites = () => {
               const tipoUpper = (c.tipo || '').toUpperCase();
               const esPermisoDestruccion = tipoUpper === 'PERMISO_DESTRUCCION';
               const tieneUbicacion = esPermisoDestruccion && c.latitud != null && c.longitud != null;
-              const esPendiente = c.estado?.toUpperCase() === 'PENDIENTE';
+              const esPendiente = (c.estado || '').toUpperCase().startsWith('PENDIENTE');
 
               return (
                 <div
@@ -450,6 +447,11 @@ const AprobarTramites = () => {
                       )}
                       {c.burocrata && (
                         <div>Burócrata: <strong className="text-slate-200">{c.burocrata.nomBurocrata || c.burocrata.nombre}</strong></div>
+                      )}
+                      {c.targetVillanoId && (
+                        <div className="bg-indigo-950/40 border border-indigo-500/30 px-2 py-0.5 rounded text-indigo-300">
+                          🎯 Villano Objetivo: <strong>ID #{c.targetVillanoId}</strong>
+                        </div>
                       )}
                     </div>
 

@@ -10,7 +10,7 @@ export class Carpeta extends BaseEntity {
    @Property({nullable : false})
    estado!: string;
 
-   @Property({nullable : false})
+   @Property({ type: 'text', nullable : false})
    descripcion!: string;
 
    @Property({nullable : false})

@@ -437,7 +437,7 @@ function Home() {
       }
       
       const data = await response.json();
-      let todosLosPoderes = data.data || [];
+      let todosLosPoderes = Array.isArray(data) ? data : (data.data || []);
       
       // Obtener los poderes que ya tiene el usuario
       try {
@@ -457,15 +457,16 @@ function Home() {
               });
               if (misPoderesResponse.ok) {
                 const misPoderesData = await misPoderesResponse.json();
-                const poderesMios = misPoderesData.data || misPoderesData || [];
+                const poderesMios = Array.isArray(misPoderesData) ? misPoderesData : (misPoderesData.data || []);
                 
                 // Filtrar poderes que ya tiene APROBADOS o SOLICITADOS
-                const poderesYaTengo = poderesMios
-                  .filter(mp => mp.estado === 'APROBADO' || mp.estado === 'SOLICITADO')
-                  .map(mp => mp.poder?.id);
+                const poderesYaTengo = (Array.isArray(poderesMios) ? poderesMios : [])
+                  .filter(mp => mp && (mp.estado === 'APROBADO' || mp.estado === 'SOLICITADO'))
+                  .map(mp => mp.poder?.id)
+                  .filter(Boolean);
                 
                 todosLosPoderes = todosLosPoderes.filter(poder => 
-                  !poderesYaTengo.includes(poder.id)
+                  poder && !poderesYaTengo.includes(poder.id)
                 );
               }
             }
@@ -475,7 +476,7 @@ function Home() {
         console.log('Error filtrando poderes:', filterError);
       }
       
-      setPoderes(todosLosPoderes);
+      setPoderes(Array.isArray(todosLosPoderes) ? todosLosPoderes : []);
     } catch (err) {
       setError('No se pudieron cargar los poderes disponibles');
       console.error('Error fetching poderes:', err);
@@ -1563,29 +1564,23 @@ const solicitarPoder = async (poder) => {
                                 <p className="text-orange-100 text-xs">{poder.descDebilidad}</p>
                               </div>
                               
-                              <div className="flex justify-between items-center bg-slate-800 rounded-lg p-3">
-                                <div className="flex items-center">
-                                  <span className="text-green-400 font-bold text-lg">
-                                    💰 ${poder.costoMulta.toLocaleString()}
-                                  </span>
-                                  <span className="text-gray-400 text-xs ml-2">costo de multa</span>
-                                </div>
+                              <div className="flex justify-end items-center bg-slate-800 rounded-lg p-3">
                                 <button 
-                                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center"
-                                  onClick={() => solicitarPoder(poder)}
-                                  disabled={loading}
-                                >
-                                  {loading ? (
-                                    <>
-                                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                      Procesando...
-                                    </>
-                                  ) : (
-                                    <>
-                                      ✨ Solicitar
-                                    </>
-                                  )}
-                                </button>
+                                   className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center justify-center"
+                                   onClick={() => solicitarPoder(poder)}
+                                   disabled={loading}
+                                 >
+                                   {loading ? (
+                                     <>
+                                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                       Procesando...
+                                     </>
+                                   ) : (
+                                     <>
+                                       ✨ Solicitar Poder
+                                     </>
+                                   )}
+                                 </button>
                               </div>
                             </div>
                           </div>
@@ -1664,7 +1659,7 @@ const solicitarPoder = async (poder) => {
                             <div className="space-y-3">
                               <div className="bg-orange-900/30 border border-orange-600/50 rounded-lg p-3">
                                 <p className="text-orange-200 text-xs font-bold mb-1">
-                                  📅 Adquirido: {new Date(metapoder.fechaAdquisicion).toLocaleDateString()}
+                                  📅 Adquirido: {metapoder.fechaAdquisicion ? new Date(metapoder.fechaAdquisicion).toLocaleDateString() : 'N/A'}
                                 </p>
                               </div>
                               
@@ -1768,7 +1763,7 @@ const solicitarPoder = async (poder) => {
                                 <div className="flex items-center gap-4 text-sm text-gray-300">
                                   <span>Dominio: <strong>{metapoder.dominio}</strong></span>
                                   <span>Control: <strong>{metapoder.nivelControl}%</strong></span>
-                                  <span>Fecha: <strong>{new Date(metapoder.fechaAdquisicion).toLocaleDateString()}</strong></span>
+                                  <span>Fecha: <strong>{metapoder.fechaAdquisicion ? new Date(metapoder.fechaAdquisicion).toLocaleDateString() : 'N/A'}</strong></span>
                                 </div>
                               </div>
                               <span className={`px-3 py-1 rounded-full text-xs font-medium ${

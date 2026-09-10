@@ -7,7 +7,6 @@ import "leaflet/dist/leaflet.css";
 
 export default function VigilarMundoMeta() {
     const { isAuthenticated, getPerfilId, user } = useAuth();
-    const [mapTheme, setMapTheme] = useState("oscuro");
     const [metahumanosList, setMetahumanosList] = useState([]);
     const [burocratasList, setBurocratasList] = useState([]);
     const [carpetasDestruccion, setCarpetasDestruccion] = useState([]);
@@ -104,21 +103,11 @@ export default function VigilarMundoMeta() {
             mapInstance.removeLayer(layer);
         });
 
-        // Capas Base:
-        const osmLight = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors'
-        });
-
-        const osmDark = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        });
-
-        // Aplicar capa base según el tema activo
-        if (mapTheme === 'claro') {
-            osmLight.addTo(mapInstance);
-        } else {
-            osmDark.addTo(mapInstance);
-        }
+        // Capa Base estándar OpenStreetMap:
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19
+        }).addTo(mapInstance);
 
         // 4. Graficar Metahumanos
         metahumanosList.forEach(m => {
@@ -257,7 +246,7 @@ export default function VigilarMundoMeta() {
                 console.warn(`Carpeta de destrucción ${c.id} no tiene coordenadas lat/long válidas:`, c.latitud, c.longitud);
             }
         });
-    }, [metahumanosList, carpetasDestruccion, evidenciasList, burocratasList, isAuthenticated, mapTheme]);
+    }, [metahumanosList, carpetasDestruccion, evidenciasList, burocratasList, isAuthenticated]);
 
     return (
         <LayoutComponent hideFooter={true} fullScreen={true}>
@@ -271,7 +260,7 @@ export default function VigilarMundoMeta() {
 
                 {/* Contenedor del Mapa de pantalla completa */}
                 <div className="flex-1 relative rounded-2xl overflow-hidden border border-slate-700 shadow-2xl bg-slate-950">
-                    {/* Botones flotantes (Actualizar y Tema) */}
+                    {/* Botón flotante Actualizar */}
                     <div className="absolute top-4 right-4 z-[1000] flex gap-2">
                         <button
                             onClick={fetchMapData}
@@ -280,12 +269,6 @@ export default function VigilarMundoMeta() {
                         >
                             <span className={loading ? "animate-spin inline-block" : "inline-block"}>🔄</span>
                             {loading ? "Actualizando..." : "Actualizar"}
-                        </button>
-                        <button
-                            onClick={() => setMapTheme(prev => prev === 'claro' ? 'oscuro' : 'claro')}
-                            className="px-4 py-2 bg-slate-900/90 hover:bg-slate-800 border border-slate-700 text-white rounded-lg text-xs font-bold transition-all shadow-lg cursor-pointer"
-                        >
-                            {mapTheme === "claro" ? "🌙 Modo Oscuro" : "☀️ Modo Claro"}
                         </button>
                     </div>
 

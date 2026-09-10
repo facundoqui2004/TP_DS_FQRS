@@ -6,7 +6,7 @@ import { BaseEntity } from '../shared/db/baseEntity.entity.js';
 @Entity()
 export class Evidencia extends BaseEntity  {
 
-   @Property({nullable: false })
+   @Property({ type: 'text', nullable: false })
     descripcion!: string;
 
     @Property({nullable: false})
