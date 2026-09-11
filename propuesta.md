@@ -15,6 +15,12 @@
 
 ## Tema del Proyecto
 
+
+
+https://github.com/user-attachments/assets/82fc707a-632a-4593-9a07-27c75f543b0f
+
+
+
 ### Nombre del Proyecto
 **El Super Gestor** — *Sistema Integral de Gestion y Regulacion Metahumana*
 
