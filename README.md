@@ -17,6 +17,11 @@ Los videos de explicacion de la pagina se encuentran en el siguiente enlace:
 
 ## Inicio Rapido con Docker
 
+
+https://github.com/user-attachments/assets/d41d65d5-b7db-4e69-8f81-4145fca0a67d
+
+
+
 ### Requisitos previos
 - Tener instalado [Docker](https://www.docker.com/) y Docker Compose.
 
