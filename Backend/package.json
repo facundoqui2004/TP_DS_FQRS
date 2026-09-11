@@ -14,12 +14,7 @@
     "test:1": "npm run build && node --test dist/__tests__/integrante1_auth.test.js",
     "test:2": "npm run build && node --test dist/__tests__/integrante2_roles_middleware.test.js",
     "test:3": "npm run build && node --test dist/__tests__/integrante3_domain_rules.test.js",
-    "test:4": "npm run build && node --test dist/__tests__/integrante4_environment.test.js",
-    "docker:stop": "cd docker && ./stop-dev.sh",
-    "docker:check": "cd docker && ./check-health.sh",
-    "docker:test": "cd docker && ./test-api.sh",
-    "docker:logs": "cd docker && docker-compose logs -f",
-    "docker:mysql": "cd docker && docker-compose exec mysql mysql -u dsw -pdsw metahumano"
+    "test:4": "npm run build && node --test dist/__tests__/integrante4_environment.test.js"
   },
   "keywords": [],
   "author": "",
