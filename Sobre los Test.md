@@ -8,8 +8,7 @@ Las pruebas de backend se ejecutan mediante el *test runner* nativo de Node.js (
 * **Lógica de dominio:** Reglas de negocio para la gestión de expedientes, aplicación de multas y asignación de poderes.
 * **Infraestructura:** Validación de variables de entorno y conectividad con la base de datos.
 
-
-
+https://github.com/user-attachments/assets/abeac9e1-b65e-4449-bc5d-63edc123317f
 
 
 ## Frontend
