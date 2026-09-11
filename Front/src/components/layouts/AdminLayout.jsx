@@ -22,6 +22,14 @@ export default function AdminLayout({ children }) {
       {/* Sidebar */}
       <Sidebar showMenu={showMenu} toggleUser={toggleUser} />
 
+      {/* Backdrop overlay */}
+      {showMenu && (
+        <div
+          onClick={toggleMenu}
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+        />
+      )}
+
       {/* MENU MOBILE */}
       <nav className="bg-[#1e293b] lg:hidden fixed top-0 left-0 w-full flex justify-between items-center p-4 z-20">
         <button onClick={toggleMenu} className="text-white text-3xl">

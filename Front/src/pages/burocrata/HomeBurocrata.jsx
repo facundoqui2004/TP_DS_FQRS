@@ -251,26 +251,28 @@ function HomeBurocrata() {
               </div>
 
               {/* Info de coordenadas */}
-              <div className="mt-4 flex justify-between items-center gap-4 bg-slate-950/60 p-3 rounded-lg border border-slate-800 text-xs">
-                <div>
-                  <span className="text-gray-400 font-semibold block uppercase tracking-widest text-[9px]">Latitud</span>
-                  <strong className="text-white text-sm">{lat ? Number(lat).toFixed(6) : "No seleccionada"}</strong>
+              <div className="mt-4 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 bg-slate-950/60 p-3 rounded-lg border border-slate-800 text-xs">
+                <div className="flex gap-4 items-center justify-between sm:justify-start">
+                  <div>
+                    <span className="text-gray-400 font-semibold block uppercase tracking-widest text-[9px]">Latitud</span>
+                    <strong className="text-white text-sm">{lat ? Number(lat).toFixed(6) : "No seleccionada"}</strong>
+                  </div>
+                  <div>
+                    <span className="text-gray-400 font-semibold block uppercase tracking-widest text-[9px]">Longitud</span>
+                    <strong className="text-white text-sm">{lng ? Number(lng).toFixed(6) : "No seleccionada"}</strong>
+                  </div>
                 </div>
-                <div>
-                  <span className="text-gray-400 font-semibold block uppercase tracking-widest text-[9px]">Longitud</span>
-                  <strong className="text-white text-sm">{lng ? Number(lng).toFixed(6) : "No seleccionada"}</strong>
-                </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 justify-end">
                   <button
                     onClick={() => setShowMapModal(false)}
-                    className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-semibold transition cursor-pointer"
+                    className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-semibold transition cursor-pointer text-xs"
                   >
                     Cancelar
                   </button>
                   <button
                     onClick={handleGuardarUbicacion}
                     disabled={savingLocation || !lat || !lng}
-                    className="px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 disabled:text-gray-500 disabled:cursor-not-allowed text-white font-bold transition shadow-md flex items-center gap-1.5 cursor-pointer"
+                    className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 disabled:text-gray-500 disabled:cursor-not-allowed text-white font-bold transition shadow-md flex items-center justify-center gap-1.5 cursor-pointer text-xs"
                   >
                     {savingLocation ? "⏳ Guardando..." : "📍 Confirmar Ubicación"}
                   </button>

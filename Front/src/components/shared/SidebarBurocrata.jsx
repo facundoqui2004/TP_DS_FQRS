@@ -25,17 +25,21 @@ const Sidebar = (props) => {
 
   return (
     <div
-      className={`bg-[#f1a035] fixed lg:left-0 top-0 w-28 h-full flex flex-col justify-between py-6 rounded-tr-xl rounded-br-xl z-50 transition-all duration-300 ease-in-out shadow-lg
+      className={`bg-[#f1a035] fixed lg:left-0 top-0 w-28 h-screen max-h-screen flex flex-col justify-between rounded-tr-xl rounded-br-xl z-50 transition-all duration-300 ease-in-out shadow-lg overflow-x-hidden
       ${showMenu ? "left-0" : "-left-full"} lg:left-0`}
+      style={{
+        scrollbarWidth: "thin",
+        scrollbarColor: "#f8d19d #f1a035",
+      }}
     >
       {/* Logo */}
-      <div className="text-center my-4 relative group">
+      <div className="text-center relative group flex-shrink-0 py-2 w-full overflow-hidden">
         <img
           src="/Images/burocrataLogo.png"
           alt="Logo El Súper Gestor"
-          className="mx-auto w-25 h-auto cursor-pointer"
+          className="mx-auto w-20 h-auto cursor-pointer max-w-full"
         />
-        <div className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
+        <div className="tooltip-desktop absolute left-full ml-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
           <div className="relative bg-red-500 text-white px-4 py-3 rounded-lg text-sm font-bold border-4 border-black shadow-lg transform rotate-1 whitespace-nowrap">
             <div className="relative z-10">
               <div className="text-yellow-300 text-lg font-black tracking-wide drop-shadow-lg">
@@ -58,16 +62,16 @@ const Sidebar = (props) => {
       </div>
 
       {/* Lista de enlaces */}
-      <div>
-        <ul className="pl-4">
+      <div className="flex-1 overflow-y-auto py-2 scrollbar-thin overflow-x-hidden w-full">
+        <ul className="pl-4 space-y-1 w-full overflow-x-hidden">
           {/* Inicio */}
-          <li className="hover:bg-[#f8d19d] p-4 block rounded-tl-xl rounded-bl-xl group transition-colors">
+          <li className="hover:bg-[#f8d19d] p-1.5 block rounded-tl-xl rounded-bl-xl group transition-colors">
             <button
               onClick={() => navigate("/burocrata")}
               className="group-hover:bg-[#f1a035] p-4 flex justify-center w-full rounded-xl text-white group-hover:text-white relative cursor-pointer"
             >
               <RiHome6Line className="text-2xl" />
-              <div className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-[#f1a035] text-white px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
+              <div className="tooltip-desktop absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-[#f1a035] text-white px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
                 Inicio
                 <div className="absolute right-full top-1/2 transform -translate-y-1/2 border-4 border-transparent border-r-[#f1a035]"></div>
               </div>
@@ -75,13 +79,13 @@ const Sidebar = (props) => {
           </li>
 
           {/* Carpetas */}
-          <li className="hover:bg-[#f8d19d] p-4 block rounded-tl-xl rounded-bl-xl group transition-colors">
+          <li className="hover:bg-[#f8d19d] p-1.5 block rounded-tl-xl rounded-bl-xl group transition-colors">
             <button
               onClick={() => navigate("/burocrata/carpetas")}
               className="group-hover:bg-[#f1a035] p-4 flex justify-center w-full rounded-xl text-white group-hover:text-white relative cursor-pointer"
             >
               <FaRegFolder className="text-2xl" />
-              <div className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-[#f1a035] text-white px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
+              <div className="tooltip-desktop absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-[#f1a035] text-white px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
                 Carpetas
                 <div className="absolute right-full top-1/2 transform -translate-y-1/2 border-4 border-transparent border-r-[#f1a035]"></div>
               </div>
@@ -89,13 +93,13 @@ const Sidebar = (props) => {
           </li>
 
           {/* Mi Perfil */}
-          <li className="hover:bg-[#f8d19d] p-4 block rounded-tl-xl rounded-bl-xl group transition-colors">
+          <li className="hover:bg-[#f8d19d] p-1.5 block rounded-tl-xl rounded-bl-xl group transition-colors">
             <button
               onClick={() => navigate("/burocrata/perfil")}
               className="group-hover:bg-[#f1a035] p-4 flex justify-center w-full rounded-xl text-white group-hover:text-white relative cursor-pointer"
             >
               <FaRegUserCircle className="text-2xl" />
-              <div className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-[#f1a035] text-white px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
+              <div className="tooltip-desktop absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-[#f1a035] text-white px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
                 Mi Perfil
                 <div className="absolute right-full top-1/2 transform -translate-y-1/2 border-4 border-transparent border-r-[#f1a035]"></div>
               </div>
@@ -103,13 +107,13 @@ const Sidebar = (props) => {
           </li>
 
           {/* Vigilar el Mundo */}
-          <li className="hover:bg-[#f8d19d] p-4 block rounded-tl-xl rounded-bl-xl group transition-colors">
+          <li className="hover:bg-[#f8d19d] p-1.5 block rounded-tl-xl rounded-bl-xl group transition-colors">
             <button
               onClick={() => navigate("/burocrata/vigilar-mundo")}
               className="group-hover:bg-[#f1a035] p-4 flex justify-center w-full rounded-xl text-white group-hover:text-white relative cursor-pointer"
             >
               <BiWorld className="text-2xl" />
-              <div className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-[#f1a035] text-white px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
+              <div className="tooltip-desktop absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-[#f1a035] text-white px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
                 Vigilar el Mundo
                 <div className="absolute right-full top-1/2 transform -translate-y-1/2 border-4 border-transparent border-r-[#f1a035]"></div>
               </div>
@@ -117,13 +121,13 @@ const Sidebar = (props) => {
           </li>
 
           {/* Noticias */}
-          <li className="hover:bg-[#f8d19d] p-4 block rounded-tl-xl rounded-bl-xl group transition-colors">
+          <li className="hover:bg-[#f8d19d] p-1.5 block rounded-tl-xl rounded-bl-xl group transition-colors">
             <button
               onClick={() => navigate("/burocrata/noticias")}
               className="group-hover:bg-[#f1a035] p-4 flex justify-center w-full rounded-xl text-white group-hover:text-white relative cursor-pointer"
             >
               <IoNewspaper className="text-2xl" />
-              <div className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-[#f1a035] text-white px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
+              <div className="tooltip-desktop absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-[#f1a035] text-white px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
                 Noticias
                 <div className="absolute right-full top-1/2 transform -translate-y-1/2 border-4 border-transparent border-r-[#f1a035]"></div>
               </div>
@@ -131,13 +135,13 @@ const Sidebar = (props) => {
           </li>
 
           {/* Soporte */}
-          <li className="hover:bg-[#f8d19d] p-4 block rounded-tl-xl rounded-bl-xl group transition-colors">
+          <li className="hover:bg-[#f8d19d] p-1.5 block rounded-tl-xl rounded-bl-xl group transition-colors">
             <button
               onClick={() => navigate("/burocrata/soporte")}
               className="group-hover:bg-[#f1a035] p-4 flex justify-center w-full rounded-xl text-white group-hover:text-white relative cursor-pointer"
             >
               <MdContactSupport className="text-2xl" />
-              <div className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-[#f1a035] text-white px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
+              <div className="tooltip-desktop absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-[#f1a035] text-white px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
                 Soporte
                 <div className="absolute right-full top-1/2 transform -translate-y-1/2 border-4 border-transparent border-r-[#f1a035]"></div>
               </div>
@@ -147,15 +151,15 @@ const Sidebar = (props) => {
       </div>
 
       {/* Logout */}
-      <div>
+      <div className="flex-shrink-0 pb-2">
         <ul className="pl-4">
-          <li className="hover:bg-[#f8d19d] p-4 block rounded-tl-xl rounded-bl-xl group transition-colors">
+          <li className="hover:bg-[#f8d19d] p-1.5 block rounded-tl-xl rounded-bl-xl group transition-colors">
             <button
               onClick={handleLogout}
               className="group-hover:bg-[#f1a035] p-4 flex justify-center w-full rounded-xl text-white group-hover:text-white relative cursor-pointer"
             >
               <CiLogout className="text-2xl" />
-              <div className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-red-500 text-white px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
+              <div className="tooltip-desktop absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-red-500 text-white px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
                 Cerrar Sesión
                 <div className="absolute right-full top-1/2 transform -translate-y-1/2 border-4 border-transparent border-r-red-500"></div>
               </div>

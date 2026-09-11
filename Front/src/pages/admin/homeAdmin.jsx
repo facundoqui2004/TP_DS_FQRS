@@ -133,7 +133,7 @@ export default function HomeAdmin() {
               Soporte
             </h3>
             <div className="w-10 h-10 bg-[#f97316] rounded-full flex items-center justify-center group-hover:bg-[#ea580c] transition-colors">
-              <span className="text-white font-bold text-xl">�</span>
+              <span className="text-white font-bold text-xl">🛠️</span>
             </div>
           </div>
           <p className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors">

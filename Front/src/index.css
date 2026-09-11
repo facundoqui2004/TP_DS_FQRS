@@ -15,27 +15,25 @@ html, body {
 
 /* Estilos para scrollbar personalizado */
 .scrollbar-thin::-webkit-scrollbar {
-  width: 6px;
+  width: 5px;
 }
 
 .scrollbar-thin::-webkit-scrollbar-track {
-  background: #0f172a;
-  border-radius: 10px;
+  background: transparent;
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background: #0891b2;
+  background: rgba(255, 255, 255, 0.25);
   border-radius: 10px;
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background: #0ea5e9;
+  background: rgba(255, 255, 255, 0.45);
 }
 
 /* Para Firefox */
 .scrollbar-thin {
   scrollbar-width: thin;
-  scrollbar-color: #0891b2 #0f172a;
 }
 
 /* Custom Animations */

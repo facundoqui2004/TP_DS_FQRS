@@ -23,7 +23,7 @@ const Sidebar = (props) => {
     };
 
   return (
-    <div className={`bg-[#0f172a] fixed lg:left-0 top-0 w-28 h-full flex flex-col justify-between rounded-tr-xl rounded-br-xl z-50 transition-all duration-300 ease-in-out shadow-lg overflow-x-hidden
+    <div className={`bg-[#0f172a] fixed lg:left-0 top-0 w-28 h-screen max-h-screen flex flex-col justify-between rounded-tr-xl rounded-br-xl z-50 transition-all duration-300 ease-in-out shadow-lg overflow-x-hidden
     ${showMenu ? 'left-0' : '-left-full'}`}
     style={{
       scrollbarWidth: 'thin',
