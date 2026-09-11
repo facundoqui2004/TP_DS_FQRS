@@ -5,6 +5,11 @@ import { MemoryRouter } from 'react-router-dom'
 import LoginPage from '../pages/general/LoginPage'
 import { AuthContext } from '../context/AuthContext'
 
+// Aislamos LoginPage evitando que UserLayout cargue Footer y Sidebar con peticiones reales
+vi.mock('../components/layouts/UserLayout', () => ({
+  default: ({ children }) => <div data-testid="user-layout">{children}</div>
+}))
+
 /**
  * =========================================================================
  * TEST UNITARIO DE COMPONENTE FRONTEND: LoginPage
@@ -48,7 +53,7 @@ describe('Componente LoginPage (Test Unitario de Componente)', () => {
 
     // Inputs
     expect(screen.getByLabelText(/correo electrónico/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/contraseña/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^contraseña$/i)).toBeInTheDocument()
 
     // Botón de submit
     expect(screen.getByRole('button', { name: /iniciar sesión/i })).toBeInTheDocument()
@@ -58,7 +63,7 @@ describe('Componente LoginPage (Test Unitario de Componente)', () => {
     renderLoginPage()
 
     const submitBtn = screen.getByRole('button', { name: /iniciar sesión/i })
-    fireEvent.click(submitBtn)
+    fireEvent.submit(submitBtn.closest('form'))
 
     await waitFor(() => {
       expect(screen.getByText(/el correo electrónico es requerido/i)).toBeInTheDocument()
@@ -71,12 +76,11 @@ describe('Componente LoginPage (Test Unitario de Componente)', () => {
   it('3. Debería alternar la visibilidad de la contraseña al presionar el botón de ojo', () => {
     renderLoginPage()
 
-    const passwordInput = screen.getByLabelText(/contraseña/i)
+    const passwordInput = screen.getByLabelText(/^contraseña$/i)
     expect(passwordInput).toHaveAttribute('type', 'password')
 
     // Botón de mostrar contraseña
-    const toggleButtons = screen.getAllByRole('button')
-    const toggleEye = toggleButtons.find(btn => btn.getAttribute('type') === 'button')
+    const toggleEye = screen.getByLabelText(/alternar visibilidad/i)
 
     if (toggleEye) {
       fireEvent.click(toggleEye)
@@ -91,13 +95,13 @@ describe('Componente LoginPage (Test Unitario de Componente)', () => {
     renderLoginPage()
 
     const emailInput = screen.getByLabelText(/correo electrónico/i)
-    const passwordInput = screen.getByLabelText(/contraseña/i)
+    const passwordInput = screen.getByLabelText(/^contraseña$/i)
     const submitBtn = screen.getByRole('button', { name: /iniciar sesión/i })
 
     fireEvent.change(emailInput, { target: { value: 'admin@supergestor.com' } })
     fireEvent.change(passwordInput, { target: { value: 'password123' } })
 
-    fireEvent.click(submitBtn)
+    fireEvent.submit(submitBtn.closest('form'))
 
     await waitFor(() => {
       expect(mockLogin).toHaveBeenCalledWith({

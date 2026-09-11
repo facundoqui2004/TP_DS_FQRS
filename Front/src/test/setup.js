@@ -1,4 +1,4 @@
-import '@testing-library/jest-dom'
+import '@testing-library/jest-dom/vitest'
 
 // Polyfill in-memory localStorage for jsdom / Node 26 compatibility
 class LocalStorageMock {

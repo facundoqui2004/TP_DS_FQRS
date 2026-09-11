@@ -129,6 +129,7 @@ const LoginPage = () => {
                 />
                 <button
                   type="button"
+                  aria-label="alternar visibilidad"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors duration-200"
                 >

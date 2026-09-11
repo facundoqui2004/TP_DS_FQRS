@@ -7,6 +7,20 @@ import ProtectedRoute from '../components/ProtectedRoute'
 import LoginPage from '../pages/general/LoginPage'
 import * as authApi from '../api/auth'
 
+// Mock de la API de autenticación para interceptar las llamadas en AuthContext
+vi.mock('../api/auth', () => ({
+  loginRequest: vi.fn(),
+  logoutRequest: vi.fn(),
+  registerMetahumanoRequest: vi.fn(),
+  registerBurocrataRequest: vi.fn(),
+  getPerfilRequest: vi.fn(),
+}))
+
+// Mock de la API de usuarios para evitar la llamada real que hace el Footer (getMe)
+vi.mock('../api/usuarios', () => ({
+  getMe: vi.fn().mockResolvedValue({ data: null }),
+}))
+
 /**
  * =========================================================================
  * TEST END-TO-END (E2E) DEL FRONTEND
@@ -73,8 +87,8 @@ describe('Test End-to-End (E2E) - Flujo Completo de Autenticación y Navegación
       }
     }
 
-    vi.spyOn(authApi, 'loginRequest').mockResolvedValue(mockServerLoginResponse)
-    vi.spyOn(authApi, 'logoutRequest').mockResolvedValue({ data: { message: 'Logout exitoso' } })
+    authApi.loginRequest.mockResolvedValue(mockServerLoginResponse)
+    authApi.logoutRequest.mockResolvedValue({ data: { message: 'Logout exitoso' } })
 
     // 2. Usuario no autenticado intenta ingresar directo a /admin
     render(<E2ETestApp initialEntry="/admin" />)
@@ -84,14 +98,14 @@ describe('Test End-to-End (E2E) - Flujo Completo de Autenticación y Navegación
 
     // 3. Usuario completa el formulario de login
     const emailInput = screen.getByLabelText(/correo electrónico/i)
-    const passwordInput = screen.getByLabelText(/contraseña/i)
+    const passwordInput = screen.getByLabelText(/^contraseña$/i)
     const submitBtn = screen.getByRole('button', { name: /iniciar sesión/i })
 
     fireEvent.change(emailInput, { target: { value: 'admin@supergestor.com' } })
     fireEvent.change(passwordInput, { target: { value: 'passwordSuper123' } })
 
     // 4. El usuario envía el formulario
-    fireEvent.click(submitBtn)
+    fireEvent.submit(submitBtn.closest('form'))
 
     // 5. Esperar que la API responda y el contexto actualice el estado redirigiendo a /admin
     await waitFor(() => {
