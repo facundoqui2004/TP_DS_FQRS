@@ -8,11 +8,22 @@ Este proyecto cuenta con un entorno contenerizado completo mediante Docker y Doc
 
 ## Videos Explicativos
 
-Los videos de explicacion de la pagina se encuentran en el siguiente enlace:
+Los videos de explicacion de la pagina se encuentran en el siguiente enlace: (Recomendado si busca verlo en mejor calidad)
 
 **[Ver videos en Google Drive](https://drive.google.com/drive/folders/15m0pv096UL4-odjoIXvw6AN-_cbcTaE_?usp=sharing)**
 
 ---
+## Video 1 - Funcionamiento del supergestor
+
+
+https://github.com/user-attachments/assets/6310ebf8-d34a-4ec5-92a7-798e44d58cd9
+
+## Video 2 - Funcionamiento del supergestor
+
+
+
+https://github.com/user-attachments/assets/f0cffe15-b4c2-4caa-9f7a-e326faff94bc
+
 
 
 ## Inicio Rapido con Docker
@@ -95,14 +106,12 @@ Para ingresar a **Adminer** en [http://localhost:8080](http://localhost:8080):
 ├── README.md                # Instrucciones de instalacion y uso
 ├── ENTREGA.md               # Guia formal para la correccion del docente
 ├── Backend/                 # Servidor de API REST
-│   ├── Dockerfile           # Imagen Docker del Backend
 │   ├── src/                 # Codigo fuente TypeScript
 │   │   ├── auth/            # Modulo de Autenticacion y Usuarios
 │   │   ├── shared/db/       # Configuracion MikroORM y Seeder
 │   │   └── ...              # Entidades y controladores de dominio
 │   └── package.json
 └── Front/                   # Cliente Web SPA
-    ├── Dockerfile           # Imagen Docker del Frontend
     ├── src/                 # Componentes React, Paginas y Rutas
     ├── vite.config.js       # Configuracion de Vite
     └── package.json
@@ -170,3 +179,22 @@ npm --prefix Front test
 npm --prefix Front run test:watch
 ```
 
+# **Recomendaciones para Windows**
+
+Si vas a ejecutar las pruebas test en un entorno Windows, asegúrate de cumplir con los siguientes pasos previos:
+
+1. **Instalar Docker Desktop**: Es indispensable contar con [Docker Desktop](https://www.docker.com/products/docker-desktop/) instalado y en ejecución antes de lanzar las suites de prueba.
+2. **Habilitar permisos de ejecución de scripts**: Por defecto, Windows restringe la ejecución de scripts en PowerShell. Para permitirlo en tu usuario actual sin requerir privilegios globales de sistema, abre **PowerShell** y ejecuta:
+
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+
+```
+
+3. **Ejecutar los comandos recomendados**: Para probar dentro de este contexto se recomienda usar los comandos que empiezan con :
+
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+docker exec -it contener-correspondiente-a-el-test-a-realizar 
+```
+Luego se puede seguir la estructura como se plantea en la sección de arriba
