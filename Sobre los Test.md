@@ -18,3 +18,7 @@ Las pruebas de frontend se ejecutan con Vitest y React Testing Library sobre un 
 * **Formularios e interacción:** Renderizado y validación de entradas en el formulario de inicio de sesión.
 * **Control de navegación:** Bloqueo y redirección en rutas protegidas (`ProtectedRoute`) según el estado de autenticación y rol asignado.
 * **Flujos de usuario:** Simulación de navegación de extremo a extremo y verificación de respuestas reactivas en la UI.
+
+
+https://github.com/user-attachments/assets/a0fcc826-0378-4587-b5a0-30a2fcfb2f07
+
