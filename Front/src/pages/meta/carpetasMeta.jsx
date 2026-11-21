@@ -5,6 +5,7 @@ import { getBurocrataByIdRequest } from "../../api/burocratas";
 import { crearPreferenciaMPRequest, verificarPagoMPRequest } from "../../api/multas";
 import MetahumanoLayout from "../../components/layouts/MetahumanoLayout";
 import { useAuth } from "../../context/AuthContext";
+import { config } from "../../config/environment";
 
 
 function Home() {
@@ -31,7 +32,7 @@ function Home() {
             setError("");
             
             // Obtener todas las carpetas del metahumano específico
-            const response = await fetch(`http://localhost:3000/api/carpetas/idMetahumano/${getMetaId()}`, {
+            const response = await fetch(`${config.apiBaseUrl}/carpetas/idMetahumano/${getMetaId()}`, {
                 credentials: 'include'
             });
             

@@ -25,13 +25,18 @@ export async function crearUsuarioBasico(req: Request, res: Response) {
       })
     }
 
-    if (password.length < 6) {
-      return res.status(400).json({ message: 'La contraseña debe tener al menos 6 caracteres' })
+    if (password.length < 8) {
+      return res.status(400).json({ message: 'La contraseña debe tener al menos 8 caracteres' })
     }
 
     // Validar que el role sea válido
     if (!Object.values(UserRole).includes(role)) {
       return res.status(400).json({ message: 'Role inválido. Debe ser METAHUMANO o BUROCRATA' })
+    }
+
+    // Un ADMIN solo lo puede crear otro ADMIN desde /register/admin
+    if (role === UserRole.ADMIN) {
+      return res.status(403).json({ message: 'No se puede registrar un ADMIN desde esta ruta' })
     }
 
     // Verificar que el email sea único
@@ -86,8 +91,8 @@ export async function registrarMetahumano(req: Request, res: Response) {
       })
     }
 
-    if (password.length < 6) {
-      return res.status(400).json({ message: 'La contraseña debe tener al menos 6 caracteres' })
+    if (password.length < 8) {
+      return res.status(400).json({ message: 'La contraseña debe tener al menos 8 caracteres' })
     }
 
     // Verificar que el email sea único
@@ -172,7 +177,7 @@ export async function registrarMetahumano(req: Request, res: Response) {
 
   } catch (error: any) {
     console.error('Error en registro de metahumano:', error)
-    res.status(500).json({ message: 'Error interno del servidor', error: error.message })
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
@@ -190,8 +195,8 @@ export async function registrarBurocrata(req: Request, res: Response) {
       })
     }
 
-    if (password.length < 6) {
-      return res.status(400).json({ message: 'La contraseña debe tener al menos 6 caracteres' })
+    if (password.length < 8) {
+      return res.status(400).json({ message: 'La contraseña debe tener al menos 8 caracteres' })
     }
 
     // Verificar que el email sea único
@@ -275,7 +280,7 @@ export async function registrarBurocrata(req: Request, res: Response) {
 
   } catch (error: any) {
     console.error('Error en registro de burocrata:', error)
-    res.status(500).json({ message: 'Error interno del servidor', error: error.message })
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
@@ -293,8 +298,8 @@ export async function registrarAdmin(req: Request, res: Response) {
       })
     }
 
-    if (password.length < 6) {
-      return res.status(400).json({ message: 'La contraseña debe tener al menos 6 caracteres' })
+    if (password.length < 8) {
+      return res.status(400).json({ message: 'La contraseña debe tener al menos 8 caracteres' })
     }
 
     // Verificar que el email sea único
@@ -365,7 +370,7 @@ export async function registrarAdmin(req: Request, res: Response) {
 
   } catch (error: any) {
     console.error('Error en registro de admin:', error)
-    res.status(500).json({ message: 'Error interno del servidor', error: error.message })
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
@@ -487,7 +492,7 @@ export async function login(req: Request, res: Response) {
 
   } catch (error: any) {
     console.error('Error en login:', error)
-    res.status(500).json({ message: 'Error interno del servidor', error: error.message })
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
@@ -546,7 +551,7 @@ export async function obtenerPerfil(req: Request, res: Response) {
 
   } catch (error: any) {
     console.error('Error al obtener perfil:', error);
-    res.status(500).json({ message: 'Error interno del servidor', error: error.message });
+    res.status(500).json({ message: 'Error interno del servidor' });
   }
 }
 
@@ -590,7 +595,7 @@ export async function actualizarContacto(req: Request, res: Response) {
 
   } catch (error: any) {
     console.error('Error al actualizar contacto:', error)
-    res.status(500).json({ message: 'Error interno del servidor', error: error.message })
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
@@ -644,7 +649,7 @@ export async function listarUsuarios(req: Request, res: Response) {
 
   } catch (error: any) {
     console.error('Error al listar usuarios:', error)
-    res.status(500).json({ message: 'Error interno del servidor', error: error.message })
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
@@ -658,7 +663,7 @@ export async function logout(req: Request, res: Response) {
     return res.json({ message: 'Logout exitoso' })
   } catch (error: any) {
     console.error('Error en logout:', error)
-    res.status(500).json({ message: 'Error interno del servidor', error: error.message })
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
@@ -671,6 +676,11 @@ export async function obtenerUsuarioPorId(req: Request, res: Response) {
     
     if (isNaN(id)) {
       return res.status(400).json({ message: 'ID inválido' })
+    }
+
+    // Solo el propio usuario o un ADMIN pueden ver estos datos
+    if ((req as any).role !== 'ADMIN' && (req as any).usuarioId !== id) {
+      return res.status(403).json({ message: 'No tenés permiso para ver este usuario' })
     }
 
     const usuario = await em.findOne(Usuario, { id }, {
@@ -757,6 +767,6 @@ export async function eliminarUsuario(req: Request, res: Response) {
 
   } catch (error: any) {
     console.error('Error al eliminar usuario:', error)
-    res.status(500).json({ message: 'Error interno del servidor', error: error.message })
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }

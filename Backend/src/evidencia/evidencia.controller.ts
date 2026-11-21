@@ -26,20 +26,29 @@ function sanitizeEvidenciaInput(req: Request, res: Response, next: NextFunction)
 
 async function findAll(req:Request, res:Response){
     try {
-    const evidencias = await em.find(Evidencia, {}, {populate :['carpeta.metahumano', 'multas']})
+    // Un metahumano solo ve las evidencias de sus propias carpetas
+    const filtro: any = (req as any).role === 'METAHUMANO'
+      ? { carpeta: { metahumano: (req as any).perfilId } }
+      : {}
+    const evidencias = await em.find(Evidencia, filtro, {populate :['carpeta.metahumano', 'multas']})
     res.status(200).json({message : 'find All evidencias', data: evidencias})
     } catch (error : any) {
-      res.status(500).json({error:error.message})  
+      console.error(error)
+      res.status(500).json({ message: 'Error interno del servidor' })
     }
 }
 
 async function findOne(req:Request, res: Response){
   try {
     const id = Number.parseInt(req.params.id)
-    const evidencia = await em.findOneOrFail(Evidencia, { id }, {populate :['multas']})
+    const evidencia = await em.findOneOrFail(Evidencia, { id }, {populate :['multas', 'carpeta']})
+    if ((req as any).role === 'METAHUMANO' && evidencia.carpeta?.metahumano?.id !== (req as any).perfilId) {
+      return res.status(403).json({ message: 'No podés ver esta evidencia' })
+    }
     res.status(200).json({message: 'find one evidencia', data : evidencia})
   } catch (error : any) {
-    res.status(500).json({error:error.message})
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
@@ -62,6 +71,9 @@ async function add(req:Request , res: Response){
     
     if(carpetaId){
       const carpeta = await em.findOneOrFail(Carpeta, {id : Number(carpetaId)});
+      if (String(carpeta.estado).toUpperCase() === 'CERRADA') {
+        return res.status(400).json({error: "No se pueden agregar evidencias a una carpeta cerrada"})
+      }
       nuevaEvidencia.carpeta = carpeta;
     }
     
@@ -69,7 +81,8 @@ async function add(req:Request , res: Response){
     res.status(201).json({message : 'Evidencia creada exitosamente', data : nuevaEvidencia})
     
   } catch (error : any) {
-    res.status(500).json({error:error.message})
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   } 
 }
 
@@ -94,7 +107,8 @@ async function update(req:Request , res:Response){
     await em.flush();
     res.status(200).json({message:'Evidencia updated', data:evidenciaToUpdate})
   } catch (error : any) {
-    res.status(500).json({error : error.message})
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
@@ -105,7 +119,8 @@ async function remove(req:Request, res:Response){
     await em.removeAndFlush(evidenciaToDelete)
     res.status(200).json({message : 'Evidencia has been eliminated' })
   } catch (error : any) {
-    res.status(500).json({error:error.message})
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 

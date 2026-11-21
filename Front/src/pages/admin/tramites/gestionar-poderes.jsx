@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../../../components/layouts/AdminLayout';
 import { getPoderes } from '../../../api/poderes';
 import { api } from '../../../api/client';
+import { config } from "../../../config/environment";
 
 const GestionarPoderes = () => {
   const navigate = useNavigate();
@@ -51,7 +52,7 @@ const GestionarPoderes = () => {
         const res = await api.get('/metapoderes');
         metapoderesData = res.data?.data || res.data || [];
       } catch {
-        const response = await fetch('http://localhost:3000/api/metapoderes', { credentials: 'include' });
+        const response = await fetch(`${config.apiBaseUrl}/metapoderes`, { credentials: 'include' });
         const data = await response.json();
         metapoderesData = data.data || data || [];
       }
@@ -83,7 +84,7 @@ const GestionarPoderes = () => {
         try {
           await api.put(`/metapoderes/${metapoderId}`, { estado: 'APROBADO' });
         } catch {
-          await fetch(`http://localhost:3000/api/metapoderes/${metapoderId}`, {
+          await fetch(`${config.apiBaseUrl}/metapoderes/${metapoderId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -105,7 +106,7 @@ const GestionarPoderes = () => {
         try {
           await api.put(`/metapoderes/${metapoderId}`, { estado: 'RECHAZADO' });
         } catch {
-          await fetch(`http://localhost:3000/api/metapoderes/${metapoderId}`, {
+          await fetch(`${config.apiBaseUrl}/metapoderes/${metapoderId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',

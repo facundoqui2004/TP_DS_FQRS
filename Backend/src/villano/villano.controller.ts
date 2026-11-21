@@ -39,7 +39,8 @@ async function findAll(req: Request, res: Response) {
     })
     res.status(200).json({ message: 'Villanos encontrados', data: villanos })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
@@ -51,7 +52,8 @@ async function findOne(req: Request, res: Response) {
     })
     res.status(200).json({ message: 'Villano encontrado', data: villano })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
@@ -62,7 +64,8 @@ async function add(req: Request, res: Response) {
     await em.persistAndFlush(villano)
     res.status(201).json({ message: 'Villano creado', data: villano })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
@@ -74,7 +77,8 @@ async function update(req: Request, res: Response) {
     await em.persistAndFlush(villanoToUpdate)
     res.status(200).json({ message: 'Villano actualizado', data: villanoToUpdate })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
@@ -85,7 +89,8 @@ async function remove(req: Request, res: Response) {
     await em.removeAndFlush(villano)
     res.status(200).json({ message: 'Villano eliminado' })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
@@ -156,7 +161,8 @@ async function solicitarRehabilitacion(req: Request, res: Response) {
       }
     })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
@@ -209,7 +215,8 @@ async function solicitarPermisoDestruccion(req: Request, res: Response) {
       }
     })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
@@ -232,7 +239,8 @@ async function obtenerSolicitudesEnemigo(req: Request, res: Response) {
 
     res.status(200).json({ message: 'Solicitudes de enemigo obtenidas', data: solicitudes })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
@@ -272,7 +280,8 @@ async function responderSolicitudEnemigo(req: Request, res: Response) {
 
     res.status(200).json({ message: `Solicitud de enemigo ${respuesta === 'ACEPTAR' ? 'aceptada' : 'rechazada'} exitosamente`, data: carpeta })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 

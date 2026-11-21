@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { FaEye, FaEyeSlash, FaEnvelope, FaLock, FaSignInAlt, FaHome } from "react-icons/fa";
 import { useAuth } from "../../context/AuthContext";
@@ -9,7 +9,9 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const { isAuthenticated, user, getHomeRouteByRole, login, error } = useAuth();
   const navigate = useNavigate();
-  
+  const [searchParams] = useSearchParams();
+  const sesionExpirada = searchParams.get('sesion') === 'expirada';
+
   const {
     register,
     handleSubmit,
@@ -24,7 +26,6 @@ const LoginPage = () => {
   // Redirigir si ya está autenticado
   useEffect(() => {
     console.log('LoginPage useEffect - isAuthenticated:', isAuthenticated);
-    console.log('LoginPage useEffect - user:', user);
     if (isAuthenticated && user) {
       console.log('Usuario autenticado, obteniendo ruta...');
       const homeRoute = getHomeRouteByRole();
@@ -32,21 +33,18 @@ const LoginPage = () => {
       console.log('Rol del usuario para redirección:', user.role);
       navigate(homeRoute);
     } else {
-      console.log('No se puede redirigir - isAuthenticated:', isAuthenticated, 'user:', user);
+      console.log('No se puede redirigir - isAuthenticated:', isAuthenticated);
     }
   }, [isAuthenticated, user, navigate, getHomeRouteByRole]);
 
   const onSubmit = async (data) => {
-    console.log('LoginPage - Intentando login con:', data);
     const result = await login({
       email: data.email,
       password: data.password
     });
     
-    console.log('LoginPage - Resultado del login:', result);
     
     if (result.success) {
-      console.log('LoginPage - Login exitoso:', result.data);
       console.log('LoginPage - Rol asignado:', result.data?.role);
     } else {
       console.error('LoginPage - Error en login:', result.error);
@@ -66,6 +64,13 @@ const LoginPage = () => {
             <h1 className="text-3xl font-bold text-white mb-2">Iniciar Sesión</h1>
             <p className="text-gray-400">Accede a tu cuenta en El Súper Gestor</p>
           </div>
+
+          {/* Aviso de sesión expirada (lo pone el interceptor de api/client.js) */}
+          {sesionExpirada && !error && (
+            <div className="mb-6 p-3 bg-yellow-900 bg-opacity-50 border border-yellow-500 text-yellow-200 rounded-lg text-sm">
+              Tu sesión expiró. Volvé a iniciar sesión.
+            </div>
+          )}
 
           {/* Error message */}
           {error && (

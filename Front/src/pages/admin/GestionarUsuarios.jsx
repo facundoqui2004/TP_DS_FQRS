@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '../../components/layouts/AdminLayout';
 import { obtenerTodosLosUsuariosCombinados, eliminarUsuario } from '../../api/usuarios';
+import { config } from '../../config/environment';
 
 export default function GestionarUsuarios() {
   const [usuarios, setUsuarios] = useState([]);
@@ -19,7 +20,6 @@ export default function GestionarUsuarios() {
 
       // Usar directamente la función combinada que sabemos que funciona
       const response = await obtenerTodosLosUsuariosCombinados();
-      console.log('✅ Usuarios obtenidos:', response.data);
 
       const usuariosData = response.data || [];
 
@@ -46,7 +46,7 @@ export default function GestionarUsuarios() {
 
       let mensajeError = 'Error al cargar los usuarios.';
       if (error.code === 'ECONNREFUSED') {
-        mensajeError += ' El backend no está disponible en http://localhost:3000';
+        mensajeError += ' El backend no está disponible en ' + config.apiBaseUrl;
       } else if (error.response?.status === 401) {
         mensajeError += ' No tienes autorización para ver esta información.';
       } else if (error.response?.status === 403) {

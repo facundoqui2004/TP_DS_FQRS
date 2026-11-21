@@ -74,7 +74,6 @@ function App() {
           <Route path="/metahumano" element={<ProtectedRoute allowedRoles={['METAHUMANO', 'ADMIN']}><HomeMeta /></ProtectedRoute>} />
           <Route path="/metahumano/tramites" element={<ProtectedRoute allowedRoles={['METAHUMANO', 'ADMIN']}><TramitesMetaHumano /></ProtectedRoute>} />
           <Route path="/metahumano/carpetas" element={<ProtectedRoute allowedRoles={['METAHUMANO', 'ADMIN']}><CarpetasMeta /></ProtectedRoute>} />
-          <Route path="/metahumano/poderes/crear" element={<ProtectedRoute allowedRoles={['METAHUMANO', 'ADMIN']}><CrearPoderes /></ProtectedRoute>} />
           <Route path="/metahumano/soporte" element={<ProtectedRoute allowedRoles={['METAHUMANO', 'ADMIN']}><SoporteMeta /></ProtectedRoute>} />
           <Route path="/metahumano/perfil" element={<ProtectedRoute allowedRoles={['METAHUMANO', 'ADMIN']}><MiPerfilMeta /></ProtectedRoute>} />
           <Route path="/metahumano/vigilar-mundo" element={<ProtectedRoute allowedRoles={['METAHUMANO', 'ADMIN']}><VigilarMundo /></ProtectedRoute>} />

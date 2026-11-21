@@ -17,7 +17,7 @@ import heroeRoutes from './heroe/heroe.routes.js'
 import { noticiaRouter } from './noticia/noticia.routes.js'
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
-import { requireAuth } from './auth/auth.middleware.js';
+import { requireAuth, requireRoles } from './auth/auth.middleware.js';
 
 // Importar controladores para rutas de usuarios legacy
 import {
@@ -57,9 +57,9 @@ app.use((req, res, next) => {
 })
 
 const usuariosLegacyRouter = express.Router()
-usuariosLegacyRouter.get('/', obtenerTodosLosUsuarios)
+usuariosLegacyRouter.get('/', requireAuth, requireRoles(['ADMIN']), obtenerTodosLosUsuarios)
 usuariosLegacyRouter.get('/me', requireAuth, obtenerUsuarioActual);
-usuariosLegacyRouter.get('/:id(\\d+)', obtenerUsuarioPorId);
+usuariosLegacyRouter.get('/:id(\\d+)', requireAuth, obtenerUsuarioPorId);
 usuariosLegacyRouter.post('/register', registrarUsuario)
 usuariosLegacyRouter.post('/login', loginUsuario)
 usuariosLegacyRouter.post('/logout', logoutUsuario)

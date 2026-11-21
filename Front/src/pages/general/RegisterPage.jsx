@@ -13,6 +13,7 @@ export default function RegistroForm() {
     handleSubmit,
     watch,
     reset,
+    setError,
     formState: { errors }
   } = useForm();
   const { signup, login, error, isAuthenticated, user, getHomeRouteByRole } = useAuth();
@@ -33,14 +34,12 @@ export default function RegistroForm() {
   const registerAndLogin = async (payload, rol) => {
     try {
       console.log('Iniciando registro para rol:', rol);
-      console.log('Datos del payload:', payload);
       
       // registrar usuario
       const userType = rol === 'METAHUMANO' ? 'metahumano' : 'burocrata';
       const registerResult = await signup(payload, userType);
       
       if (registerResult.success) {
-        console.log('Registro exitoso:', registerResult.data);
         
         // login automatico
         const loginResult = await login({
@@ -49,7 +48,6 @@ export default function RegistroForm() {
         });
         
         if (loginResult.success) {
-          console.log('Login automático exitoso:', loginResult.data);
 
           // redireccion en el useEffect
           return { success: true, data: loginResult.data };
@@ -70,11 +68,11 @@ export default function RegistroForm() {
   };
 
   const onSubmit = async (data) => {
-    console.log('Intentando registro con:', data);
     
     // Validar que las contraseñas coincidan
     if (data.password !== data.confirmPassword) {
-      console.error('Las contraseñas no coinciden');
+      // Mostrar el error en el campo en lugar de cortar en silencio
+      setError('confirmPassword', { type: 'manual', message: 'Las contraseñas no coinciden' });
       return;
     }
     
@@ -89,7 +87,6 @@ export default function RegistroForm() {
     };
     
     const result = await registerAndLogin(backendData, selectedRole);
-    console.log('Resultado del proceso completo:', result);
     
     if (!result.success) {
       console.error('Error en el proceso:', result.error);

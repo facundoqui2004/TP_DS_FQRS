@@ -93,7 +93,8 @@ async function getCarpetas(req: Request, res: Response){
     }
   res.status(200).json({message: 'Carpetas found', data: burocrata.carpetas})
   }catch(error : any){
-    res.status(500).json({message : error.message})
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   } 
 } 
 
@@ -104,7 +105,8 @@ async function findAll(req: Request, res: Response) {
     })
     res.status(200).json({ message: 'found all burocratas', data: burocratas })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
@@ -116,7 +118,8 @@ async function findOne(req: Request, res: Response) {
     })
     res.status(200).json({ message: 'found burocrata', data: burocrata })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
@@ -126,19 +129,25 @@ async function add(req: Request, res: Response) {
     await em.flush()
     res.status(201).json({ message: 'burocrata created', data: burocrata })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
 async function update(req: Request, res: Response) {
   try {
     const id = Number.parseInt(req.params.id)
+    // Un burócrata solo puede editar su propio perfil (el ADMIN puede editar cualquiera)
+    if ((req as any).role !== 'ADMIN' && (req as any).perfilId !== id) {
+      return res.status(403).json({ message: 'No podés editar el perfil de otro burócrata' })
+    }
     const burocrataToUpdate = await em.findOneOrFail(Burocrata, { id })
     em.assign(burocrataToUpdate, req.body.sanitizedInput)
     await em.flush()
     res.status(200).json({ message: 'burocrata updated', data: burocrataToUpdate })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
@@ -149,7 +158,8 @@ async function remove(req: Request, res: Response) {
     await em.removeAndFlush(burocrata)
     res.status(200).json({ message: 'burocrata deleted' })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 

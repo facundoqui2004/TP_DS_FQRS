@@ -31,7 +31,8 @@ async function findAll(req:Request, res:Response){
         })
         res.status(200).json({message : "find all multas" , data : multas})
     } catch(error : any){
-        res.status(500).json({message : error.message})
+        console.error(error)
+        res.status(500).json({ message: 'Error interno del servidor' })
     }
 }
 
@@ -39,23 +40,33 @@ async function findAll(req:Request, res:Response){
 async function findOne(req:Request,res:Response){
     try {
         const id = Number.parseInt(req.params.id)
-        const multa = await em.findOneOrFail(Multa, { id })
+        const multa = await em.findOneOrFail(Multa, { id }, { populate: ['evidencia.carpeta'] })
+        // Un metahumano solo puede ver sus propias multas
+        if ((req as any).role === 'METAHUMANO' && multa.evidencia?.carpeta?.metahumano?.id !== (req as any).perfilId) {
+          return res.status(403).json({ message: 'Esta multa no te pertenece' })
+        }
         res.status(200).json({ message: 'find one multa', data: multa })
       } catch (error: any) {
-        res.status(500).json({ message: error.message })
+        console.error(error)
+        res.status(500).json({ message: 'Error interno del servidor' })
       }
 }
 
 async function add(req:Request,res:Response){
     try{
-        const { evidenciaId, ...sanitizedInput} = req.body
+        // Usar solo los campos permitidos por el sanitizador, no el body entero
+        const { evidenciaId, ...sanitizedInput} = req.body.sanitizedInput
+        // Toda multa nueva arranca PENDIENTE hasta que un ADMIN la apruebe
+        sanitizedInput.estado = 'PENDIENTE'
         const nuevaMulta = em.create(Multa, sanitizedInput)
         if(!evidenciaId){
             return res.status(400).json({message : "Evidencia id is required"})
         }else{
-            const evidencia = await em.findOneOrFail(Evidencia, { id : evidenciaId})
+            const evidencia = await em.findOneOrFail(Evidencia, { id : evidenciaId}, { populate: ['carpeta'] })
             if(!evidencia){
                 return res.status(404).json({message: "evidencia not found"})
+            }else if (String(evidencia.carpeta?.estado).toUpperCase() === 'CERRADA') {
+                return res.status(400).json({ message: "No se pueden agregar multas a una carpeta cerrada" })
             }else {
                 // Validar que no exista una multa con el mismo motivo y monto para esta evidencia
                 const existingMulta = await em.findOne(Multa, {
@@ -76,13 +87,24 @@ async function add(req:Request,res:Response){
         }
         res.status(201).json({ message: 'multa created', data: nuevaMulta })
     } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
     }
 }
 
 async function update(req:Request,res:Response){
     try {
         const id = Number.parseInt(req.params.id)
+        const { estado } = req.body.sanitizedInput
+        if (estado !== undefined) {
+          // Aprobar o rechazar es decisión del ADMIN; PAGADA solo se llega pagando
+          if ((req as any).role !== 'ADMIN') {
+            return res.status(403).json({ message: 'Solo un ADMIN puede cambiar el estado de una multa' })
+          }
+          if (!['PENDIENTE', 'APROBADA', 'RECHAZADA'].includes(estado)) {
+            return res.status(400).json({ message: 'Estado inválido. Debe ser PENDIENTE, APROBADA o RECHAZADA' })
+          }
+        }
         const multaToUpdate = await em.findOneOrFail(Multa, { id })
         em.assign(multaToUpdate, req.body.sanitizedInput)
         await em.flush()
@@ -124,7 +146,8 @@ async function update(req:Request,res:Response){
 
         res.status(200).json({ message: 'multa updated', data: multaToUpdate })
       } catch (error: any) {
-        res.status(500).json({ message: error.message })
+        console.error(error)
+        res.status(500).json({ message: 'Error interno del servidor' })
       }
 }
 
@@ -166,7 +189,8 @@ async function remove(req:Request,res:Response){
         }
         res.status(200).json({ message: 'multa deleted' })
       } catch (error: any) {
-        res.status(500).json({ message: error.message })
+        console.error(error)
+        res.status(500).json({ message: 'Error interno del servidor' })
       }
 }
 
@@ -184,7 +208,13 @@ async function pagarMulta(req: Request, res: Response) {
       return res.status(400).json({ message: 'El usuario no tiene un perfil de metahumano asociado' })
     }
 
-    const formaPago = req.body?.formaPago || req.body?.metodoPago || req.body?.formaDePago || 'AstroPay';
+    const formaPagoPedida = req.body?.formaPago || req.body?.metodoPago || req.body?.formaDePago || 'AstroPay';
+    // Solo se aceptan formas de pago conocidas
+    const formasPagoValidas = ['AstroPay', 'Mercado Pago']
+    if (!formasPagoValidas.includes(formaPagoPedida)) {
+      return res.status(400).json({ message: 'Forma de pago inválida', validas: formasPagoValidas })
+    }
+    const formaPago = formaPagoPedida;
 
     const multa = await em.findOneOrFail(Multa, { id }, {
       populate: ['evidencia.carpeta.metahumano']
@@ -234,7 +264,8 @@ async function pagarMulta(req: Request, res: Response) {
 
     res.status(200).json({ message: 'Multa pagada exitosamente', data: multa })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
@@ -290,9 +321,6 @@ async function crearPreferenciaMPAdmin(req: Request, res: Response) {
       external_reference: `MULTA-${multa.id}`
     };
 
-    console.log('[MP] Token prefix:', mpAccessToken.substring(0, 8));
-    console.log('[MP] Body enviado a MP:', JSON.stringify(preferenceBody, null, 2));
-
     const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
       method: 'POST',
       headers: {
@@ -303,12 +331,11 @@ async function crearPreferenciaMPAdmin(req: Request, res: Response) {
     });
 
     const mpData = await response.json();
-    console.log('[MP] HTTP Status:', response.status);
-    console.log('[MP] Respuesta de MP:', JSON.stringify(mpData, null, 2));
 
     if (!response.ok) {
-      console.error('[MP] ❌ Error de MP API:', mpData);
-      return res.status(502).json({ message: `Error al crear preferencia en MercadoPago: ${mpData?.message || mpData?.error || 'Error desconocido'}` });
+      // Solo el status y el mensaje, nunca la respuesta completa
+      console.error('[MP] Error de MP API:', response.status, mpData?.message);
+      return res.status(502).json({ message: 'Error al crear la preferencia de pago en MercadoPago' });
     }
 
     const initPoint: string = mpData.init_point;
@@ -316,7 +343,7 @@ async function crearPreferenciaMPAdmin(req: Request, res: Response) {
     const preferenceId: string = mpData.id;
     const checkoutUrl: string = mpAccessToken.startsWith('TEST-') ? sandboxInitPoint : initPoint;
 
-    console.log('[MP] ✅ Preferencia creada OK. checkoutUrl:', checkoutUrl);
+    console.log('[MP] Preferencia creada para multa', multa.id);
 
     res.status(200).json({
       message: 'Preferencia de pago creada correctamente',
@@ -332,7 +359,8 @@ async function crearPreferenciaMPAdmin(req: Request, res: Response) {
     });
 
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
@@ -391,7 +419,8 @@ async function verificarPagoMP(req: Request, res: Response) {
 
     res.status(200).json({ message: 'Pago verificado y multa marcada como PAGADA', data: multa })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 

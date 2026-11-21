@@ -4,6 +4,9 @@ import BurocrataLayout from "../../components/layouts/BurocrataLayout";
 import { useAuth } from "../../context/AuthContext";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { escapeHtml } from "../../utils/escapeHtml";
+import { normalizeRole } from "../../utils/roles";
+import { config } from "../../config/environment";
 
 export default function VigilarMundoMeta() {
     const { isAuthenticated, getPerfilId, user } = useAuth();
@@ -19,14 +22,14 @@ export default function VigilarMundoMeta() {
         setLoading(true);
         try {
             console.log('fetchMapData ejecutándose...');
-            const resMeta = await fetch('http://localhost:3000/api/metahumanos', { credentials: 'include' });
+            const resMeta = await fetch(`${config.apiBaseUrl}/metahumanos`, { credentials: 'include' });
             if (resMeta.ok) {
                 const data = await resMeta.json();
                 console.log('Metahumanos cargados:', data.length || (data.data && data.data.length));
                 setMetahumanosList(data.data || data || []);
             }
 
-            const resCarp = await fetch('http://localhost:3000/api/carpetas', { credentials: 'include' });
+            const resCarp = await fetch(`${config.apiBaseUrl}/carpetas`, { credentials: 'include' });
             if (resCarp.ok) {
                 const data = await resCarp.json();
                 const list = data.data || data || [];
@@ -37,7 +40,8 @@ export default function VigilarMundoMeta() {
             const metaId = getPerfilId();
             console.log('metaId obtenido en fetchMapData:', metaId);
             if (metaId) {
-                const url = `http://localhost:3000/api/evidencias?carpeta_metahumano=${metaId}`;
+                // El backend filtra por el metahumano del token (no hace falta query param)
+                const url = `${config.apiBaseUrl}/evidencias`;
                 console.log('Fetching evidencias de URL:', url);
                 const resEv = await fetch(url, { credentials: 'include' });
                 if (resEv.ok) {
@@ -52,7 +56,7 @@ export default function VigilarMundoMeta() {
                 console.warn('No se pudo obtener metaId para cargar evidencias');
             }
 
-            const resBuro = await fetch('http://localhost:3000/api/burocratas', { credentials: 'include' })
+            const resBuro = await fetch(`${config.apiBaseUrl}/burocratas`, { credentials: 'include' })
             if (resBuro.ok) {
                 const data = await resBuro.json();
                 console.log('Burocratas cargados:', data.length || (data.data && data.data.length));
@@ -71,7 +75,9 @@ export default function VigilarMundoMeta() {
         }
     }, [isAuthenticated, user]);
 
-    const isBurocrata = user?.role === 'burocrata' || user?.perfil === 'burocrata' || user?.role === 'admin';
+    // El backend manda los roles en mayúsculas: normalizar antes de comparar
+    const rolUsuario = normalizeRole(user?.role);
+    const isBurocrata = rolUsuario === 'BUROCRATA' || rolUsuario === 'ADMIN';
     const LayoutComponent = isBurocrata ? BurocrataLayout : MetahumanoLayout;
 
     // 1. Inicialización del Mapa (Solo se ejecuta una vez al montar)
@@ -126,8 +132,8 @@ export default function VigilarMundoMeta() {
                     .addTo(mapInstance)
                     .bindPopup(`
             <div style="font-family: sans-serif; color: #333; min-width: 140px; padding: 2px;">
-              <strong style="font-size: 13px;">${m.alias || 'Metahumano'}</strong><br/>
-              <span style="font-size: 11px; color: #666;">Nombre: ${m.nombre}</span><br/>
+              <strong style="font-size: 13px;">${escapeHtml(m.alias || 'Metahumano')}</strong><br/>
+              <span style="font-size: 11px; color: #666;">Nombre: ${escapeHtml(m.nombre)}</span><br/>
               <span style="font-size: 11px; font-weight: bold; color: ${m.tipoMeta === 'heroe' || m.tipoMeta === 'heróe' ? '#3b82f6' : m.tipoMeta === 'villano' ? '#ef4444' : '#10b981'}">
                 ${m.tipoMeta === 'heroe' || m.tipoMeta === 'heróe' ? '🦸‍♂️ HÉROE' : m.tipoMeta === 'villano' ? '🦹 VILLANO' : '👤 METAHUMANO'}
               </span>
@@ -154,7 +160,7 @@ export default function VigilarMundoMeta() {
                                 <strong style="font-size: 13px; color: #1e293b;">Burócrata ID: ${id}</strong><br/>
                                 <hr style="margin: 4px 0; border: 0; border-top: 1px solid #e2e8f0;"/>
                                 <span style="font-size: 11px; color: #475569;">
-                                    👨‍💼 <b>Nombre:</b> ${nombre}
+                                    👨‍💼 <b>Nombre:</b> ${escapeHtml(nombre)}
                                 </span>
                             </div>
                         `);
@@ -189,7 +195,7 @@ export default function VigilarMundoMeta() {
                                 📅 <b>Fecha:</b> ${fechaFormateada}
                             </span><br/>
                             <span style="font-size: 11px; color: #475569;">
-                                📂 <b>Carpeta:</b> ${carpeta?.descripcion || 'Sin descripción'} (ID: ${carpeta?.id || 'N/A'})
+                                📂 <b>Carpeta:</b> ${escapeHtml(carpeta?.descripcion || 'Sin descripción')} (ID: ${carpeta?.id || 'N/A'})
                             </span>
                         </div>
                     `);
@@ -220,13 +226,13 @@ export default function VigilarMundoMeta() {
                                 📂 <b>Trámite ID:</b> ${c.id}
                             </span><br/>
                             <span style="font-size: 11px; color: #475569;">
-                                📝 <b>Descripción:</b> ${c.descripcion || 'Sin descripción'}
+                                📝 <b>Descripción:</b> ${escapeHtml(c.descripcion || 'Sin descripción')}
                             </span><br/>
                             <span style="font-size: 11px; color: #475569;">
-                                🎯 <b>Radio:</b> ${c.radio ? `${c.radio} metros` : 'No especificado'}
+                                🎯 <b>Radio:</b> ${c.radio ? `${escapeHtml(c.radio)} metros` : 'No especificado'}
                             </span><br/>
                             <span style="font-size: 11px; font-weight: bold; color: ${c.estado === 'APROBADA' ? '#10b981' : c.estado === 'PENDIENTE' ? '#f59e0b' : '#ef4444'}">
-                                ⚖️ <b>Estado:</b> ${c.estado}
+                                ⚖️ <b>Estado:</b> ${escapeHtml(c.estado)}
                             </span>
                         </div>
                     `);

@@ -34,8 +34,8 @@ export default function CarpetaDetalle() {
       const c = res.data.data || res.data;
       setCarpeta(res.data.data || res.data);
       setCarpeta(c);
-      setEstadoEdit(c?.estado || "activa");
-      console.log("carpeta", c)
+      // Las carpetas viejas pueden tener el estado en minúsculas
+      setEstadoEdit((c?.estado || "ACTIVA").toUpperCase());
       if (c?.metahumano) {
         setMetahumanoNombre(c.metahumano.nombre || c.metahumano.alias || "—")
       } else {
@@ -52,7 +52,7 @@ export default function CarpetaDetalle() {
     fetchCarpeta();
   }, [id]);
 
-  const isReadOnly = (carpeta?.estado === 'cerrada');
+  const isReadOnly = (carpeta?.estado?.toUpperCase() === 'CERRADA');
 
   // Inicialización del Mapa de la Evidencia
   useEffect(() => {

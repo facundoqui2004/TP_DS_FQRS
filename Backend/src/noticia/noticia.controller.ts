@@ -53,6 +53,12 @@ async function findAll(req: Request, res: Response) {
 
     const where: any = {}
 
+    // Borradores y archivadas solo las ve el staff: el filtro va en el backend, no en el front
+    const rol = (req as any).role
+    if (rol !== 'ADMIN' && rol !== 'BUROCRATA') {
+      where.estado = 'PUBLICADA'
+    }
+
     if (fechaDesde || fechaHasta) {
       where.fecha = {}
 
@@ -78,7 +84,8 @@ async function findAll(req: Request, res: Response) {
     const noticias = await em.find(Noticia, where, { populate: ['autor'] })
     res.status(200).json({ message: 'Noticias encontradas', data: noticias })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
@@ -87,9 +94,14 @@ async function findOne(req: Request, res: Response) {
   try {
     const id = Number.parseInt(req.params.id)
     const noticia = await em.findOneOrFail(Noticia, { id }, { populate: ['autor'] })
+    const rol = (req as any).role
+    if (rol !== 'ADMIN' && rol !== 'BUROCRATA' && noticia.estado !== 'PUBLICADA') {
+      return res.status(404).json({ message: 'Noticia no encontrada' })
+    }
     res.status(200).json({ message: 'Noticia encontrada', data: noticia })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
@@ -191,7 +203,8 @@ async function update(req: Request, res: Response) {
 
     res.status(200).json({ message: 'Noticia actualizada', data: noticiaToUpdate })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
@@ -203,7 +216,8 @@ async function remove(req: Request, res: Response) {
     await em.removeAndFlush(noticia)
     res.status(200).json({ message: 'Noticia eliminada' })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 

@@ -28,7 +28,8 @@ async function findAll(req: Request, res: Response) {
     const poderes = await em.find(Poder, {})
     res.status(200).json({ message: 'found all poderes', data: poderes })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
@@ -38,7 +39,8 @@ async function findOne(req: Request, res: Response) {
     const poder = await em.findOneOrFail(Poder, { id })
     res.status(200).json({ message: 'found poder', data: poder })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
@@ -48,7 +50,8 @@ async function add(req: Request, res: Response) {
     await em.flush()
     res.status(201).json({ message: 'poder created', data: poder })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
@@ -60,7 +63,8 @@ async function update(req: Request, res: Response) {
     await em.flush()
     res.status(200).json({ message: 'poder updated', data: poderToUpdate })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
@@ -71,7 +75,8 @@ async function remove(req: Request, res: Response) {
     await em.removeAndFlush(poder)
     res.status(200).json({ message: 'poder deleted' })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 

@@ -23,7 +23,7 @@ export class Usuario extends BaseEntity {
   @Property({ nullable: false })
   telefono!: string
 
-  @Property({ nullable: false })
+  @Property({ nullable: false, hidden: true })
   passwordHash!: string
 
   @Enum(() => UserRole)

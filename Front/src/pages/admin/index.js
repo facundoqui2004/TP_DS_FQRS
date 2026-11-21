@@ -7,3 +7,4 @@ export { default as Tramites } from './Tramites.jsx';
 export { default as MiPerfil } from './MiPerfil.jsx';
 export { default as Soporte } from './Soporte.jsx';
 export { default as AprobarTramites } from './tramites/AprobarTramites.jsx';
+export { default as CrearPoderes } from './tramites/CrearPoderes.jsx';

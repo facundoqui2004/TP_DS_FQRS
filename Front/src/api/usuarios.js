@@ -3,10 +3,7 @@ import { api } from './client';
 export const obtenerTodosLosUsuarios = () => api.get('/usuarios');
 export const getMe = () => api.get('/usuarios/me');
 export const obtenerUsuarioPorId = (id) => api.get(`/usuarios/${id}`);
-export const actualizarUsuario = (id, d) => api.put(`/usuarios/${id}`, d);
 export const eliminarUsuario = (id) => api.delete(`/auth/admin/usuarios/${id}`);
-export const cambiarEstadoUsuario = (id, a) =>
-  api.patch(`/usuarios/${id}/estado`, { activo: a });
 
 export const obtenerMetahumanos = () => api.get('/metahumanos');
 export const obtenerMetahumanoById = (id) => api.get(`/metahumanos/${id}`);

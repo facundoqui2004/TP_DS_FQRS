@@ -4,6 +4,7 @@ import { Metahumano } from '../metahumano/metahumano.entity.js'
 import { Poder } from '../poder/poder.entity.js'
 import { Usuario } from '../auth/usuario.entity.js'
 import { orm } from '../shared/db/orm.js'
+import { AuthedRequest } from '../auth/auth.middleware.js'
 
 const em = orm.em
 
@@ -29,6 +30,17 @@ function sanitizeMetaPoderInput(req: Request, res: Response, next: Function) {
 
 async function assignPoder(req: Request, res: Response) {
   try {
+    const authedReq = req as AuthedRequest
+    if (authedReq.role === 'METAHUMANO') {
+      // Un metahumano solo SOLICITA: el nivel, la aprobación y el certificado los decide el staff
+      Object.assign(req.body.sanitizedInput, {
+        dominio: 'NOVATO',
+        nivelControl: 25,
+        estado: 'SOLICITADO',
+        certificado: null
+      })
+    }
+
     const {
       dominio,
       fechaAdquisicion,
@@ -39,12 +51,17 @@ async function assignPoder(req: Request, res: Response) {
       poderId,
     } = req.body.sanitizedInput
 
+    // Un metahumano solo puede solicitar poderes para su propio perfil
+    if (authedReq.role === 'METAHUMANO' && Number(metahumanoId) !== authedReq.perfilId) {
+      return res.status(403).json({ message: 'Solo podés solicitar poderes para tu propio perfil' })
+    }
+
     // Validar que el dominio sea válido
     const dominiosValidos = ['NOVATO', 'INTERMEDIO', 'AVANZADO', 'EXPERTO', 'MAESTRO']
     if (!dominiosValidos.includes(dominio)) {
-      return res.status(400).json({ 
-        message: 'Dominio inválido', 
-        validos: dominiosValidos 
+      return res.status(400).json({
+        message: 'Dominio inválido',
+        validos: dominiosValidos
       })
     }
 
@@ -95,7 +112,8 @@ async function assignPoder(req: Request, res: Response) {
       }
     })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
@@ -106,7 +124,8 @@ async function findAll(req: Request, res: Response) {
     })
     res.status(200).json({ message: 'found all metapoder', data: registros })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
@@ -117,7 +136,8 @@ async function remove(req: Request, res: Response) {
     await em.removeAndFlush(metaPoder)
     res.status(200).json({ message: 'registro MetaPoder eliminado' })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
@@ -151,7 +171,8 @@ async function findAllForMetahumano(req: Request, res: Response) {
       data: result 
     })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
@@ -169,6 +190,20 @@ async function updateMetaPoder(req: Request, res: Response) {
     const metaPoder = await em.findOneOrFail(MetaPoder, { id }, {
       populate: ['metahumano', 'poder']
     })
+
+    // Un metahumano sobre sus propios poderes solo puede desactivarlos
+    const authedReq = req as AuthedRequest
+    if (authedReq.role === 'METAHUMANO') {
+      if (metaPoder.metahumano?.id !== authedReq.perfilId) {
+        return res.status(403).json({ message: 'Este poder no te pertenece' })
+      }
+      if (req.body.estado !== 'INACTIVO') {
+        return res.status(403).json({ message: 'Solo podés desactivar tus poderes' })
+      }
+      metaPoder.estado = 'INACTIVO'
+      await em.flush()
+      return res.status(200).json({ message: 'Poder desactivado', data: { id: metaPoder.id, estado: metaPoder.estado } })
+    }
 
     if (dominio) {
       const dominiosValidos = ['NOVATO', 'INTERMEDIO', 'AVANZADO', 'EXPERTO', 'MAESTRO']
@@ -206,7 +241,8 @@ async function updateMetaPoder(req: Request, res: Response) {
       }
     })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
@@ -267,7 +303,8 @@ async function assignPoderToMetahumano(req: Request, res: Response) {
       }
     })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
@@ -334,7 +371,8 @@ async function findAllForUsuario(req: Request, res: Response) {
       data: result 
     })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
@@ -406,7 +444,8 @@ async function findOneOrAllForMetahumano(req: Request, res: Response) {
       }
     }
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 

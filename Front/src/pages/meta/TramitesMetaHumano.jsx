@@ -4,6 +4,7 @@ import MetahumanoLayout from "../../components/layouts/MetahumanoLayout";
 import { getMetaId } from "../../utils/cookies";
 import { Meta } from "react-router-dom";
 import L from "leaflet";
+import { config } from "../../config/environment";
 import "leaflet/dist/leaflet.css";
 
 function Home() {
@@ -61,7 +62,7 @@ function Home() {
       const userId = getUserId();
       if (!userId) return;
       
-      const response = await fetch(`http://localhost:3000/api/usuarios/${userId}`, {
+      const response = await fetch(`${config.apiBaseUrl}/usuarios/${userId}`, {
         credentials: 'include'
       });
       if (response.ok) {
@@ -77,7 +78,7 @@ function Home() {
   // Cargar lista de villanos para solicitud de enemigos
   const fetchVillanos = async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/villanos', {
+      const response = await fetch(`${config.apiBaseUrl}/villanos`, {
         credentials: 'include'
       });
       if (response.ok) {
@@ -92,7 +93,7 @@ function Home() {
   // Cargar solicitudes de enemigo entrantes para villanos
   const fetchIncomingEnemyRequests = async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/villanos/solicitudes-enemigo', {
+      const response = await fetch(`${config.apiBaseUrl}/villanos/solicitudes-enemigo`, {
         credentials: 'include'
       });
       if (response.ok) {
@@ -103,7 +104,7 @@ function Home() {
       console.error('Error fetching incoming enemy requests:', err);
     }
   };
-
+
 
   // Responder a solicitud de enemigo
   const handleResponderSolicitudEnemigo = async (carpetaId, respuesta) => {
@@ -111,7 +112,7 @@ function Home() {
       setLoading(true);
       setError("");
       setSuccessMessage("");
-      const response = await fetch(`http://localhost:3000/api/villanos/solicitudes-enemigo/${carpetaId}/responder`, {
+      const response = await fetch(`${config.apiBaseUrl}/villanos/solicitudes-enemigo/${carpetaId}/responder`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -230,41 +231,15 @@ function Home() {
     }
   }, [destructionRadio, destructionLat, destructionLng]);
 
-  // Definir estilo de vida (Héroe o Villano)
-  const handleDefinirEstiloVida = async (e) => {
-    e.preventDefault();
-    try {
-      setLoading(true);
-      setError("");
-      setSuccessMessage("");
-      
-      const payload = {
-        tipoMeta: lifestyleRole,
-        ...(lifestyleRole === 'HEROE' 
-          ? { nivelFama, mision, numeroVictorias: 0, estatus: 'activo' }
-          : { nivelPeligrosidad, motivacion, estado: 'activo' })
-      };
-      
-      const response = await fetch('http://localhost:3000/api/metahumanos/estilo-vida', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(payload)
-      });
-      
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.message || 'Error al definir estilo de vida');
-      }
-      
   // Obtener deuda acumulada de multas no pagadas para mostrar en recompensa de villano
+  // (va en el nivel superior del componente: los hooks no se pueden llamar dentro de un handler)
   useEffect(() => {
     if (showFormLifestyle && lifestyleRole === 'VILLANO') {
       const calcularDeudaMultas = async () => {
         try {
           const metaId = getMetaId();
           if (!metaId) return;
-          const res = await fetch(`http://localhost:3000/api/carpetas/idMetahumano/${metaId}`, {
+          const res = await fetch(`${config.apiBaseUrl}/carpetas/idMetahumano/${metaId}`, {
             credentials: 'include'
           });
           if (res.ok) {
@@ -289,6 +264,34 @@ function Home() {
       calcularDeudaMultas();
     }
   }, [showFormLifestyle, lifestyleRole]);
+
+  // Definir estilo de vida (Héroe o Villano)
+  const handleDefinirEstiloVida = async (e) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      setError("");
+      setSuccessMessage("");
+      
+      const payload = {
+        tipoMeta: lifestyleRole,
+        ...(lifestyleRole === 'HEROE' 
+          ? { nivelFama, mision, numeroVictorias: 0, estatus: 'activo' }
+          : { nivelPeligrosidad, motivacion, estado: 'activo' })
+      };
+      
+      const response = await fetch(`${config.apiBaseUrl}/metahumanos/estilo-vida`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload)
+      });
+      
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.message || 'Error al definir estilo de vida');
+      }
+
       await fetchPerfilMetahumano();
       if (refreshProfile) {
         await refreshProfile();
@@ -313,7 +316,7 @@ function Home() {
         throw new Error("Debes seleccionar un villano");
       }
       
-      const response = await fetch('http://localhost:3000/api/heroes/solicitud-enemigos', {
+      const response = await fetch(`${config.apiBaseUrl}/heroes/solicitud-enemigos`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -354,7 +357,7 @@ function Home() {
       setError("");
       setSuccessMessage("");
       
-      const response = await fetch('http://localhost:3000/api/villanos/tramite-rehabilitacion', {
+      const response = await fetch(`${config.apiBaseUrl}/villanos/tramite-rehabilitacion`, {
         method: 'POST',
         credentials: 'include'
       });
@@ -386,7 +389,7 @@ function Home() {
       setError("");
       setSuccessMessage("");
       
-      const response = await fetch('http://localhost:3000/api/villanos/permisos-destruccion', {
+      const response = await fetch(`${config.apiBaseUrl}/villanos/permisos-destruccion`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -428,7 +431,7 @@ function Home() {
       setError("");
       
       // Obtener todos los poderes
-      const response = await fetch('http://localhost:3000/api/poderes', {
+      const response = await fetch(`${config.apiBaseUrl}/poderes`, {
         credentials: 'include'
       });
       
@@ -443,7 +446,7 @@ function Home() {
       try {
         const userId = getUserId();
         if (userId) {
-          const userResponse = await fetch(`http://localhost:3000/api/metapoderes/usuario/${userId}`, {
+          const userResponse = await fetch(`${config.apiBaseUrl}/metapoderes/usuario/${userId}`, {
             credentials: 'include'
           });
           
@@ -452,7 +455,7 @@ function Home() {
             const metahumanoId = userData.usuario?.metahumano?.id;
             
             if (metahumanoId) {
-              const misPoderesResponse = await fetch(`http://localhost:3000/api/metapoderes/${metahumanoId}`, {
+              const misPoderesResponse = await fetch(`${config.apiBaseUrl}/metapoderes/${metahumanoId}`, {
                 credentials: 'include'
               });
               if (misPoderesResponse.ok) {
@@ -501,7 +504,7 @@ function Home() {
       console.log(' Obteniendo datos del usuario ID:', userId);
 
       // Obtener datos completos del usuario para extraer metahumanoId
-      const userResponse = await fetch(`http://localhost:3000/api/usuarios/${userId}`, {
+      const userResponse = await fetch(`${config.apiBaseUrl}/usuarios/${userId}`, {
         credentials: 'include'
       });
 
@@ -510,7 +513,6 @@ function Home() {
       }
 
       const userData = await userResponse.json();
-      console.log('Datos del usuario:', userData);
       
       const metahumanoId = userData.usuario?.metahumano?.id;
       
@@ -523,7 +525,7 @@ function Home() {
       console.log('Obteniendo metapoderes para metahumanoId:', metahumanoId);
 
       // Obtener los metapoderes del usuario
-      const response = await fetch(`http://localhost:3000/api/metapoderes/${metahumanoId}`, {
+      const response = await fetch(`${config.apiBaseUrl}/metapoderes/${metahumanoId}`, {
         credentials: 'include'
       });
       
@@ -589,7 +591,7 @@ const solicitarPoder = async (poder) => {
 
     // Obtener el ID del metahumano
     console.log('Obteniendo datos del usuario...');
-    const userResponse = await fetch(`http://localhost:3000/api/usuarios/${userId}`, {
+    const userResponse = await fetch(`${config.apiBaseUrl}/usuarios/${userId}`, {
       credentials: 'include'
     });
 
@@ -598,7 +600,6 @@ const solicitarPoder = async (poder) => {
     }
 
     const userData = await userResponse.json();
-    console.log('Datos completos del usuario:', userData);
 
     const metahumanoId = userData.usuario?.metahumano?.id;
     
@@ -612,7 +613,7 @@ const solicitarPoder = async (poder) => {
 
     // Verificar si el metahumano ya tiene este poder
     console.log('Verificando si ya tienes este poder...');
-    const checkResponse = await fetch(`http://localhost:3000/api/metapoderes/${metahumanoId}`, {
+    const checkResponse = await fetch(`${config.apiBaseUrl}/metapoderes/${metahumanoId}`, {
       credentials: 'include'
     });
 
@@ -646,7 +647,7 @@ const solicitarPoder = async (poder) => {
     console.log('Enviando solicitud de metapoder:', asignacionData);
     console.log('Poder seleccionado:', poder.nomPoder);
     
-    const response = await fetch('http://localhost:3000/api/metapoderes', {
+    const response = await fetch(`${config.apiBaseUrl}/metapoderes`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -714,7 +715,7 @@ const solicitarPoder = async (poder) => {
       }
       
       // Enviar petición para desactivar el poder (cambiar estado a INACTIVO)
-      const response = await fetch(`http://localhost:3000/api/metapoderes/${metapoderId}`, {
+      const response = await fetch(`${config.apiBaseUrl}/metapoderes/${metapoderId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -820,25 +821,6 @@ const solicitarPoder = async (poder) => {
   
   const toggleUser = () => setShowUser(!showUser);
   const closeUser = () => setShowUser(false);
-
-  // Función de debug para consola
-  window.debugTramites = {
-    fetchPoderes,
-    fetchMisPoderes,
-    desactivarPoder,
-    solicitarPoder,
-    cambiarTipoSolicitud,
-    getUserId,
-    getUserRole,
-    user,
-    isAuthenticated,
-    poderes,
-    misPoderes,
-    tipoSolicitud,
-    loading,
-    error,
-    successMessage
-  };
 
   // Verificar autenticación en el componente
   if (!isAuthenticated) {

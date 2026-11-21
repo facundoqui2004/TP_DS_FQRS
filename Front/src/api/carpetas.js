@@ -8,9 +8,6 @@ export const getCarpetaByIdRequest = (id) => api.get(`/carpetas/${id}`);
 export const createCarpetaRequest = (data) => api.post('/carpetas', data);
 // Eliminar una carpeta
 export const deleteCarpetaRequest = (id) => api.delete(`/carpetas/${id}`);
-// Actualizar carpeta
-export const updateCarpetaRequest = (id, data) =>
-  api.put(`/carpetas/${id}`, data);
 // Cambiar estado
 export const patchCarpetaEstadoRequest = (id, estado) =>
   api.patch(`/carpetas/${id}/estado`, { estado });

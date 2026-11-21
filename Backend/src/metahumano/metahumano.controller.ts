@@ -17,8 +17,9 @@ function sanitizeMetahumanoInput(req: Request, res: Response, next: NextFunction
     nombre: req.body.nombre,
     alias: req.body.alias,
     origen: req.body.origen,
-    tipoMeta: req.body.tipoMeta,
-    usuarioId: req.body.usuarioId,
+    // tipoMeta y usuarioId solo los puede tocar un ADMIN (un metahumano no se cambia de dueño ni de tipo)
+    tipoMeta: (req as AuthedRequest).role === 'ADMIN' ? req.body.tipoMeta : undefined,
+    usuarioId: (req as AuthedRequest).role === 'ADMIN' ? req.body.usuarioId : undefined,
     latitud: req.body.latitud !== undefined && req.body.latitud !== null ? Number(req.body.latitud) : undefined,
     longitud: req.body.longitud !== undefined && req.body.longitud !== null ? Number(req.body.longitud) : undefined
   }
@@ -35,12 +36,14 @@ function sanitizeMetahumanoInput(req: Request, res: Response, next: NextFunction
 
 async function crearPerfilMetahumano(req: Request, res: Response) {
   try {
-    const { usuarioId, nombre, alias, origen, tipoMeta } = req.body
+    const { nombre, alias, origen, tipoMeta } = req.body
+    // El usuario sale del token, no del body
+    const usuarioId = (req as AuthedRequest).usuarioId
 
     // Validaciones básicas
-    if (!usuarioId || !nombre || !alias || !origen) {
-      return res.status(400).json({ 
-        message: 'Campos requeridos: usuarioId, nombre, alias, origen' 
+    if (!nombre || !alias || !origen) {
+      return res.status(400).json({
+        message: 'Campos requeridos: nombre, alias, origen'
       })
     }
 
@@ -135,7 +138,8 @@ async function findAll(req: Request, res: Response) {
     })
     res.status(200).json({ message: 'found all metahumanos', data: metahumanos })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
@@ -147,7 +151,8 @@ async function findOne(req: Request, res: Response) {
     })
     res.status(200).json({ message: 'found metahumano', data: metahumano })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
@@ -157,19 +162,26 @@ async function add(req: Request, res: Response) {
     await em.flush()
     res.status(201).json({ message: 'metahumano created', data: metahumano })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
 async function update(req: Request, res: Response) {
   try {
     const id = Number.parseInt(req.params.id)
+    const authedReq = req as AuthedRequest
+    // Solo el dueño del perfil o un ADMIN pueden modificarlo
+    if (authedReq.role !== 'ADMIN' && authedReq.perfilId !== id) {
+      return res.status(403).json({ message: 'No podés modificar el perfil de otro metahumano' })
+    }
     const metahumanoToUpdate = await em.findOneOrFail(Metahumano, { id })
     em.assign(metahumanoToUpdate, req.body.sanitizedInput)
     await em.flush()
     res.status(200).json({ message: 'metahumano updated', data: metahumanoToUpdate })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
@@ -180,7 +192,8 @@ async function remove(req: Request, res: Response) {
     await em.removeAndFlush(metahumano)
     res.status(200).json({ message: 'metahumano deleted' })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
@@ -193,10 +206,11 @@ async function actualizarPoderesMetahumano(req: Request, res: Response) {
       return res.status(400).json({ message: 'El usuario no tiene un perfil de metahumano asociado' })
     }
 
-    const { poderId, dominio, nivelControl, estado, certificado } = req.body
+    // nivelControl, estado y certificado NO se toman del body: los decide un burócrata/admin
+    const { poderId } = req.body
 
-    if (!poderId || !dominio) {
-      return res.status(400).json({ message: 'Campos requeridos: poderId, dominio' })
+    if (!poderId) {
+      return res.status(400).json({ message: 'Campo requerido: poderId' })
     }
 
     // Verificar que el poder exista
@@ -212,24 +226,21 @@ async function actualizarPoderesMetahumano(req: Request, res: Response) {
     let metaPoder = await em.findOne(MetaPoder, { metahumano: metahumanoId, poder: poderId })
 
     if (metaPoder) {
-      // Actualizar existente
-      metaPoder.dominio = dominio
-      if (nivelControl !== undefined) metaPoder.nivelControl = nivelControl
-      if (estado !== undefined) metaPoder.estado = estado
-      if (certificado !== undefined) metaPoder.certificado = certificado
-    } else {
-      // Crear nuevo metapoder
-      metaPoder = em.create(MetaPoder, {
-        metahumano,
-        poder,
-        dominio,
-        nivelControl: nivelControl || 1,
-        estado: estado || 'ACTIVO',
-        certificado: certificado || '',
-        fechaAdquisicion: new Date()
-      })
-      metahumano.poderes.add(metaPoder)
+      // El metahumano no puede subirse el nivel solo
+      return res.status(400).json({ message: 'Ya tenés este poder. Los cambios de nivel los hace un burócrata o un admin' })
     }
+
+    // Crear nuevo metapoder como solicitud
+    metaPoder = em.create(MetaPoder, {
+      metahumano,
+      poder,
+      dominio: 'NOVATO',
+      nivelControl: 1,
+      estado: 'SOLICITADO',
+      certificado: '',
+      fechaAdquisicion: new Date()
+    })
+    metahumano.poderes.add(metaPoder)
 
     await em.flush()
 
@@ -245,7 +256,8 @@ async function actualizarPoderesMetahumano(req: Request, res: Response) {
       }
     })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
@@ -293,7 +305,8 @@ async function obtenerNotificacionesMetahumano(req: Request, res: Response) {
       }
     })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
@@ -332,9 +345,11 @@ async function definirEstiloVida(req: Request, res: Response) {
     const connection = em.getConnection()
 
     if (tipo === 'HEROE' || tipo === 'HERÓE') {
-      const nivelFama = req.body.nivelFama || 'Bajo'
-      const estatus = req.body.estatus || 'activo'
-      const numeroVictorias = req.body.numeroVictorias || 0
+      // Solo se aceptan los niveles que ofrece el formulario
+      const nivelFama = ['Bajo', 'Medio', 'Alto'].includes(req.body.nivelFama) ? req.body.nivelFama : 'Bajo'
+      // Un héroe recién definido arranca activo y sin victorias: no lo decide el cliente
+      const estatus = 'activo'
+      const numeroVictorias = 0
       const mision = req.body.mision || ''
 
       await connection.execute(
@@ -342,8 +357,10 @@ async function definirEstiloVida(req: Request, res: Response) {
         ['heroe', nivelFama, estatus, numeroVictorias, mision, metahumanoId]
       )
     } else {
-      const nivelPeligrosidad = req.body.nivelPeligrosidad || 'Baja'
-      const estado = req.body.estado || 'activo'
+      // Solo se aceptan los niveles que ofrece el formulario
+      const nivelPeligrosidad = ['Baja', 'Media', 'Alta'].includes(req.body.nivelPeligrosidad) ? req.body.nivelPeligrosidad : 'Baja'
+      // El estado inicial lo fija el servidor
+      const estado = 'activo'
       const motivacion = req.body.motivacion || ''
 
       // Buscar todas las multas de este metahumano
@@ -378,7 +395,7 @@ async function definirEstiloVida(req: Request, res: Response) {
     })
   } catch (error: any) {
     console.error('Error al definir estilo de vida:', error)
-    res.status(500).json({ message: error.message || 'Error interno del servidor' })
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../../../components/layouts/AdminLayout';
 import { getAllCarpetasRequest, patchCarpetaEstadoRequest } from '../../../api/carpetas';
+import { escapeHtml } from '../../../utils/escapeHtml';
 
 // ── Componente de Mapa Dinámico ─────────────────────────────────────────────
 const MapaZonaDestruccion = ({ latitud, longitud, radio, descripcion, carpetaId }) => {
@@ -60,7 +61,7 @@ const MapaZonaDestruccion = ({ latitud, longitud, radio, descripcion, carpetaId 
         .bindPopup(
           `<div style="font-family:sans-serif;min-width:160px;">
             <p style="font-weight:bold;color:#f97316;margin:0 0 4px 0;">⚠️ Zona de Impacto</p>
-            <p style="margin:0 0 2px 0;font-size:12px;color:#374151;">${descripcion || 'Sin descripción'}</p>
+            <p style="margin:0 0 2px 0;font-size:12px;color:#374151;">${escapeHtml(descripcion || 'Sin descripción')}</p>
             <p style="margin:0;font-size:11px;color:#6b7280;">📍 ${lat.toFixed(5)}, ${lng.toFixed(5)}</p>
             <p style="margin:2px 0 0 0;font-size:11px;color:#ef4444;">🔴 Radio: ${radioMetros}m</p>
           </div>`,
@@ -313,8 +314,8 @@ const AprobarTramites = () => {
               <option value="todos">📋 Todos los Estados</option>
               <option value="APROBADA">✅ Aprobadas</option>
               <option value="RECHAZADA">❌ Rechazadas</option>
-              <option value="activa">📁 Activas</option>
-              <option value="cerrada">🔒 Cerradas</option>
+              <option value="ACTIVA">📁 Activas</option>
+              <option value="CERRADA">🔒 Cerradas</option>
             </select>
             <select
               value={filtroTipo}

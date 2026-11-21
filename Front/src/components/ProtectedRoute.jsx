@@ -1,30 +1,16 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-
-// Normalizar roles
-export const normalizeRole = (role) => {
-    if (!role) return null;
-    
-    const roleUpper = String(role).toUpperCase().trim();
-    
-    switch (roleUpper) {
-        case 'METAHUMANO':
-        case 'META':
-            return 'METAHUMANO';
-        case 'BUROCRATA':
-        case 'BURO':
-            return 'BUROCRATA';
-        case 'ADMIN':
-        case 'ADMINISTRATOR':
-            return 'ADMIN';
-        default:
-            return roleUpper;
-    }
-};
+import { normalizeRole } from '../utils/roles';
 
 const ProtectedRoute = ({ children, requiredRole = null, allowedRoles = [] }) => {
-    const { isAuthenticated, user } = useAuth();
+    const { isAuthenticated, user, checkingSession } = useAuth();
+
+    // Mientras el servidor confirma la sesión y el rol, no mostrar nada
+    // (así un rol editado en localStorage no llega a renderizar la ruta)
+    if (checkingSession) {
+        return null;
+    }
 
     // Si no está autenticado, redirigir al login
     if (!isAuthenticated) {

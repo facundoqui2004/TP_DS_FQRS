@@ -10,7 +10,8 @@ const em = orm.em
 
 function sanitizeCarpetaInput(req: Request, res: Response, next: NextFunction) {
   req.body.sanitizedInput = {
-    estado : req.body.estado,
+    // Los estados se guardan siempre en mayúsculas (ACTIVA, PENDIENTE, CERRADA...)
+    estado : req.body.estado ? String(req.body.estado).toUpperCase() : undefined,
     tipo: req.body.tipo,
     descripcion: req.body.descripcion,
     burocrataId: req.body.burocrataId,
@@ -31,37 +32,63 @@ async function getCarpetasByMetahumano(req: Request, res : Response){
     if (isNaN(idMetahumano)) {
       return res.status(400).json({ message: 'ID de Metahumano inválido' })
     }
+    // Un metahumano solo puede ver sus propias carpetas
+    if ((req as any).role === 'METAHUMANO' && (req as any).perfilId !== idMetahumano) {
+      return res.status(403).json({ message: 'No podés ver las carpetas de otro metahumano' })
+    }
     const carpetas = await em.find(Carpeta, {metahumano : idMetahumano}, {populate : ['evidencias.multas', 'metahumano', 'burocrata']})
     res.status(200).json({message : 'found carpetas by metahumano', data : carpetas})
   }
   catch(error: any){
-    res.status(500).json({message : error.message})
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
 async function findAll(req:Request, res:Response){
     try {
       const { metahumanoId, search } = req.query;
+
+      // Un metahumano solo necesita las zonas de destrucción para el mapa:
+      // sin evidencias, multas ni datos del burócrata
+      if ((req as any).role === 'METAHUMANO') {
+        const zonas = await em.find(Carpeta, { tipo: 'PERMISO_DESTRUCCION' })
+        return res.status(200).json({message : 'find All carpetas', data: zonas})
+      }
+
       const filter: any = {};
       if (metahumanoId) {
         filter.metahumano = Number(metahumanoId);
       }
-      const carpetas = await em.find(Carpeta, filter, {populate :['metahumano', 'burocrata', 'evidencias.multas']})
-      
-      let result = carpetas;
+
+      // El filtro de texto lo resuelve la base (WHERE ... LIKE), no JavaScript en memoria
       if (search) {
-        const q = String(search).toLowerCase().trim();
-        result = carpetas.filter((c: any) =>
-          c.id?.toString().includes(q) ||
-          c.descripcion?.toLowerCase().includes(q) ||
-          c.metahumano?.alias?.toLowerCase().includes(q) ||
-          c.metahumano?.nombre?.toLowerCase().includes(q)
-        );
+        const texto = String(search).trim();
+        const q = `%${texto}%`;
+        filter.$or = [
+          { descripcion: { $like: q } },
+          { metahumano: { alias: { $like: q } } },
+          { metahumano: { nombre: { $like: q } } },
+        ];
+        if (!isNaN(Number(texto))) {
+          filter.$or.push({ id: Number(texto) });
+        }
       }
 
-      res.status(200).json({message : 'find All carpetas', data: result})
+      // Paginación opcional: si no se mandan limit/offset, se devuelve todo como antes
+      const limit = req.query.limit ? Number(req.query.limit) : undefined;
+      const offset = req.query.offset ? Number(req.query.offset) : undefined;
+
+      const carpetas = await em.find(Carpeta, filter, {
+        populate :['metahumano', 'burocrata', 'evidencias.multas'],
+        limit,
+        offset,
+      })
+
+      res.status(200).json({message : 'find All carpetas', data: carpetas})
     } catch (error : any) {
-      res.status(500).json({error:error.message})  
+      console.error(error)
+      res.status(500).json({ message: 'Error interno del servidor' })
     }
 }
 
@@ -69,9 +96,14 @@ async function findOne(req:Request, res: Response){
   try {
     const id = Number.parseInt(req.params.id)
     const carpeta = await em.findOneOrFail(Carpeta, { id }, {populate :['metahumano', 'burocrata', 'evidencias.multas']})
+    // Un metahumano solo puede ver su propio expediente
+    if ((req as any).role === 'METAHUMANO' && carpeta.metahumano?.id !== (req as any).perfilId) {
+      return res.status(403).json({ message: 'No podés ver esta carpeta' })
+    }
     res.status(200).json({message: 'find one carpeta', data : carpeta})
   } catch (error : any) {
-    res.status(500).json({error:error.message})
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 
@@ -134,7 +166,7 @@ async function updateEstado(req:Request, res: Response) {
     });
   } catch (e:any) {
     console.error('Error al actualizar estado de carpeta:', e);
-    return res.status(500).json({ message: e.message });
+    return res.status(500).json({ message: 'Error interno del servidor' });
   }
 }
 
@@ -173,7 +205,7 @@ async function LinkCarpBuro(req: Request, res: Response) {
     });
   } catch (error: any) {
     console.error("Error al crear carpeta:", error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: 'Error interno del servidor' });
   }
 }
 
@@ -187,7 +219,8 @@ async function remove(req:Request, res:Response){
     await em.removeAndFlush(carpetaToDelete)
     res.status(200).json({message : 'Carpeta has been eliminated' })
   } catch (error : any) {
-    res.status(500).json({error:error.message})
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }
 

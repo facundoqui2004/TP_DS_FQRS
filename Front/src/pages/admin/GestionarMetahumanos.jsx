@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '../../components/layouts/AdminLayout';
 import { obtenerTodosLosUsuariosCombinados, eliminarUsuario } from '../../api/usuarios';
+import { config } from '../../config/environment';
 
 export default function GestionarMetahumanos() {
   const [metahumanos, setMetahumanos] = useState([]);
@@ -19,7 +20,6 @@ export default function GestionarMetahumanos() {
       
       // Usar la función combinada y filtrar solo metahumanos
       const response = await obtenerTodosLosUsuariosCombinados();
-      console.log('✅ Usuarios obtenidos:', response.data);
       
       const usuariosData = response.data || [];
       
@@ -38,7 +38,7 @@ export default function GestionarMetahumanos() {
       
       let mensajeError = 'Error al cargar los metahumanos.';
       if (error.code === 'ECONNREFUSED') {
-        mensajeError += ' El backend no está disponible en http://localhost:3000';
+        mensajeError += ' El backend no está disponible en ' + config.apiBaseUrl;
       } else if (error.response?.status === 401) {
         mensajeError += ' No autorizado. Inicia sesión nuevamente.';
       } else if (error.response?.status === 500) {

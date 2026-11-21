@@ -68,6 +68,7 @@ export async function solicitarEnemigo(req: Request, res: Response) {
       }
     })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    console.error(error)
+    res.status(500).json({ message: 'Error interno del servidor' })
   }
 }

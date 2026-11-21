@@ -76,3 +76,10 @@ export const getFormattedUserInfo = () => {
   };
 };
 
+
+/**
+ * Borra la cookie user_info del navegador (se usa al cerrar o perder la sesión)
+ */
+export const removeUserCookie = () => {
+  document.cookie = 'user_info=; Max-Age=0; path=/';
+};

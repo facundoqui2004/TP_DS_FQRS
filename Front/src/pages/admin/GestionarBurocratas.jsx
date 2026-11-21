@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '../../components/layouts/AdminLayout';
 import { obtenerTodosLosUsuariosCombinados, eliminarUsuario } from '../../api/usuarios';
+import { config } from '../../config/environment';
 
 export default function GestionarBurocratas() {
   const [burocratas, setBurocratas] = useState([]);
@@ -18,7 +19,6 @@ export default function GestionarBurocratas() {
       console.log('Cargando burócratas desde endpoints disponibles...');
       
       const response = await obtenerTodosLosUsuariosCombinados();
-      console.log('Usuarios obtenidos:', response.data);
       
       const usuariosData = response.data || [];
       
@@ -37,7 +37,7 @@ export default function GestionarBurocratas() {
       
       let mensajeError = 'Error al cargar los burócratas.';
       if (error.code === 'ECONNREFUSED') {
-        mensajeError += ' El backend no está disponible en http://localhost:3000';
+        mensajeError += ' El backend no está disponible en ' + config.apiBaseUrl;
       } else if (error.response?.status === 401) {
         mensajeError += ' No autorizado. Inicia sesión nuevamente.';
       } else if (error.response?.status === 500) {

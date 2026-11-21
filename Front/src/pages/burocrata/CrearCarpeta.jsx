@@ -6,7 +6,7 @@ import BurocrataLayout from "../../components/layouts/BurocrataLayout";
 
 export default function CrearCarpeta() {
   const [titulo, setTitulo] = useState("");
-  const [estado, setEstado] = useState("activa");
+  const [estado, setEstado] = useState("ACTIVA");
   const [tipo, setTipo] = useState("general");
   const [metahumanoId, setMetahumanoId] = useState("");
   const [metahumanoNombre, setMetahumanoNombre] = useState("");
@@ -104,9 +104,9 @@ export default function CrearCarpeta() {
                 disabled={tipo === "CAPTURA_VILLANO"}
                 className="w-full p-3 rounded-lg bg-[#1F1F1F] text-white focus:outline-none focus:ring-2 focus:ring-blue-600 transition disabled:opacity-60"
               >
-                <option value="activa">Activa</option>
-                <option value="pendiente">Pendiente</option>
-                <option value="cerrada">Cerrada</option>
+                <option value="ACTIVA">Activa</option>
+                <option value="PENDIENTE">Pendiente</option>
+                <option value="CERRADA">Cerrada</option>
               </select>
             </div>
 
@@ -119,7 +119,7 @@ export default function CrearCarpeta() {
                   const val = e.target.value;
                   setTipo(val);
                   if (val === "CAPTURA_VILLANO") {
-                    setEstado("pendiente");
+                    setEstado("PENDIENTE");
                   }
                 }}
                 className="w-full p-3 rounded-lg bg-[#1F1F1F] text-white focus:outline-none focus:ring-2 focus:ring-blue-600 transition"

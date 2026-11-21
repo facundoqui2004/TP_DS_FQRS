@@ -10,15 +10,16 @@ import {
   updateMetaPoder,
   remove
 } from './metaPoder.controller.js'
+import { requireAuth, requireRoles } from '../auth/auth.middleware.js'
 const router = express.Router()
 
-router.get('/', findAll)
-router.post('/', sanitizeMetaPoderInput, assignPoder)
-router.get('/metahumano/:metahumanoId', findAllForMetahumano)
-router.get('/usuario/:usuarioId', findAllForUsuario)
-router.get('/:id', findOneOrAllForMetahumano)
-router.post('/metahumano/:id', sanitizeMetaPoderInput, assignPoderToMetahumano)
-router.put('/:id', sanitizeMetaPoderInput, updateMetaPoder)
-router.delete('/:id', remove)
+router.get('/', requireAuth, findAll)
+router.post('/', requireAuth, sanitizeMetaPoderInput, assignPoder)
+router.get('/metahumano/:metahumanoId', requireAuth, findAllForMetahumano)
+router.get('/usuario/:usuarioId', requireAuth, findAllForUsuario)
+router.get('/:id', requireAuth, findOneOrAllForMetahumano)
+router.post('/metahumano/:id', requireAuth, requireRoles(['ADMIN', 'BUROCRATA']), sanitizeMetaPoderInput, assignPoderToMetahumano)
+router.put('/:id', requireAuth, sanitizeMetaPoderInput, updateMetaPoder)
+router.delete('/:id', requireAuth, requireRoles(['ADMIN', 'BUROCRATA']), remove)
 
 export default router

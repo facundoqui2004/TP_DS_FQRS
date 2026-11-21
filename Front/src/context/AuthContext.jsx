@@ -1,6 +1,8 @@
 import { createContext, useState, useContext, useEffect } from "react";
 import { registerMetahumanoRequest, registerBurocrataRequest, loginRequest, logoutRequest, getPerfilRequest } from '../api/auth';
-import { getUserFromCookie } from '../utils/cookies';
+import { getUserFromCookie, removeUserCookie } from '../utils/cookies';
+import { normalizeRole } from '../utils/roles';
+import { config } from '../config/environment';
 
 export const AuthContext = createContext();
 
@@ -19,14 +21,12 @@ export const AuthProvider = ({children}) => {
             let userData = getUserFromCookie();
             
             if (userData) {
-                console.log('Usuario encontrado en cookies:', userData);
                 return userData;
             }
             
             const savedUser = localStorage.getItem('user_info');
             if (savedUser) {
                 userData = JSON.parse(savedUser);
-                console.log('Usuario encontrado en localStorage:', userData);
                 return userData;
             }
             
@@ -45,6 +45,44 @@ export const AuthProvider = ({children}) => {
     });
     
     const [error, setError] = useState(null);
+
+    // true mientras se verifica con el servidor la sesión guardada en el navegador
+    const [checkingSession, setCheckingSession] = useState(isAuthenticated);
+
+    // Borra la sesión del navegador (estado, localStorage y cookie user_info)
+    const limpiarSesionLocal = () => {
+        setUser(null);
+        setIsAuthenticated(false);
+        localStorage.removeItem('user_info');
+        localStorage.removeItem('user');
+        localStorage.removeItem('isAuthenticated');
+        localStorage.removeItem('token');
+        removeUserCookie();
+    };
+
+    // Al montar la app, el rol y la identidad salen del servidor (que valida el token),
+    // no de lo guardado en la cookie o en localStorage, que el usuario puede editar.
+    useEffect(() => {
+        if (!isAuthenticated) {
+            setCheckingSession(false);
+            return;
+        }
+        getPerfilRequest()
+            .then((res) => {
+                const perfil = res?.data?.data;
+                if (perfil?.id && perfil?.role) {
+                    // Lo del servidor pisa a lo guardado (por ejemplo, un role editado a mano)
+                    saveUserData({ ...user, ...perfil });
+                }
+            })
+            .catch((err) => {
+                if (err?.response?.status === 401) {
+                    limpiarSesionLocal();
+                }
+            })
+            .finally(() => setCheckingSession(false));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // sincronizar cambios y guardar en ambos lugares (local y cookie)
     useEffect(() => {
@@ -68,7 +106,6 @@ export const AuthProvider = ({children}) => {
 
     // guardar usuario completo
     const saveUserData = (userData) => {
-        console.log('Guardando datos completos del usuario:', userData);
         
         const completeUserData = {
             id: userData.id || userData.usuarioId,
@@ -81,7 +118,6 @@ export const AuthProvider = ({children}) => {
             ...userData
         };
         
-        console.log('Estructura completa a guardar:', completeUserData);
         
         localStorage.setItem('user_info', JSON.stringify(completeUserData));
         
@@ -91,30 +127,7 @@ export const AuthProvider = ({children}) => {
         return completeUserData;
     };
     
-    const normalizeRole = (role) => {
-        if (!role) return null;
-        
-        const roleUpper = role.toUpperCase();
-        console.log('Normalizando rol:', role, '>', roleUpper);
-        
-        switch (roleUpper) {
-            case 'METAHUMANO':
-            case 'META':
-                return 'METAHUMANO';
-            case 'BUROCRATA':
-            case 'BURO':
-                return 'BUROCRATA';
-            case 'ADMIN':
-            case 'ADMINISTRATOR':
-                return 'ADMIN';
-            default:
-                console.log('Rol no reconocido, usando valor original:', role);
-                return role;
-        }
-    };
-    
     const getHomeRouteByRole = () => {
-        console.log('Obteniendo ruta para usuario:', user);
         if (!user || !user.role) {
             console.log('No hay usuario o rol, redirigiendo a /');
             return '/';
@@ -143,7 +156,6 @@ export const AuthProvider = ({children}) => {
         try {
             setError(null);
             console.log('Iniciando registro como:', userType);
-            console.log('Datos para registro:', userData);
             
             let registerFunc;
             if (userType === 'metahumano') {
@@ -155,7 +167,6 @@ export const AuthProvider = ({children}) => {
             }
             
             const res = await registerFunc(userData);
-            console.log('Respuesta del servidor para registro:', res.data);
             
             const userDataFromServer = res.data.data || res.data;
             console.log('Registro exitoso (sin login automático)');
@@ -183,19 +194,15 @@ export const AuthProvider = ({children}) => {
     const login = async (userData) => {
         try {
             setError(null);
-            console.log('Iniciando login con datos:', userData);
             console.log('Consultando endpoint: POST /api/auth/login');
             
             const res = await loginRequest(userData);
-            console.log('Respuesta del servidor completa:', res.data);
             
             const userDataFromServer = res.data.usuario || res.data.user || res.data;
-            console.log('Datos del usuario del servidor:', userDataFromServer);
             console.log('Rol del usuario:', userDataFromServer?.role);
             
             const completeUser = saveUserData(userDataFromServer);
             
-            console.log('Login exitoso, sesión iniciada. Usuario completo:', completeUser);
             return { success: true, data: completeUser };
         } catch (error) {
             console.error('Error en login:', error);
@@ -225,7 +232,7 @@ export const AuthProvider = ({children}) => {
                 
                 console.log(`Error ${status}: ${errorMessage}`);
             } else if (error.request) {
-                errorMessage = 'No se pudo conectar con el servidor. Verifica que esté ejecutándose en http://localhost:3000';
+                errorMessage = 'No se pudo conectar con el servidor. Verifica que esté ejecutándose en ' + config.apiBaseUrl;
                 console.log('Error de conexión - servidor no disponible');
             } else {
                 errorMessage = error.message || 'Error desconocido';
@@ -248,16 +255,9 @@ export const AuthProvider = ({children}) => {
             console.error('Error al hacer logout en el servidor:', error);
         }
         
-        setUser(null);
-        setIsAuthenticated(false);
         setError(null);
-        
-        // Limpiar localStorage
-        localStorage.removeItem('user_info');
-        localStorage.removeItem('user');
-        localStorage.removeItem('isAuthenticated');
-        localStorage.removeItem('token');
-        
+        limpiarSesionLocal();
+
         console.log('Sesión cerrada correctamente, estado local limpiado');
     };
 
@@ -265,10 +265,14 @@ export const AuthProvider = ({children}) => {
     const refreshProfile = async () => {
         try {
             const res = await getPerfilRequest();
-            const profileData = res.data;
-            
-            const updatedUser = saveUserData(profileData);
-            console.log('Perfil actualizado desde el servidor:', updatedUser);
+            // El backend responde { message, data: { id, role, ... } }
+            const profileData = res.data.data;
+            if (!profileData?.id || !profileData?.role) {
+                throw new Error('Respuesta de perfil inválida');
+            }
+
+            // Fusionar con el usuario actual para no perder alias/nombre
+            const updatedUser = saveUserData({ ...user, ...profileData });
             return { success: true, data: updatedUser };
         } catch (error) {
             console.error('Error al refrescar perfil:', error);
@@ -290,6 +294,7 @@ export const AuthProvider = ({children}) => {
             refreshProfile,
             user,
             isAuthenticated,
+            checkingSession,
             error,
             getHomeRouteByRole,
             getUserId,

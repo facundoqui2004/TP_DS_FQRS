@@ -42,7 +42,7 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
 
     next();
   } catch (err: any) {
-    return res.status(401).json({ message: 'Token inválido o expirado', error: err.message });
+    return res.status(401).json({ message: 'Token inválido o expirado' });
   }
 }
 

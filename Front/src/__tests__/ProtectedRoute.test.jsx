@@ -69,6 +69,19 @@ describe('Componente ProtectedRoute (Test Unitario de Control de Acceso Frontend
     expect(screen.queryByText('Contenido Secreto de Administración')).not.toBeInTheDocument()
   })
 
+  it('Issue #50: no debería renderizar nada mientras el servidor verifica la sesión', () => {
+    const authState = {
+      isAuthenticated: true,
+      checkingSession: true,
+      // rol que podría haber sido editado a mano en localStorage
+      user: { id: 10, email: 'meta@test.com', role: 'ADMIN' }
+    }
+
+    renderWithRouter(authState, '/admin-secret', ['ADMIN'])
+
+    expect(screen.queryByText('Contenido Secreto de Administración')).not.toBeInTheDocument()
+  })
+
   it('3. Debería permitir el acceso y renderizar los children cuando el usuario tiene el rol permitido', () => {
     const authState = {
       isAuthenticated: true,

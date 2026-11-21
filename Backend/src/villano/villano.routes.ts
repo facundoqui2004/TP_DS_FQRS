@@ -22,10 +22,10 @@ router.get('/solicitudes-enemigo', requireAuth, requireRoles(['VILLANO']), obten
 router.post('/solicitudes-enemigo/:carpetaId/responder', requireAuth, requireRoles(['VILLANO']), responderSolicitudEnemigo)
 
 // CRUD básico
-router.get('/', findAll)
-router.get('/:id', findOne)
-router.post('/', sanitizeVillanoInput, add)
-router.put('/:id', sanitizeVillanoInput, update)
-router.delete('/:id', remove)
+router.get('/', requireAuth, findAll)
+router.get('/:id', requireAuth, findOne)
+router.post('/', requireAuth, requireRoles(['ADMIN', 'BUROCRATA']), sanitizeVillanoInput, add)
+router.put('/:id', requireAuth, requireRoles(['ADMIN', 'BUROCRATA']), sanitizeVillanoInput, update)
+router.delete('/:id', requireAuth, requireRoles(['ADMIN']), remove)
 
 export default router
