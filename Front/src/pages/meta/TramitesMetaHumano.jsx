@@ -7,6 +7,27 @@ import L from "leaflet";
 import { config } from "../../config/environment";
 import "leaflet/dist/leaflet.css";
 
+async function obtenerDeudaMultas(metaId) {
+  const res = await fetch(`${config.apiBaseUrl}/carpetas/idMetahumano/${metaId}`, {
+    credentials: 'include'
+  });
+  if (!res.ok) return null;
+
+  const data = await res.json();
+  const carpetas = data.data || [];
+  let acumulado = 0;
+  carpetas.forEach(c => {
+    c.evidencias?.forEach(ev => {
+      ev.multas?.forEach(m => {
+        if (m.estado !== 'PAGADA' && m.estado !== 'RECHAZADA') {
+          acumulado += (m.montoMulta || 0);
+        }
+      });
+    });
+  });
+  return acumulado;
+}
+
 function Home() {
   const [showMenu, setShowMenu] = useState(false);
   const [showUser, setShowUser] = useState(false);
@@ -232,37 +253,26 @@ function Home() {
   }, [destructionRadio, destructionLat, destructionLng]);
 
   // Obtener deuda acumulada de multas no pagadas para mostrar en recompensa de villano
-  // (va en el nivel superior del componente: los hooks no se pueden llamar dentro de un handler)
   useEffect(() => {
-    if (showFormLifestyle && lifestyleRole === 'VILLANO') {
-      const calcularDeudaMultas = async () => {
-        try {
-          const metaId = getMetaId();
-          if (!metaId) return;
-          const res = await fetch(`${config.apiBaseUrl}/carpetas/idMetahumano/${metaId}`, {
-            credentials: 'include'
-          });
-          if (res.ok) {
-            const data = await res.json();
-            const carpetas = data.data || [];
-            let acumulado = 0;
-            carpetas.forEach(c => {
-              c.evidencias?.forEach(ev => {
-                ev.multas?.forEach(m => {
-                  if (m.estado !== 'PAGADA' && m.estado !== 'RECHAZADA') {
-                    acumulado += (m.montoMulta || 0);
-                  }
-                });
-              });
-            });
-            setDeudaMultas(acumulado);
-          }
-        } catch (err) {
-          console.error("Error al calcular deuda de multas:", err);
+    if (!showFormLifestyle || lifestyleRole !== 'VILLANO') return;
+
+    let ignore = false;
+    const metaId = getMetaId();
+    if (!metaId) return;
+
+    obtenerDeudaMultas(metaId)
+      .then((acumulado) => {
+        if (!ignore && acumulado !== null) {
+          setDeudaMultas(acumulado);
         }
-      };
-      calcularDeudaMultas();
-    }
+      })
+      .catch((err) => {
+        console.error("Error al calcular deuda de multas:", err);
+      });
+
+    return () => {
+      ignore = true;
+    };
   }, [showFormLifestyle, lifestyleRole]);
 
   // Definir estilo de vida (Héroe o Villano)

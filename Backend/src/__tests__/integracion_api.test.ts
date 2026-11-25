@@ -78,4 +78,34 @@ describe('Test de Integración - Flujo Completo de Autenticación, Roles y Rutas
     assert.strictEqual(res.status, 404)
     assert.strictEqual(res.body.message, 'Resource not found')
   })
+
+  test('INT-6: Debería proteger el router legacy /api/usuarios y marcarlo como deprecado', async () => {
+    const unauthList = await request(app).get('/api/usuarios')
+    assert.strictEqual(unauthList.status, 401)
+    assert.strictEqual(unauthList.headers['deprecation'], 'true')
+
+    const forbiddenList = await request(app)
+      .get('/api/usuarios')
+      .set('Authorization', `Bearer ${metahumanoToken}`)
+    assert.strictEqual(forbiddenList.status, 403)
+
+    const unauthById = await request(app).get('/api/usuarios/1')
+    assert.strictEqual(unauthById.status, 401)
+
+    const forbiddenById = await request(app)
+      .get('/api/usuarios/1')
+      .set('Authorization', `Bearer ${metahumanoToken}`)
+    assert.strictEqual(forbiddenById.status, 403)
+
+    const adminList = await request(app)
+      .get('/api/usuarios')
+      .set('Authorization', `Bearer ${adminToken}`)
+    assert.strictEqual(adminList.status, 200)
+    assert.strictEqual(adminList.headers['deprecation'], 'true')
+    assert.ok(Array.isArray(adminList.body.usuarios))
+    for (const u of adminList.body.usuarios) {
+      assert.strictEqual('telefono' in u, false, 'El DTO no debe exponer telefono')
+      assert.strictEqual('verificado' in u, false, 'El DTO no debe exponer verificado')
+    }
+  })
 })

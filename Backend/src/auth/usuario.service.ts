@@ -1,99 +1,268 @@
 import { EntityManager } from '@mikro-orm/core'
+import bcrypt from 'bcryptjs'
+import jwt from 'jsonwebtoken'
 import { Usuario, UserRole } from '../auth/usuario.entity.js'
 import { Metahumano } from '../metahumano/metahumano.entity.js'
 import { Burocrata } from '../Burocratas/Burocrata.entity.js'
+import { config } from '../config/environment.js'
+
+export class AuthServiceError extends Error {
+  constructor(
+    public readonly statusCode: number,
+    message: string
+  ) {
+    super(message)
+    this.name = 'AuthServiceError'
+  }
+}
+
+export type RegistroInput =
+  | {
+      tipo: 'BASICO'
+      email?: string
+      telefono?: string
+      password?: string
+      role?: UserRole | string
+    }
+  | {
+      tipo: 'METAHUMANO'
+      email?: string
+      telefono?: string
+      password?: string
+      nombre?: string
+      alias?: string
+      origen?: string
+    }
+  | {
+      tipo: 'BUROCRATA'
+      email?: string
+      telefono?: string
+      password?: string
+      nombre?: string
+      alias?: string
+      origen?: string
+    }
+  | {
+      tipo: 'ADMIN'
+      email?: string
+      telefono?: string
+      password?: string
+      nombre?: string
+    }
+
+export interface RegistroResult {
+  usuario: Usuario
+  metahumano?: Metahumano
+  burocrata?: Burocrata
+  token?: string
+  userInfo?: Record<string, unknown>
+}
+
+const MIN_PASSWORD_LENGTH = 8
+const BCRYPT_SALT_ROUNDS = 10
 
 export class UsuarioService {
   constructor(private em: EntityManager) {}
 
   /**
-   * Crea un usuario con perfil de metahumano
+   * Flujo unificado y transaccional de alta de usuarios para todos los roles:
+   * valida datos, verifica unicidad de email, hashea contraseña una sola vez,
+   * persiste usuario (y perfil si corresponde) y emite token JWT.
    */
-  async crearMetahumano(datos: {
-    email: string
-    telefono: string
-    passwordHash: string
-    nombre: string
-    alias: string
-    origen: string
-    tipoMeta?: string
-  }): Promise<{ usuario: Usuario; metahumano: Metahumano }> {
-    // Verificar que el email no exista
-    const usuarioExistente = await this.em.findOne(Usuario, { email: datos.email })
-    if (usuarioExistente) {
-      throw new Error('Ya existe un usuario con este email')
+  async registrarUsuario(input: RegistroInput): Promise<RegistroResult> {
+    const role = this.validarDatosRegistro(input)
+
+    const { usuario, metahumano, burocrata } = await this.em.transactional(async (txEm) => {
+      const existeUsuario = await txEm.findOne(Usuario, { email: input.email! })
+      if (existeUsuario) {
+        throw new AuthServiceError(400, 'Ya existe un usuario con este email')
+      }
+
+      const passwordHash = await bcrypt.hash(input.password!, BCRYPT_SALT_ROUNDS)
+
+      const now = new Date()
+      const nuevoUsuario = new Usuario()
+      nuevoUsuario.email = input.email!
+      nuevoUsuario.telefono = input.telefono!
+      nuevoUsuario.passwordHash = passwordHash
+      nuevoUsuario.role = role
+      nuevoUsuario.verificado = input.tipo === 'ADMIN'
+      nuevoUsuario.createdAt = now
+      nuevoUsuario.updatedAt = now
+
+      if (input.tipo === 'METAHUMANO') {
+        const nuevoMetahumano = new Metahumano()
+        nuevoMetahumano.nombre = input.nombre!
+        nuevoMetahumano.alias = input.alias!
+        nuevoMetahumano.origen = input.origen!
+        nuevoMetahumano.usuario = nuevoUsuario
+        nuevoUsuario.metahumano = nuevoMetahumano
+
+        await txEm.persistAndFlush([nuevoUsuario, nuevoMetahumano])
+        return { usuario: nuevoUsuario, metahumano: nuevoMetahumano }
+      }
+
+      if (input.tipo === 'BUROCRATA') {
+        const nuevoBurocrata = new Burocrata()
+        nuevoBurocrata.nombre = input.nombre!
+        nuevoBurocrata.alias = input.alias!
+        nuevoBurocrata.origen = input.origen!
+        nuevoBurocrata.usuario = nuevoUsuario
+        nuevoUsuario.burocrata = nuevoBurocrata
+
+        await txEm.persistAndFlush([nuevoUsuario, nuevoBurocrata])
+        return { usuario: nuevoUsuario, burocrata: nuevoBurocrata }
+      }
+
+      await txEm.persistAndFlush(nuevoUsuario)
+      return { usuario: nuevoUsuario }
+    })
+
+    if (input.tipo === 'BASICO') {
+      return { usuario }
     }
 
-    // Crear usuario
-    const usuario = this.em.create(Usuario, {
-      email: datos.email,
-      telefono: datos.telefono,
-      passwordHash: datos.passwordHash,
-      role: UserRole.METAHUMANO,
-      verificado: false,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    })
+    const { token, userInfo } = this.emitirTokenYUserInfo(input, usuario, metahumano, burocrata)
 
-    // Crear metahumano asociado
-    const metahumano = this.em.create(Metahumano, {
-      nombre: datos.nombre,
-      alias: datos.alias,
-      origen: datos.origen,
-      tipoMeta: datos.tipoMeta || 'NORMAL', // Valor por defecto
-      usuario: usuario,
-    })
-
-    // Establecer la relación bidireccional
-    usuario.metahumano = metahumano
-
-    await this.em.persistAndFlush([usuario, metahumano])
-
-    return { usuario, metahumano }
+    return {
+      usuario,
+      metahumano,
+      burocrata,
+      token,
+      userInfo,
+    }
   }
 
-  /**
-   * Crea un usuario con perfil de burocrata
-   */
-  async crearBurocrata(datos: {
-    email: string
-    telefono: string
-    passwordHash: string
-    nombre: string
-    alias: string
-    origen: string
-  }): Promise<{ usuario: Usuario; burocrata: Burocrata }> {
-    // Verificar que el email no exista
-    const usuarioExistente = await this.em.findOne(Usuario, { email: datos.email })
-    if (usuarioExistente) {
-      throw new Error('Ya existe un usuario con este email')
+  private validarDatosRegistro(input: RegistroInput): UserRole {
+    switch (input.tipo) {
+      case 'BASICO': {
+        if (!input.email || !input.telefono || !input.password || !input.role) {
+          throw new AuthServiceError(
+            400,
+            'Todos los campos son requeridos: email, telefono, password, role'
+          )
+        }
+        if (input.password.length < MIN_PASSWORD_LENGTH) {
+          throw new AuthServiceError(400, 'La contraseña debe tener al menos 8 caracteres')
+        }
+        if (!Object.values(UserRole).includes(input.role as UserRole)) {
+          throw new AuthServiceError(400, 'Role inválido. Debe ser METAHUMANO o BUROCRATA')
+        }
+        if (input.role === UserRole.ADMIN) {
+          throw new AuthServiceError(403, 'No se puede registrar un ADMIN desde esta ruta')
+        }
+        return input.role as UserRole
+      }
+
+      case 'METAHUMANO':
+      case 'BUROCRATA': {
+        if (
+          !input.email ||
+          !input.telefono ||
+          !input.password ||
+          !input.nombre ||
+          !input.alias ||
+          !input.origen
+        ) {
+          throw new AuthServiceError(
+            400,
+            'Todos los campos son requeridos: email, telefono, password, nombre, alias, origen'
+          )
+        }
+        if (input.password.length < MIN_PASSWORD_LENGTH) {
+          throw new AuthServiceError(400, 'La contraseña debe tener al menos 8 caracteres')
+        }
+        return input.tipo === 'METAHUMANO' ? UserRole.METAHUMANO : UserRole.BUROCRATA
+      }
+
+      case 'ADMIN': {
+        if (!input.email || !input.telefono || !input.password || !input.nombre) {
+          throw new AuthServiceError(
+            400,
+            'Todos los campos son requeridos: email, telefono, password, nombre'
+          )
+        }
+        if (input.password.length < MIN_PASSWORD_LENGTH) {
+          throw new AuthServiceError(400, 'La contraseña debe tener al menos 8 caracteres')
+        }
+        return UserRole.ADMIN
+      }
+    }
+  }
+
+  private emitirTokenYUserInfo(
+    input: Exclude<RegistroInput, { tipo: 'BASICO' }>,
+    usuario: Usuario,
+    metahumano?: Metahumano,
+    burocrata?: Burocrata
+  ): { token: string; userInfo: Record<string, unknown> } {
+    if (input.tipo === 'METAHUMANO' && metahumano) {
+      const token = jwt.sign(
+        {
+          usuarioId: usuario.id,
+          email: usuario.email,
+          role: usuario.role,
+          perfilId: metahumano.id,
+          perfil: 'metahumano',
+        },
+        config.jwtSecret,
+        { expiresIn: '24h' }
+      )
+      return {
+        token,
+        userInfo: {
+          id: usuario.id,
+          role: usuario.role,
+          perfil: 'metahumano',
+          perfilId: metahumano.id,
+          alias: metahumano.alias,
+        },
+      }
     }
 
-    // Crear usuario
-    const usuario = this.em.create(Usuario, {
-      email: datos.email,
-      telefono: datos.telefono,
-      passwordHash: datos.passwordHash,
-      role: UserRole.BUROCRATA,
-      verificado: false,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    })
+    if (input.tipo === 'BUROCRATA' && burocrata) {
+      const token = jwt.sign(
+        {
+          usuarioId: usuario.id,
+          email: usuario.email,
+          role: usuario.role,
+          perfilId: burocrata.id,
+          perfil: 'burocrata',
+        },
+        config.jwtSecret,
+        { expiresIn: '24h' }
+      )
+      return {
+        token,
+        userInfo: {
+          id: usuario.id,
+          role: usuario.role,
+          perfil: 'burocrata',
+          perfilId: burocrata.id,
+          alias: burocrata.alias,
+        },
+      }
+    }
 
-    // Crear burocrata asociado
-    const burocrata = this.em.create(Burocrata, {
-      nombre: datos.nombre,
-      alias: datos.alias,
-      origen: datos.origen,
-      usuario: usuario,
-    })
-
-    // Establecer la relación bidireccional
-    usuario.burocrata = burocrata
-
-    await this.em.persistAndFlush([usuario, burocrata])
-
-    return { usuario, burocrata }
+    const token = jwt.sign(
+      {
+        usuarioId: usuario.id,
+        email: usuario.email,
+        role: usuario.role,
+        nombre: input.nombre,
+      },
+      config.jwtSecret,
+      { expiresIn: '24h' }
+    )
+    return {
+      token,
+      userInfo: {
+        id: usuario.id,
+        role: usuario.role,
+        nombre: input.nombre,
+        email: usuario.email,
+      },
+    }
   }
 
   /**
@@ -226,19 +395,17 @@ export class UsuarioService {
       return false
     }
 
-    // Al eliminar el usuario, MikroORM debería encargarse de las relaciones si están configuradas con cascade
-    // Pero para estar seguros y explícitos, podemos eliminar los perfiles si existen
     if (usuario.metahumano) {
       this.em.remove(usuario.metahumano)
     }
-    
+
     if (usuario.burocrata) {
       this.em.remove(usuario.burocrata)
     }
 
     this.em.remove(usuario)
     await this.em.flush()
-    
+
     return true
   }
 }

@@ -1,15 +1,35 @@
 import { Request, Response } from 'express'
 import { Usuario, UserRole } from './usuario.entity.js'
-import { Metahumano } from '../metahumano/metahumano.entity.js'
-import { Burocrata } from '../Burocratas/Burocrata.entity.js'
 import { orm } from '../shared/db/orm.js'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
-import { UsuarioService } from './usuario.service.js'
+import { AuthServiceError, UsuarioService } from './usuario.service.js'
 import { config } from '../config/environment.js'
 
 const em = orm.em
 const JWT_SECRET = config.jwtSecret
+const usuarioService = new UsuarioService(em)
+
+function setAuthCookies(res: Response, token: string, userInfo: Record<string, unknown>) {
+  const isProd = process.env.NODE_ENV === 'production'
+  const cookieOptions = {
+    secure: isProd,
+    sameSite: (isProd ? 'strict' : 'lax') as 'strict' | 'lax',
+    maxAge: 1000 * 60 * 60 * 24,
+    path: '/',
+  }
+
+  res.cookie('auth_token', token, { ...cookieOptions, httpOnly: true })
+  res.cookie('user_info', JSON.stringify(userInfo), { ...cookieOptions, httpOnly: false })
+}
+
+function handleRegistroError(res: Response, error: unknown, context: string) {
+  if (error instanceof AuthServiceError) {
+    return res.status(error.statusCode).json({ message: error.message })
+  }
+  console.error(context, error)
+  return res.status(500).json({ message: 'Error interno del servidor' })
+}
 
 /**
  * Crear usuario básico (solo datos comunes, sin perfil)
@@ -17,63 +37,26 @@ const JWT_SECRET = config.jwtSecret
 export async function crearUsuarioBasico(req: Request, res: Response) {
   try {
     const { email, telefono, password, role } = req.body
-
-    // Validaciones básicas
-    if (!email || !telefono || !password || !role) {
-      return res.status(400).json({ 
-        message: 'Todos los campos son requeridos: email, telefono, password, role' 
-      })
-    }
-
-    if (password.length < 8) {
-      return res.status(400).json({ message: 'La contraseña debe tener al menos 8 caracteres' })
-    }
-
-    // Validar que el role sea válido
-    if (!Object.values(UserRole).includes(role)) {
-      return res.status(400).json({ message: 'Role inválido. Debe ser METAHUMANO o BUROCRATA' })
-    }
-
-    // Un ADMIN solo lo puede crear otro ADMIN desde /register/admin
-    if (role === UserRole.ADMIN) {
-      return res.status(403).json({ message: 'No se puede registrar un ADMIN desde esta ruta' })
-    }
-
-    // Verificar que el email sea único
-    const existeUsuario = await em.findOne(Usuario, { email })
-    if (existeUsuario) {
-      return res.status(400).json({ message: 'Ya existe un usuario con este email' })
-    }
-
-    // Hashear contraseña
-    const passwordHash = await bcrypt.hash(password, 10)
-
-    // Crear usuario
-    const usuario = em.create(Usuario, {
+    const { usuario } = await usuarioService.registrarUsuario({
+      tipo: 'BASICO',
       email,
       telefono,
-      passwordHash,
+      password,
       role,
-      verificado: false,
-      createdAt: new Date(),
-      updatedAt: new Date(),
     })
 
-    await em.persistAndFlush(usuario)
-
-    res.status(201).json({
+    return res.status(201).json({
       message: 'Usuario básico creado exitosamente',
       usuario: {
         id: usuario.id,
         email: usuario.email,
         telefono: usuario.telefono,
         role: usuario.role,
-        verificado: usuario.verificado
-      }
+        verificado: usuario.verificado,
+      },
     })
-  } catch (error: any) {
-    console.error('Error al crear usuario básico:', error)
-    res.status(500).json({ message: 'Error interno del servidor' })
+  } catch (error) {
+    return handleRegistroError(res, error, 'Error al crear usuario básico:')
   }
 }
 
@@ -83,83 +66,19 @@ export async function crearUsuarioBasico(req: Request, res: Response) {
 export async function registrarMetahumano(req: Request, res: Response) {
   try {
     const { email, telefono, password, nombre, alias, origen } = req.body
-
-    // Validaciones básicas
-    if (!email || !telefono || !password || !nombre || !alias || !origen) {
-      return res.status(400).json({ 
-        message: 'Todos los campos son requeridos: email, telefono, password, nombre, alias, origen' 
-      })
-    }
-
-    if (password.length < 8) {
-      return res.status(400).json({ message: 'La contraseña debe tener al menos 8 caracteres' })
-    }
-
-    // Verificar que el email sea único
-    const existeUsuario = await em.findOne(Usuario, { email })
-    if (existeUsuario) {
-      return res.status(400).json({ message: 'Ya existe un usuario con este email' })
-    }
-
-    // Hash de la contraseña
-    const passwordHash = await bcrypt.hash(password, 10)
-
-    // Crear usuario
-    const usuario = new Usuario()
-    usuario.email = email
-    usuario.telefono = telefono
-    usuario.passwordHash = passwordHash
-    usuario.role = UserRole.METAHUMANO
-
-    // Crear metahumano
-    const metahumano = new Metahumano()
-    metahumano.nombre = nombre
-    metahumano.alias = alias
-    metahumano.origen = origen
-    metahumano.usuario = usuario
-
-    // Establecer relación bidireccional
-    usuario.metahumano = metahumano
-
-    await em.persistAndFlush([usuario, metahumano])
-
-    // Generar JWT
-    const token = jwt.sign(
-      { 
-        usuarioId: usuario.id, 
-        email: usuario.email, 
-        role: usuario.role,
-        perfilId: metahumano.id,
-        perfil: 'metahumano'
-      },
-      JWT_SECRET,
-      { expiresIn: '24h' }
-    )
-
-    // Setear cookies (token httpOnly + info ligera no sensible)
-    const isProd = process.env.NODE_ENV === 'production'
-    res.cookie('auth_token', token, {
-      httpOnly: true,
-      secure: isProd,
-      sameSite: isProd ? 'strict' : 'lax',
-      maxAge: 1000 * 60 * 60 * 24, // 1 día
-      path: '/'
-    })
-    res.cookie('user_info', JSON.stringify({
-      id: usuario.id,
-      role: usuario.role,
-      perfil: 'metahumano',
-      perfilId: metahumano.id,
-      alias: metahumano.alias
-    }), {
-      httpOnly: false,
-      secure: isProd,
-      sameSite: isProd ? 'strict' : 'lax',
-      maxAge: 1000 * 60 * 60 * 24,
-      path: '/'
+    const { usuario, metahumano, token, userInfo } = await usuarioService.registrarUsuario({
+      tipo: 'METAHUMANO',
+      email,
+      telefono,
+      password,
+      nombre,
+      alias,
+      origen,
     })
 
-    res.status(201).json({
+    setAuthCookies(res, token!, userInfo!)
+
+    return res.status(201).json({
       message: 'Metahumano registrado exitosamente',
       token,
       usuario: {
@@ -167,17 +86,15 @@ export async function registrarMetahumano(req: Request, res: Response) {
         email: usuario.email,
         role: usuario.role,
         metahumano: {
-          id: metahumano.id,
-          nombre: metahumano.nombre,
-          alias: metahumano.alias,
-          origen: metahumano.origen
-        }
-      }
+          id: metahumano!.id,
+          nombre: metahumano!.nombre,
+          alias: metahumano!.alias,
+          origen: metahumano!.origen,
+        },
+      },
     })
-
-  } catch (error: any) {
-    console.error('Error en registro de metahumano:', error)
-    res.status(500).json({ message: 'Error interno del servidor' })
+  } catch (error) {
+    return handleRegistroError(res, error, 'Error en registro de metahumano:')
   }
 }
 
@@ -187,82 +104,19 @@ export async function registrarMetahumano(req: Request, res: Response) {
 export async function registrarBurocrata(req: Request, res: Response) {
   try {
     const { email, telefono, password, nombre, alias, origen } = req.body
-
-    // Validaciones básicas
-    if (!email || !telefono || !password || !nombre || !alias || !origen) {
-      return res.status(400).json({ 
-        message: 'Todos los campos son requeridos: email, telefono, password, nombre, alias, origen' 
-      })
-    }
-
-    if (password.length < 8) {
-      return res.status(400).json({ message: 'La contraseña debe tener al menos 8 caracteres' })
-    }
-
-    // Verificar que el email sea único
-    const existeUsuario = await em.findOne(Usuario, { email })
-    if (existeUsuario) {
-      return res.status(400).json({ message: 'Ya existe un usuario con este email' })
-    }
-
-    // Hash de la contraseña
-    const passwordHash = await bcrypt.hash(password, 10)
-
-    // Crear usuario
-    const usuario = new Usuario()
-    usuario.email = email
-    usuario.telefono = telefono
-    usuario.passwordHash = passwordHash
-    usuario.role = UserRole.BUROCRATA
-
-    // Crear burocrata
-    const burocrata = new Burocrata()
-    burocrata.nombre = nombre
-    burocrata.alias = alias
-    burocrata.origen = origen
-    burocrata.usuario = usuario
-
-    // Establecer relación bidireccional
-    usuario.burocrata = burocrata
-
-    await em.persistAndFlush([usuario, burocrata])
-
-    // Generar JWT
-    const token = jwt.sign(
-      { 
-        usuarioId: usuario.id, 
-        email: usuario.email, 
-        role: usuario.role,
-        perfilId: burocrata.id,
-        perfil: 'burocrata'
-      },
-      JWT_SECRET,
-      { expiresIn: '24h' }
-    )
-
-    const isProd = process.env.NODE_ENV === 'production'
-    res.cookie('auth_token', token, {
-      httpOnly: true,
-      secure: isProd,
-      sameSite: isProd ? 'strict' : 'lax',
-      maxAge: 1000 * 60 * 60 * 24,
-      path: '/'
-    })
-    res.cookie('user_info', JSON.stringify({
-      id: usuario.id,
-      role: usuario.role,
-      perfil: 'burocrata',
-      perfilId: burocrata.id,
-      alias: burocrata.alias
-    }), {
-      httpOnly: false,
-      secure: isProd,
-      sameSite: isProd ? 'strict' : 'lax',
-      maxAge: 1000 * 60 * 60 * 24,
-      path: '/'
+    const { usuario, burocrata, token, userInfo } = await usuarioService.registrarUsuario({
+      tipo: 'BUROCRATA',
+      email,
+      telefono,
+      password,
+      nombre,
+      alias,
+      origen,
     })
 
-    res.status(201).json({
+    setAuthCookies(res, token!, userInfo!)
+
+    return res.status(201).json({
       message: 'Burocrata registrado exitosamente',
       token,
       usuario: {
@@ -270,17 +124,15 @@ export async function registrarBurocrata(req: Request, res: Response) {
         email: usuario.email,
         role: usuario.role,
         burocrata: {
-          id: burocrata.id,
-          nombre: burocrata.nombre,
-          alias: burocrata.alias,
-          origen: burocrata.origen
-        }
-      }
+          id: burocrata!.id,
+          nombre: burocrata!.nombre,
+          alias: burocrata!.alias,
+          origen: burocrata!.origen,
+        },
+      },
     })
-
-  } catch (error: any) {
-    console.error('Error en registro de burocrata:', error)
-    res.status(500).json({ message: 'Error interno del servidor' })
+  } catch (error) {
+    return handleRegistroError(res, error, 'Error en registro de burocrata:')
   }
 }
 
@@ -290,87 +142,28 @@ export async function registrarBurocrata(req: Request, res: Response) {
 export async function registrarAdmin(req: Request, res: Response) {
   try {
     const { email, telefono, password, nombre } = req.body
-
-    // Validaciones básicas
-    if (!email || !telefono || !password || !nombre) {
-      return res.status(400).json({ 
-        message: 'Todos los campos son requeridos: email, telefono, password, nombre' 
-      })
-    }
-
-    if (password.length < 8) {
-      return res.status(400).json({ message: 'La contraseña debe tener al menos 8 caracteres' })
-    }
-
-    // Verificar que el email sea único
-    const existeUsuario = await em.findOne(Usuario, { email })
-    if (existeUsuario) {
-      return res.status(400).json({ message: 'Ya existe un usuario con este email' })
-    }
-
-    // Hash de la contraseña
-    const passwordHash = await bcrypt.hash(password, 10)
-
-    // Crear usuario con rol ADMIN
-    const usuario = new Usuario()
-    usuario.email = email
-    usuario.telefono = telefono
-    usuario.passwordHash = passwordHash
-    usuario.role = UserRole.ADMIN
-    usuario.verificado = true // Los admins se consideran verificados por defecto
-    usuario.createdAt = new Date()
-    usuario.updatedAt = new Date()
-
-    await em.persistAndFlush(usuario)
-
-    // Generar JWT
-    const token = jwt.sign(
-      { 
-        usuarioId: usuario.id, 
-        email: usuario.email, 
-        role: usuario.role,
-        nombre
-      },
-      JWT_SECRET,
-      { expiresIn: '24h' }
-    )
-
-    // Establecer cookies
-    const isProd = process.env.NODE_ENV === 'production'
-    res.cookie('auth_token', token, {
-      httpOnly: true,
-      secure: isProd,
-      sameSite: isProd ? 'strict' : 'lax',
-      maxAge: 1000 * 60 * 60 * 24,
-      path: '/'
-    })
-    res.cookie('user_info', JSON.stringify({
-      id: usuario.id,
-      role: usuario.role,
+    const { usuario, token, userInfo } = await usuarioService.registrarUsuario({
+      tipo: 'ADMIN',
+      email,
+      telefono,
+      password,
       nombre,
-      email: usuario.email
-    }), {
-      httpOnly: false,
-      secure: isProd,
-      sameSite: isProd ? 'strict' : 'lax',
-      maxAge: 1000 * 60 * 60 * 24,
-      path: '/'
     })
 
-    res.status(201).json({
+    setAuthCookies(res, token!, userInfo!)
+
+    return res.status(201).json({
       message: 'Administrador registrado exitosamente',
       token,
       usuario: {
         id: usuario.id,
         email: usuario.email,
         role: usuario.role,
-        nombre
-      }
+        nombre,
+      },
     })
-
-  } catch (error: any) {
-    console.error('Error en registro de admin:', error)
-    res.status(500).json({ message: 'Error interno del servidor' })
+  } catch (error) {
+    return handleRegistroError(res, error, 'Error en registro de admin:')
   }
 }
 
@@ -599,6 +392,38 @@ export async function actualizarContacto(req: Request, res: Response) {
   }
 }
 
+interface UsuarioListadoDTO {
+  id: number | undefined
+  email: string
+  role: UserRole
+  createdAt: Date
+  metahumano: { id: number | undefined; nombre: string; alias: string } | null
+  burocrata: { id: number | undefined; nombre: string; alias: string } | null
+}
+
+function toUsuarioListadoDTO(usuario: Usuario): UsuarioListadoDTO {
+  return {
+    id: usuario.id,
+    email: usuario.email,
+    role: usuario.role,
+    createdAt: usuario.createdAt,
+    metahumano: usuario.metahumano
+      ? {
+          id: usuario.metahumano.id,
+          nombre: usuario.metahumano.nombre,
+          alias: usuario.metahumano.alias,
+        }
+      : null,
+    burocrata: usuario.burocrata
+      ? {
+          id: usuario.burocrata.id,
+          nombre: usuario.burocrata.nombre,
+          alias: usuario.burocrata.alias,
+        }
+      : null,
+  }
+}
+
 /**
  * Listar todos los usuarios (admin)
  */
@@ -618,24 +443,7 @@ export async function listarUsuarios(req: Request, res: Response) {
       orderBy: { createdAt: 'DESC' }
     })
 
-    const usuariosConPerfiles = usuarios.map(usuario => ({
-      id: usuario.id,
-      email: usuario.email,
-      telefono: usuario.telefono,
-      role: usuario.role,
-      verificado: usuario.verificado,
-      createdAt: usuario.createdAt,
-      metahumano: usuario.metahumano ? {
-        id: usuario.metahumano.id,
-        nombre: usuario.metahumano.nombre,
-        alias: usuario.metahumano.alias
-      } : null,
-      burocrata: usuario.burocrata ? {
-        id: usuario.burocrata.id,
-        nombre: usuario.burocrata.nombre,
-        alias: usuario.burocrata.alias
-      } : null
-    }))
+    const usuariosConPerfiles = usuarios.map(toUsuarioListadoDTO)
 
     res.json({
       usuarios: usuariosConPerfiles,

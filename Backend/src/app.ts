@@ -50,16 +50,29 @@ app.use(express.json({ limit: '50mb' }))
 app.use(express.urlencoded({ limit: '50mb', extended: true }))
 app.use(cookieParser())
 //>----------------------------------------------------------------------------------------------------------------
-// TODO : El usuario legacy ta dificil Mano
 // Contexto de EntityManager por request
 app.use((req, res, next) => {
   RequestContext.create(orm.em, next)
 })
 
+/**
+ * @deprecated Router legacy de usuarios mantenido temporalmente por compatibilidad con el frontend.
+ * Migrar los consumidores a `/api/auth/*`:
+ * - GET /api/usuarios           -> GET /api/auth/admin/usuarios
+ * - GET /api/usuarios/me        -> GET /api/auth/perfil
+ * - POST /api/usuarios/register -> POST /api/auth/register/basic
+ * - POST /api/usuarios/login    -> POST /api/auth/login
+ * - POST /api/usuarios/logout   -> POST /api/auth/logout
+ */
 const usuariosLegacyRouter = express.Router()
+usuariosLegacyRouter.use((_req, res, next) => {
+  res.setHeader('Deprecation', 'true')
+  res.setHeader('Link', '</api/auth>; rel="successor-version"')
+  next()
+})
 usuariosLegacyRouter.get('/', requireAuth, requireRoles(['ADMIN']), obtenerTodosLosUsuarios)
-usuariosLegacyRouter.get('/me', requireAuth, obtenerUsuarioActual);
-usuariosLegacyRouter.get('/:id(\\d+)', requireAuth, obtenerUsuarioPorId);
+usuariosLegacyRouter.get('/me', requireAuth, obtenerUsuarioActual)
+usuariosLegacyRouter.get('/:id(\\d+)', requireAuth, obtenerUsuarioPorId)
 usuariosLegacyRouter.post('/register', registrarUsuario)
 usuariosLegacyRouter.post('/login', loginUsuario)
 usuariosLegacyRouter.post('/logout', logoutUsuario)

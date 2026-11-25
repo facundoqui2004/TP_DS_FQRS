@@ -16,12 +16,12 @@ import {
   MiPerfil as MiPerfilAdmin,
   Soporte as SoporteAdmin,
   AprobarTramites,
+  CrearPoderes,
 
   // Metahumanos
   HomeMeta,
   TramitesMetaHumano,
   CarpetasMeta,
-  CrearPoderes,
   SoporteMeta,
   VigilarMundo,
 

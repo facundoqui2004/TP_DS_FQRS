@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import Footer from '../../components/footer';
-import Sidebar from '../../components/shared/SidebarUser';
 import { useAuth } from '../../context/AuthContext';
 import UserLayout from "../../components/layouts/UserLayout";
 
