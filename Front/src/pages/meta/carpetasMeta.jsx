@@ -18,6 +18,7 @@ function Home() {
   const [expandedCarpetas, setExpandedCarpetas] = useState({});
   const [expandedMultas, setExpandedMultas] = useState({});
   const [burocrataNombre, setBurocrataNombre] = useState(null);
+  const [burocratasNombres, setBurocratasNombres] = useState({});
   const [payingMulta, setPayingMulta] = useState(null);
   const [pendingVerification, setPendingVerification] = useState(null); // multaId esperando confirmación de MP
   const { user } = useAuth();
@@ -43,6 +44,7 @@ function Home() {
             const data = await response.json();
             const carpetasData = data.data || [];
             setCarpetas(carpetasData);
+            await fetchNombresBurocratas(carpetasData);
             
         } catch (error) {
             console.error('Error fetching carpetas:', error);
@@ -52,22 +54,50 @@ function Home() {
             setLoading(false);
         }
     }, []);
+  
+  const fetchNombresBurocratas = useCallback(async (carpetasData) => {
+  const ids = [
+    ...new Set(
+      carpetasData
+        .map((c) => c.burocrata?.id ?? c.burocrataId)
+        .filter(Boolean)
+    ),
+  ];
+
+  if (ids.length === 0) return;
+
+  const entries = await Promise.all(
+    ids.map(async (id) => {
+      try {
+        const res = await getBurocrataByIdRequest(id);
+        const nombre =
+          res.data?.data?.nombre ||
+          res.data?.data?.nomBurocrata ||
+          res.data?.nombre ||
+          null;
+        return [id, nombre];
+      } catch (err) {
+        console.error(`Error al obtener burócrata #${id}:`, err);
+        return [id, null];
+      }
+    })
+  );
+
+  setBurocratasNombres((prev) => {
+    const next = { ...prev };
+    for (const [id, nombre] of entries) {
+      if (nombre) next[id] = nombre;
+    }
+    return next;
+  });
+  }, []);
+
 
   useEffect(() => {
     async function fetchData() {
       try {
         if (getMetaId()) {
-          await fetchCarpetas();
-        }
-        const user = getUserFromCookie();
-        const burocrataId = user?.perfilId;
-
-        if (burocrataId) {
-          const res = await getBurocrataByIdRequest(burocrataId);
-          setBurocrataNombre(res.data.data.nombre);
-          console.log("nombre del burócrata:", res.data.data.nombre);
-        } else {
-          console.warn("No se encontró perfilId en la cookie");
+          fetchCarpetas();
         }
       } catch (error) {
         console.error("Error al obtener datos:", error);
@@ -372,14 +402,14 @@ function Home() {
                           </div>
 
                           <div className="text-xs text-gray-500 mb-3">
-                            <p>
-                              Creada:{' '}
-                              {carpeta.fecha_creacion
-                                ? new Date(carpeta.fecha_creacion).toLocaleDateString()
-                                : 'Fecha no disponible'}
-                            </p>
                             {carpeta.burocrata && (
-                              <p>Asignada al Burócrata: {burocrataNombre}</p>
+                              <p>
+                                Asignada al Burócrata:{" "}
+                                {burocratasNombres[carpeta.burocrata?.id ?? carpeta.burocrataId] ||
+                                  carpeta.burocrata?.nombre ||
+                                  carpeta.burocrata?.nomBurocrata ||
+                                  "Cargando..."}
+                              </p>
                             )}
                           </div>
 

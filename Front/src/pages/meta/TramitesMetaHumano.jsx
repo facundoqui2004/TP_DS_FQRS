@@ -1,11 +1,9 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../../context/AuthContext";
 import MetahumanoLayout from "../../components/layouts/MetahumanoLayout";
 import { getMetaId } from "../../utils/cookies";
-import { Meta } from "react-router-dom";
-import L from "leaflet";
 import { config } from "../../config/environment";
-import "leaflet/dist/leaflet.css";
+import MapView from "../../components/MapView";
 
 async function obtenerDeudaMultas(metaId) {
   const res = await fetch(`${config.apiBaseUrl}/carpetas/idMetahumano/${metaId}`, {
@@ -61,9 +59,6 @@ function Home() {
   const [destructionLat, setDestructionLat] = useState(null);
   const [destructionLng, setDestructionLng] = useState(null);
   const [destructionRadio, setDestructionRadio] = useState(500);
-  const destructionMapRef = useRef(null);
-  const destructionMarkerRef = useRef(null);
-  const destructionCircleRef = useRef(null);
   const [incomingEnemyRequests, setIncomingEnemyRequests] = useState([]);
 
   // Obtener datos del usuario
@@ -168,89 +163,6 @@ function Home() {
       fetchIncomingEnemyRequests();
     }
   }, [metahumanoDetails]);
-
-  // Manejar inicialización y destrucción del mapa del trámite de destrucción
-  useEffect(() => {
-    if (showFormDestruction) {
-      const timer = setTimeout(() => {
-        const container = document.getElementById("destruction-map");
-        if (container && !destructionMapRef.current) {
-          const defaultLat = -32.9468;
-          const defaultLng = -60.6393;
-          const initialLat = destructionLat || defaultLat;
-          const initialLng = destructionLng || defaultLng;
-
-          const map = L.map("destruction-map").setView([initialLat, initialLng], 14);
-          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          }).addTo(map);
-
-          destructionMapRef.current = map;
-
-          const icon = L.divIcon({
-            html: `<div style="font-size: 26px; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.5));">💥</div>`,
-            iconSize: [26, 26],
-            iconAnchor: [13, 13]
-          });
-
-          if (destructionLat && destructionLng) {
-            destructionMarkerRef.current = L.marker([destructionLat, destructionLng], { icon }).addTo(map);
-            destructionCircleRef.current = L.circle([destructionLat, destructionLng], {
-              radius: destructionRadio,
-              color: '#ef4444',
-              fillColor: '#ef4444',
-              fillOpacity: 0.15,
-              weight: 1.5,
-              dashArray: '5, 5'
-            }).addTo(map);
-          }
-
-          map.on("click", (e) => {
-            const { lat, lng } = e.latlng;
-            setDestructionLat(lat);
-            setDestructionLng(lng);
-
-            if (destructionMarkerRef.current) {
-              destructionMarkerRef.current.setLatLng([lat, lng]);
-            } else {
-              destructionMarkerRef.current = L.marker([lat, lng], { icon }).addTo(map);
-            }
-
-            if (destructionCircleRef.current) {
-              destructionCircleRef.current.setLatLng([lat, lng]);
-            } else {
-              destructionCircleRef.current = L.circle([lat, lng], {
-                radius: destructionRadio,
-                color: '#ef4444',
-                fillColor: '#ef4444',
-                fillOpacity: 0.15,
-                weight: 1.5,
-                dashArray: '5, 5'
-              }).addTo(map);
-            }
-          });
-        }
-      }, 100);
-
-      return () => {
-        clearTimeout(timer);
-      };
-    } else {
-      if (destructionMapRef.current) {
-        destructionMapRef.current.remove();
-        destructionMapRef.current = null;
-        destructionMarkerRef.current = null;
-        destructionCircleRef.current = null;
-      }
-    }
-  }, [showFormDestruction]);
-
-  // Actualizar dinámicamente el radio del círculo del trámite
-  useEffect(() => {
-    if (destructionMapRef.current && destructionLat && destructionLng && destructionCircleRef.current) {
-      destructionCircleRef.current.setRadius(destructionRadio);
-    }
-  }, [destructionRadio, destructionLat, destructionLng]);
 
   // Obtener deuda acumulada de multas no pagadas para mostrar en recompensa de villano
   useEffect(() => {
@@ -565,145 +477,145 @@ function Home() {
   }, [getUserId]);
 
   // Función para solicitar un poder
-const solicitarPoder = async (poder) => {
-  try {
-    setLoading(true);
-    setError("");
-    
-    // Verificar autenticación
-    if (!isAuthenticated || !user) {
-      setError('Debes iniciar sesión para solicitar poderes');
-      return;
-    }
-
-    // Verificar que es un metahumano
-    const userRole = getUserRole();
-    if (userRole !== 'METAHUMANO') {
-      setError('Solo los metahumanos pueden solicitar poderes');
-      return;
-    }
-
-    // Obtener datos del usuario
-    const userId = getUserId();
-    const alias = getUserAlias();
-
-    console.log('Datos del usuario para solicitud:', {
-      userId,
-      userRole,
-      alias,
-      user
-    });
-
-    if (!userId) {
-      setError('No se pudo obtener la información del usuario');
-      return;
-    }
-
-    // Obtener el ID del metahumano
-    console.log('Obteniendo datos del usuario...');
-    const userResponse = await fetch(`${config.apiBaseUrl}/usuarios/${userId}`, {
-      credentials: 'include'
-    });
-
-    if (!userResponse.ok) {
-      throw new Error('Error al obtener los datos del usuario');
-    }
-
-    const userData = await userResponse.json();
-
-    const metahumanoId = userData.usuario?.metahumano?.id;
-    
-    if (!metahumanoId) {
-      setError('No se pudo obtener el ID del metahumano. Verifica que tu perfil esté completo.');
-      console.error('No se encontró metahumano.id en:', userData);
-      return;
-    }
-
-    console.log('ID del metahumano obtenido:', metahumanoId);
-
-    // Verificar si el metahumano ya tiene este poder
-    console.log('Verificando si ya tienes este poder...');
-    const checkResponse = await fetch(`${config.apiBaseUrl}/metapoderes/${metahumanoId}`, {
-      credentials: 'include'
-    });
-
-    if (checkResponse.ok) {
-      const existingPowers = await checkResponse.json();
-      const poderes = existingPowers.data || existingPowers || [];
+  const solicitarPoder = async (poder) => {
+    try {
+      setLoading(true);
+      setError("");
       
-      // Verifica si ya tiene el poder (aprobado o solicitado)
-      if (misPoderes.length > 0){
-          const yaTienePoder = poderes.some(mp => 
-          mp.poder?.id === poder.id && (mp.estado === 'APROBADO' || mp.estado === 'SOLICITADO')
-        );
+      // Verificar autenticación
+      if (!isAuthenticated || !user) {
+        setError('Debes iniciar sesión para solicitar poderes');
+        return;
+      }
 
-        if (yaTienePoder) {
-          setError(`Ya tienes el poder "${poder.nomPoder}" asignado o en proceso de solicitud.`);
-          return;
+      // Verificar que es un metahumano
+      const userRole = getUserRole();
+      if (userRole !== 'METAHUMANO') {
+        setError('Solo los metahumanos pueden solicitar poderes');
+        return;
+      }
+
+      // Obtener datos del usuario
+      const userId = getUserId();
+      const alias = getUserAlias();
+
+      console.log('Datos del usuario para solicitud:', {
+        userId,
+        userRole,
+        alias,
+        user
+      });
+
+      if (!userId) {
+        setError('No se pudo obtener la información del usuario');
+        return;
+      }
+
+      // Obtener el ID del metahumano
+      console.log('Obteniendo datos del usuario...');
+      const userResponse = await fetch(`${config.apiBaseUrl}/usuarios/${userId}`, {
+        credentials: 'include'
+      });
+
+      if (!userResponse.ok) {
+        throw new Error('Error al obtener los datos del usuario');
+      }
+
+      const userData = await userResponse.json();
+
+      const metahumanoId = userData.usuario?.metahumano?.id;
+      
+      if (!metahumanoId) {
+        setError('No se pudo obtener el ID del metahumano. Verifica que tu perfil esté completo.');
+        console.error('No se encontró metahumano.id en:', userData);
+        return;
+      }
+
+      console.log('ID del metahumano obtenido:', metahumanoId);
+
+      // Verificar si el metahumano ya tiene este poder
+      console.log('Verificando si ya tienes este poder...');
+      const checkResponse = await fetch(`${config.apiBaseUrl}/metapoderes/${metahumanoId}`, {
+        credentials: 'include'
+      });
+
+      if (checkResponse.ok) {
+        const existingPowers = await checkResponse.json();
+        const poderes = existingPowers.data || existingPowers || [];
+        
+        // Verifica si ya tiene el poder (aprobado o solicitado)
+        if (misPoderes.length > 0){
+            const yaTienePoder = poderes.some(mp => 
+            mp.poder?.id === poder.id && (mp.estado === 'APROBADO' || mp.estado === 'SOLICITADO')
+          );
+
+          if (yaTienePoder) {
+            setError(`Ya tienes el poder "${poder.nomPoder}" asignado o en proceso de solicitud.`);
+            return;
+          }
         }
       }
-    }
 
-    // Preparar los datos completos para la asignación de metapoder
-    const asignacionData = {
-      metahumanoId: parseInt(metahumanoId),
-      poderId: parseInt(poder.id),
-      dominio: "NOVATO", 
-      nivelControl: 25, 
-      estado: "SOLICITADO", 
-      fechaAdquisicion: new Date().toISOString().split('T')[0] 
-    };
+      // Preparar los datos completos para la asignación de metapoder
+      const asignacionData = {
+        metahumanoId: parseInt(metahumanoId),
+        poderId: parseInt(poder.id),
+        dominio: "NOVATO", 
+        nivelControl: 25, 
+        estado: "SOLICITADO", 
+        fechaAdquisicion: new Date().toISOString().split('T')[0] 
+      };
 
-    console.log('Enviando solicitud de metapoder:', asignacionData);
-    console.log('Poder seleccionado:', poder.nomPoder);
-    
-    const response = await fetch(`${config.apiBaseUrl}/metapoderes`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include', // incluye cookies
-      body: JSON.stringify(asignacionData),
-    });
+      console.log('Enviando solicitud de metapoder:', asignacionData);
+      console.log('Poder seleccionado:', poder.nomPoder);
+      
+      const response = await fetch(`${config.apiBaseUrl}/metapoderes`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // incluye cookies
+        body: JSON.stringify(asignacionData),
+      });
 
-    console.log('Respuesta del servidor:', response.status, response.statusText);
+      console.log('Respuesta del servidor:', response.status, response.statusText);
 
-    if (!response.ok) {
-      let errorMessage = `Error ${response.status}: ${response.statusText}`;
-      try {
-        const errorData = await response.json();
-        console.log('Error del servidor:', errorData);
-        errorMessage = errorData.message || errorData.error || errorMessage;
-      } catch {
-        console.log('No se pudo parsear el error como JSON');
+      if (!response.ok) {
+        let errorMessage = `Error ${response.status}: ${response.statusText}`;
+        try {
+          const errorData = await response.json();
+          console.log('Error del servidor:', errorData);
+          errorMessage = errorData.message || errorData.error || errorMessage;
+        } catch {
+          console.log('No se pudo parsear el error como JSON');
+        }
+        throw new Error(errorMessage);
       }
-      throw new Error(errorMessage);
-    }
 
-    const result = await response.json();
-    console.log('Metapoder asignado exitosamente:', result);
-    
-    // Mostrar mensaje de éxito con más detalles
-    setSuccessMessage(
-      `¡Éxito! Has solicitado el poder "${poder.nomPoder}". Estado: SOLICITADO`
-    );
-    setError(""); // Limpiar errores previos
-    
-    // Recargar la lista de poderes disponibles para reflejar los cambios
-    await fetchPoderes();
-    
-    // Limpiar el mensaje de éxito después de 5 segundos
-    setTimeout(() => {
-      setSuccessMessage("");
-    }, 5000);
-    
-  } catch (err) {
-    setError(`Error al solicitar el poder: ${err.message}`);
-    console.error('Error solicitando poder:', err);
-  } finally {
-    setLoading(false);
-  }
-};
+      const result = await response.json();
+      console.log('Metapoder asignado exitosamente:', result);
+      
+      // Mostrar mensaje de éxito con más detalles
+      setSuccessMessage(
+        `¡Éxito! Has solicitado el poder "${poder.nomPoder}". Estado: SOLICITADO`
+      );
+      setError(""); // Limpiar errores previos
+      
+      // Recargar la lista de poderes disponibles para reflejar los cambios
+      await fetchPoderes();
+      
+      // Limpiar el mensaje de éxito después de 5 segundos
+      setTimeout(() => {
+        setSuccessMessage("");
+      }, 5000);
+      
+    } catch (err) {
+      setError(`Error al solicitar el poder: ${err.message}`);
+      console.error('Error solicitando poder:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Función para desactivar/eliminar un poder
   const desactivarPoder = async (metapoderId, nombrePoder) => {
@@ -1379,11 +1291,18 @@ const solicitarPoder = async (poder) => {
                     <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">
                       Ubicación del Incidente/Destrucción (Seleccionar en el mapa)
                     </label>
-                    <div 
-                      id="destruction-map" 
-                      style={{ height: "250px" }} 
-                      className="w-full rounded-lg overflow-hidden border border-slate-700 mb-2 relative z-10"
-                    ></div>
+                    <div className="w-full rounded-lg overflow-hidden border border-slate-700 mb-2 relative z-10">
+                      <MapView
+                        lat={destructionLat}
+                        lng={destructionLng}
+                        radio={destructionRadio}
+                        height="250px"
+                        onLocationChange={(location) => {
+                          setDestructionLat(location.lat);
+                          setDestructionLng(location.lng);
+                        }}
+                      />
+                    </div>
                     {destructionLat && destructionLng ? (
                       <p className="text-xs text-green-400">
                         Coordenadas seleccionadas: Lat: {destructionLat.toFixed(6)}, Lng: {destructionLng.toFixed(6)} | Radio: {destructionRadio}m
@@ -1781,7 +1700,7 @@ const solicitarPoder = async (poder) => {
                     
                     {!loading && !error && misPoderes.length === 0 && (
                       <div className="text-center py-8 bg-slate-700 rounded-lg border border-slate-600">
-                        <div className="text-6xl mb-4">�</div>
+                        <div className="text-6xl mb-4">📭</div>
                         <h5 className="text-xl font-bold text-white mb-2">Aún no tienes poderes</h5>
                         <p className="text-gray-400 mb-4">
                           No has solicitado ningún poder todavía. ¡Comienza tu aventura como metahumano!

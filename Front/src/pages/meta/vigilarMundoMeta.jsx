@@ -1,12 +1,11 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import MetahumanoLayout from "../../components/layouts/MetahumanoLayout";
 import BurocrataLayout from "../../components/layouts/BurocrataLayout";
 import { useAuth } from "../../context/AuthContext";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
 import { escapeHtml } from "../../utils/escapeHtml";
 import { normalizeRole } from "../../utils/roles";
 import { config } from "../../config/environment";
+import MapView from "../../components/MapView";
 
 export default function VigilarMundoMeta() {
     const { isAuthenticated, getPerfilId, user } = useAuth();
@@ -15,17 +14,18 @@ export default function VigilarMundoMeta() {
     const [carpetasDestruccion, setCarpetasDestruccion] = useState([]);
     const [evidenciasList, setEvidenciasList] = useState([]);
     const [loading, setLoading] = useState(false);
-    const mapRef = useRef(null);
 
-    // Cargar metahumanos y carpetas de la base de datos
-    const fetchMapData = async () => {
+    const rolUsuario = normalizeRole(user?.role);
+    const isBurocrata = rolUsuario === 'BUROCRATA' || rolUsuario === 'ADMIN';
+    const LayoutComponent = isBurocrata ? BurocrataLayout : MetahumanoLayout;
+
+    // Cargar metahumanos, carpetas, evidencias y burócratas
+    const fetchMapData = useCallback(async () => {
         setLoading(true);
         try {
-            console.log('fetchMapData ejecutándose...');
             const resMeta = await fetch(`${config.apiBaseUrl}/metahumanos`, { credentials: 'include' });
             if (resMeta.ok) {
                 const data = await resMeta.json();
-                console.log('Metahumanos cargados:', data.length || (data.data && data.data.length));
                 setMetahumanosList(data.data || data || []);
             }
 
@@ -33,33 +33,21 @@ export default function VigilarMundoMeta() {
             if (resCarp.ok) {
                 const data = await resCarp.json();
                 const list = data.data || data || [];
-                console.log('Carpetas cargadas:', list.length);
                 setCarpetasDestruccion(list.filter(c => c.tipo === 'PERMISO_DESTRUCCION'));
             }
 
             const metaId = getPerfilId();
-            console.log('metaId obtenido en fetchMapData:', metaId);
             if (metaId) {
-                // El backend filtra por el metahumano del token (no hace falta query param)
-                const url = `${config.apiBaseUrl}/evidencias`;
-                console.log('Fetching evidencias de URL:', url);
-                const resEv = await fetch(url, { credentials: 'include' });
+                const resEv = await fetch(`${config.apiBaseUrl}/evidencias`, { credentials: 'include' });
                 if (resEv.ok) {
                     const data = await resEv.json();
-                    const evidencias = data.data || data || [];
-                    console.log('Evidencias cargadas:', evidencias);
-                    setEvidenciasList(evidencias);
-                } else {
-                    console.error('Error en respuesta de evidencias status:', resEv.status);
+                    setEvidenciasList(data.data || data || []);
                 }
-            } else {
-                console.warn('No se pudo obtener metaId para cargar evidencias');
             }
 
-            const resBuro = await fetch(`${config.apiBaseUrl}/burocratas`, { credentials: 'include' })
+            const resBuro = await fetch(`${config.apiBaseUrl}/burocratas`, { credentials: 'include' });
             if (resBuro.ok) {
                 const data = await resBuro.json();
-                console.log('Burocratas cargados:', data.length || (data.data && data.data.length));
                 setBurocratasList(data.data || data || []);
             }
         } catch (err) {
@@ -67,158 +55,113 @@ export default function VigilarMundoMeta() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [getPerfilId]);
 
     useEffect(() => {
         if (isAuthenticated) {
             fetchMapData();
         }
-    }, [isAuthenticated, user]);
+    }, [isAuthenticated, user, fetchMapData]);
 
-    // El backend manda los roles en mayúsculas: normalizar antes de comparar
-    const rolUsuario = normalizeRole(user?.role);
-    const isBurocrata = rolUsuario === 'BUROCRATA' || rolUsuario === 'ADMIN';
-    const LayoutComponent = isBurocrata ? BurocrataLayout : MetahumanoLayout;
+    // Construir marcadores y círculos según permisos y datos cargados
+    const { mapMarkers, mapCircles } = useMemo(() => {
+        const markers = [];
+        const circles = [];
 
-    // 1. Inicialización del Mapa (Solo se ejecuta una vez al montar)
-    useEffect(() => {
-        if (!isAuthenticated) return;
-
-        const container = document.getElementById('vigilar-map');
-        if (!container) return;
-
-        if (!mapRef.current) {
-            mapRef.current = L.map('vigilar-map').setView([-32.9468, -60.6393], 15);
-        }
-
-        return () => {
-            if (mapRef.current) {
-                mapRef.current.remove();
-                mapRef.current = null;
-            }
-        };
-    }, [isAuthenticated]);
-
-    // 2. Actualización de Capas y Datos (Se ejecuta cuando cambian los datos o el tema)
-    useEffect(() => {
-        const mapInstance = mapRef.current;
-        if (!mapInstance || !isAuthenticated) return;
-
-        // Limpiar todas las capas existentes antes de re-dibujar
-        mapInstance.eachLayer((layer) => {
-            mapInstance.removeLayer(layer);
-        });
-
-        // Capa Base estándar OpenStreetMap:
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-            maxZoom: 19
-        }).addTo(mapInstance);
-
-        // 4. Graficar Metahumanos
+        // 1. Metahumanos (si no es burócrata/admin, ocultar villanos)
         metahumanosList.forEach(m => {
-            // Si es metahumano comun/heroe, NO puede ver villanos
             if (!isBurocrata && m.tipoMeta === 'villano') return;
-
             if (m.latitud && m.longitud) {
-                const emoji = m.tipoMeta === 'heroe' || m.tipoMeta === 'heróe' ? '🦸‍♂️' : m.tipoMeta === 'villano' ? '🦹' : '👤';
-                const icon = L.divIcon({
-                    html: `<div style="font-size: 26px; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.5));">${emoji}</div>`,
-                    iconSize: [26, 26],
-                    iconAnchor: [13, 13]
-                });
+                const esHeroe = m.tipoMeta === 'heroe' || m.tipoMeta === 'heróe';
+                const esVillano = m.tipoMeta === 'villano';
+                const emoji = esHeroe ? '🦸‍♂️' : esVillano ? '🦹' : '👤';
+                const colorEstado = esHeroe ? '#3b82f6' : esVillano ? '#ef4444' : '#10b981';
+                const labelEstado = esHeroe ? '🦸‍♂️ HÉROE' : esVillano ? '🦹 VILLANO' : '👤 METAHUMANO';
 
-                L.marker([m.latitud, m.longitud], { icon })
-                    .addTo(mapInstance)
-                    .bindPopup(`
-            <div style="font-family: sans-serif; color: #333; min-width: 140px; padding: 2px;">
-              <strong style="font-size: 13px;">${escapeHtml(m.alias || 'Metahumano')}</strong><br/>
-              <span style="font-size: 11px; color: #666;">Nombre: ${escapeHtml(m.nombre)}</span><br/>
-              <span style="font-size: 11px; font-weight: bold; color: ${m.tipoMeta === 'heroe' || m.tipoMeta === 'heróe' ? '#3b82f6' : m.tipoMeta === 'villano' ? '#ef4444' : '#10b981'}">
-                ${m.tipoMeta === 'heroe' || m.tipoMeta === 'heróe' ? '🦸‍♂️ HÉROE' : m.tipoMeta === 'villano' ? '🦹 VILLANO' : '👤 METAHUMANO'}
-              </span>
-            </div>
-          `);
+                markers.push({
+                    id: `meta-${m.id}`,
+                    lat: Number(m.latitud),
+                    lng: Number(m.longitud),
+                    emoji,
+                    popupHtml: `
+                        <div style="font-family: sans-serif; color: #333; min-width: 140px; padding: 2px;">
+                            <strong style="font-size: 13px;">${escapeHtml(m.alias || 'Metahumano')}</strong><br/>
+                            <span style="font-size: 11px; color: #666;">Nombre: ${escapeHtml(m.nombre)}</span><br/>
+                            <span style="font-size: 11px; font-weight: bold; color: ${colorEstado}">
+                                ${labelEstado}
+                            </span>
+                        </div>
+                    `
+                });
             }
         });
 
-        // 6. Graficar Burócratas (Solo visibles para burócratas)
+        // 2. Burócratas (solo visibles para burócratas y admin)
         if (isBurocrata) {
             burocratasList.forEach(b => {
                 if (b.latitud && b.longitud) {
-                    const { id, nombre, latitud, longitud } = b;
-                    const icon = L.divIcon({
-                        html: `<div style="font-size: 26px; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.5));">👨‍💼</div>`,
-                        iconSize: [26, 26],
-                        iconAnchor: [13, 13]
-                    });
-
-                    L.marker([latitud, longitud], { icon })
-                        .addTo(mapInstance)
-                        .bindPopup(`
+                    markers.push({
+                        id: `buro-${b.id}`,
+                        lat: Number(b.latitud),
+                        lng: Number(b.longitud),
+                        emoji: '👨‍💼',
+                        popupHtml: `
                             <div style="font-family: sans-serif; color: #333; min-width: 160px; padding: 2px;">
-                                <strong style="font-size: 13px; color: #1e293b;">Burócrata ID: ${id}</strong><br/>
+                                <strong style="font-size: 13px; color: #1e293b;">Burócrata ID: ${b.id}</strong><br/>
                                 <hr style="margin: 4px 0; border: 0; border-top: 1px solid #e2e8f0;"/>
                                 <span style="font-size: 11px; color: #475569;">
-                                    👨‍💼 <b>Nombre:</b> ${escapeHtml(nombre)}
+                                    👨‍💼 <b>Nombre:</b> ${escapeHtml(b.nombre)}
                                 </span>
                             </div>
-                        `);
+                        `
+                    });
                 }
             });
         }
-        console.log('Graficando evidencias en el mapa, cantidad:', evidenciasList.length);
+
+        // 3. Evidencias
         evidenciasList.forEach(ev => {
-            console.log('Procesando evidencia:', ev);
             if (ev.latitud && ev.longitud) {
-                const { id, fechaRecoleccion, latitud, longitud, carpeta } = ev;
-
-                const icon = L.divIcon({
-                    html: `<div style="font-size: 26px; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.5));">🔍</div>`,
-                    iconSize: [26, 26],
-                    iconAnchor: [13, 13]
-                });
-
-                const fechaFormateada = new Date(fechaRecoleccion).toLocaleDateString("es-AR", {
+                const fechaFormateada = new Date(ev.fechaRecoleccion).toLocaleDateString("es-AR", {
                     day: '2-digit',
                     month: '2-digit',
                     year: 'numeric'
                 });
 
-                L.marker([latitud, longitud], { icon })
-                    .addTo(mapInstance)
-                    .bindPopup(`
+                markers.push({
+                    id: `ev-${ev.id}`,
+                    lat: Number(ev.latitud),
+                    lng: Number(ev.longitud),
+                    emoji: '🔍',
+                    popupHtml: `
                         <div style="font-family: sans-serif; color: #333; min-width: 160px; padding: 2px;">
-                            <strong style="font-size: 13px; color: #1e293b;">Evidencia ID: ${id}</strong><br/>
+                            <strong style="font-size: 13px; color: #1e293b;">Evidencia ID: ${ev.id}</strong><br/>
                             <hr style="margin: 4px 0; border: 0; border-top: 1px solid #e2e8f0;"/>
                             <span style="font-size: 11px; color: #475569;">
                                 📅 <b>Fecha:</b> ${fechaFormateada}
                             </span><br/>
                             <span style="font-size: 11px; color: #475569;">
-                                📂 <b>Carpeta:</b> ${escapeHtml(carpeta?.descripcion || 'Sin descripción')} (ID: ${carpeta?.id || 'N/A'})
+                                📂 <b>Carpeta:</b> ${escapeHtml(ev.carpeta?.descripcion || 'Sin descripción')} (ID: ${ev.carpeta?.id || 'N/A'})
                             </span>
                         </div>
-                    `);
-                console.log(`Marcador de evidencia ${id} agregado al mapa en coordenadas:`, [latitud, longitud]);
-            } else {
-                console.warn(`Evidencia ${ev.id} no tiene coordenadas lat/long válidas:`, ev.latitud, ev.longitud);
+                    `
+                });
             }
         });
 
-        // 7. Graficar Zonas de Destrucción (carpetasDestruccion)
-        console.log('Graficando zonas de destrucción en el mapa, cantidad:', carpetasDestruccion.length);
+        // 4. Zonas de Destrucción y sus radios
         carpetasDestruccion.forEach(c => {
-            console.log('Procesando carpeta de destrucción:', c);
             if (c.latitud && c.longitud) {
-                const icon = L.divIcon({
-                    html: `<div style="font-size: 26px; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.5));">💥</div>`,
-                    iconSize: [26, 26],
-                    iconAnchor: [13, 13]
-                });
+                const lat = Number(c.latitud);
+                const lng = Number(c.longitud);
+                const colorEstado = c.estado === 'APROBADA' ? '#10b981' : c.estado === 'PENDIENTE' ? '#f59e0b' : '#ef4444';
 
-                L.marker([c.latitud, c.longitud], { icon })
-                    .addTo(mapInstance)
-                    .bindPopup(`
+                markers.push({
+                    id: `dest-${c.id}`,
+                    lat,
+                    lng,
+                    emoji: '💥',
+                    popupHtml: `
                         <div style="font-family: sans-serif; color: #333; min-width: 180px; padding: 2px;">
                             <strong style="font-size: 13px; color: #ef4444;">💥 ZONA DE DESTRUCCIÓN</strong><br/>
                             <hr style="margin: 4px 0; border: 0; border-top: 1px solid #e2e8f0;"/>
@@ -231,28 +174,31 @@ export default function VigilarMundoMeta() {
                             <span style="font-size: 11px; color: #475569;">
                                 🎯 <b>Radio:</b> ${c.radio ? `${escapeHtml(c.radio)} metros` : 'No especificado'}
                             </span><br/>
-                            <span style="font-size: 11px; font-weight: bold; color: ${c.estado === 'APROBADA' ? '#10b981' : c.estado === 'PENDIENTE' ? '#f59e0b' : '#ef4444'}">
+                            <span style="font-size: 11px; font-weight: bold; color: ${colorEstado}">
                                 ⚖️ <b>Estado:</b> ${escapeHtml(c.estado)}
                             </span>
                         </div>
-                    `);
+                    `
+                });
 
                 if (c.radio) {
-                    L.circle([c.latitud, c.longitud], {
+                    circles.push({
+                        id: `circle-${c.id}`,
+                        lat,
+                        lng,
                         radius: Number(c.radio),
                         color: '#ef4444',
                         fillColor: '#ef4444',
                         fillOpacity: 0.15,
                         weight: 1.5,
                         dashArray: '5, 5'
-                    }).addTo(mapInstance);
+                    });
                 }
-                console.log(`Marcador de destrucción ${c.id} agregado al mapa con radio ${c.radio}m en coordenadas:`, [c.latitud, c.longitud]);
-            } else {
-                console.warn(`Carpeta de destrucción ${c.id} no tiene coordenadas lat/long válidas:`, c.latitud, c.longitud);
             }
         });
-    }, [metahumanosList, carpetasDestruccion, evidenciasList, burocratasList, isAuthenticated]);
+
+        return { mapMarkers: markers, mapCircles: circles };
+    }, [metahumanosList, burocratasList, evidenciasList, carpetasDestruccion, isBurocrata]);
 
     return (
         <LayoutComponent hideFooter={true} fullScreen={true}>
@@ -278,7 +224,16 @@ export default function VigilarMundoMeta() {
                         </button>
                     </div>
 
-                    <div id="vigilar-map" className="absolute inset-0 z-10"></div>
+                    {isAuthenticated && (
+                        <MapView
+                            center={[-32.9468, -60.6393]}
+                            zoom={15}
+                            readOnly={true}
+                            markers={mapMarkers}
+                            circles={mapCircles}
+                            height="100%"
+                        />
+                    )}
                 </div>
             </div>
         </LayoutComponent>

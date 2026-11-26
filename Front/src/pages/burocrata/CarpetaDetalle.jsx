@@ -7,6 +7,7 @@ import BurocrataLayout from "../../components/layouts/BurocrataLayout";
 import { obtenerMetahumanoById } from "../../api/usuarios";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import MapView from "../../components/MapView";
 
 export default function CarpetaDetalle() {
   const { id } = useParams();
@@ -53,48 +54,6 @@ export default function CarpetaDetalle() {
   }, [id]);
 
   const isReadOnly = (carpeta?.estado?.toUpperCase() === 'CERRADA');
-
-  // Inicialización del Mapa de la Evidencia
-  useEffect(() => {
-    let mapInstance = null;
-    let markerInstance = null;
-
-    if (!isReadOnly && !loading && carpeta) {
-      const container = document.getElementById('evidencia-form-map');
-      if (container) {
-        mapInstance = L.map('evidencia-form-map').setView([-32.9468, -60.6393], 13); // Rosario por defecto
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(mapInstance);
-
-        mapInstance.on('click', (e) => {
-          const { lat, lng } = e.latlng;
-          setEvidenciaLat(lat);
-          setEvidenciaLng(lng);
-
-          const icon = L.divIcon({
-            html: `<div style="font-size: 28px; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.5));">📍</div>`,
-            iconSize: [28, 28],
-            iconAnchor: [14, 14]
-          });
-
-          if (markerInstance) {
-            markerInstance.setLatLng(e.latlng);
-          } else {
-            markerInstance = L.marker(e.latlng, { icon }).addTo(mapInstance);
-          }
-        });
-      }
-    }
-
-    return () => {
-      if (mapInstance) {
-        mapInstance.remove();
-      }
-    };
-  }, [isReadOnly, loading, carpeta]);
-
 
   // Cambiar estado carpeta
   const handleGuardarEstado = async () => {
@@ -393,11 +352,18 @@ export default function CarpetaDetalle() {
               </div>
 
               <div className="mb-4">
+                
                 <label className="block mb-1 font-semibold text-gray-200">📍 Ubicación de la Evidencia (Opcional)</label>
                 <p className="text-gray-400 text-xs mb-2">Haz clic en el mapa para marcar dónde se recolectó/ocurrió la evidencia.</p>
                 <div className="h-[200px] relative rounded bg-[#1a1a1a] overflow-hidden border border-gray-700">
-                  <div id="evidencia-form-map" className="absolute inset-0 z-10"></div>
-                </div>
+                    <MapView
+                      lat={evidenciaLat}
+                      lng={evidenciaLng}
+                      onLocationChange={(location) => {
+                        setEvidenciaLat(location.lat);
+                        setEvidenciaLng(location.lng);
+                      }}
+                    />                </div>
                 {evidenciaLat && evidenciaLng && (
                   <p className="text-xs text-green-400 mt-1">
                     Coordenadas seleccionadas: Lat {Number(evidenciaLat).toFixed(6)}, Lng {Number(evidenciaLng).toFixed(6)}

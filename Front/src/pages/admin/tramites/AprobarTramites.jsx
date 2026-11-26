@@ -1,105 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../../../components/layouts/AdminLayout';
 import { getAllCarpetasRequest, patchCarpetaEstadoRequest } from '../../../api/carpetas';
-import { escapeHtml } from '../../../utils/escapeHtml';
-
-// ── Componente de Mapa Dinámico ─────────────────────────────────────────────
-const MapaZonaDestruccion = ({ latitud, longitud, radio, descripcion, carpetaId }) => {
-  const mapInstanceRef = useRef(null);
-  const mapId = `mapa-dest-${carpetaId}`;
-
-  useEffect(() => {
-    const lat = parseFloat(latitud);
-    const lng = parseFloat(longitud);
-    const radioMetros = radio ? parseInt(radio) : 500;
-    if (isNaN(lat) || isNaN(lng)) return;
-
-    import('leaflet').then((L) => {
-      import('leaflet/dist/leaflet.css').catch(() => {});
-
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
-      }
-
-      const container = document.getElementById(mapId);
-      if (!container) return;
-
-      if (container._leaflet_id) {
-        delete container._leaflet_id;
-      }
-
-      let map;
-      try {
-        map = L.map(mapId, {
-          center: [lat, lng],
-          zoom: 14,
-          scrollWheelZoom: false,
-          zoomControl: true,
-        });
-      } catch {
-        return;
-      }
-
-      mapInstanceRef.current = map;
-
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        maxZoom: 19,
-      }).addTo(map);
-
-      const iconoDestruccion = L.divIcon({
-        html: `<div style="font-size:26px;filter:drop-shadow(0 0 8px rgba(251,146,60,0.9));text-align:center;line-height:1;">💥</div>`,
-        iconSize: [32, 32],
-        iconAnchor: [16, 16],
-        className: '',
-      });
-
-      L.marker([lat, lng], { icon: iconoDestruccion })
-        .addTo(map)
-        .bindPopup(
-          `<div style="font-family:sans-serif;min-width:160px;">
-            <p style="font-weight:bold;color:#f97316;margin:0 0 4px 0;">⚠️ Zona de Impacto</p>
-            <p style="margin:0 0 2px 0;font-size:12px;color:#374151;">${escapeHtml(descripcion || 'Sin descripción')}</p>
-            <p style="margin:0;font-size:11px;color:#6b7280;">📍 ${lat.toFixed(5)}, ${lng.toFixed(5)}</p>
-            <p style="margin:2px 0 0 0;font-size:11px;color:#ef4444;">🔴 Radio: ${radioMetros}m</p>
-          </div>`,
-          { maxWidth: 220 }
-        )
-        .openPopup();
-
-      L.circle([lat, lng], {
-        radius: radioMetros,
-        color: '#f97316',
-        fillColor: '#f97316',
-        fillOpacity: 0.18,
-        weight: 2,
-        dashArray: '6, 4',
-      }).addTo(map);
-
-      map.fitBounds(
-        L.circle([lat, lng], { radius: radioMetros * 1.6 }).getBounds(),
-        { padding: [20, 20] }
-      );
-    });
-
-    return () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
-      }
-    };
-  }, [latitud, longitud, radio, mapId]);
-
-  return (
-    <div
-      id={mapId}
-      style={{ height: '260px', width: '100%', zIndex: 0 }}
-      className="rounded-b-xl overflow-hidden"
-    />
-  );
-};
+import MapView from '../../../components/MapView';
 
 // ── Componente wrapper con botón "Ver mapa" ───────────────────────────────────
 const ZonaDestruccionCard = ({ c }) => {
@@ -132,13 +35,16 @@ const ZonaDestruccionCard = ({ c }) => {
 
       {mapaVisible && (
         <>
-          <MapaZonaDestruccion
-            latitud={c.latitud}
-            longitud={c.longitud}
-            radio={c.radio}
-            descripcion={c.descripcion}
-            carpetaId={c.id}
-          />
+          <div className="rounded-b-xl overflow-hidden">
+            <MapView
+              lat={parseFloat(c.latitud)}
+              lng={parseFloat(c.longitud)}
+              radio={c.radio ? parseInt(c.radio, 10) : 500}
+              descripcion={c.descripcion}
+              readOnly={true}
+              height="260px"
+            />
+          </div>
           {(c.estado === 'PENDIENTE' || c.estado === 'pendiente') && (
             <div className="bg-rose-950/30 border-t border-rose-500/20 px-3.5 py-2 flex items-center gap-2">
               <span className="text-rose-400 text-xs">⚠️</span>
@@ -175,7 +81,7 @@ const AprobarTramites = () => {
       setLoading(true);
       const response = await getAllCarpetasRequest();
       const carpetasData = response.data?.data || response.data || [];
-      
+
       // Ordenar por fecha / ID descendente (más recientes primero)
       const ordenadas = carpetasData.sort((a, b) => {
         const fechaA = new Date(a.createdAt || 0);
@@ -219,10 +125,10 @@ const AprobarTramites = () => {
       c.id?.toString().includes(busqueda);
 
     const estadoUpper = (c.estado || '').toUpperCase();
-    const coincideEstado = filtroEstado === 'todos' || 
+    const coincideEstado = filtroEstado === 'todos' ||
       (filtroEstado === 'PENDIENTE' ? estadoUpper.startsWith('PENDIENTE') : estadoUpper === filtroEstado.toUpperCase());
     const coincideTipo = filtroTipo === 'todos' || c.tipo?.toLowerCase() === filtroTipo.toLowerCase();
-    
+
     return coincideBusqueda && coincideEstado && coincideTipo;
   });
 
@@ -377,7 +283,7 @@ const AprobarTramites = () => {
                       <span className="font-mono text-xs text-slate-500">Expediente #{c.id}</span>
                       {c.createdAt && (
                         <span className="text-xs text-slate-400">
-                          • {formatearFecha(c.createdAt)}
+                          - {formatearFecha(c.createdAt)}
                         </span>
                       )}
                     </div>
@@ -420,9 +326,9 @@ const AprobarTramites = () => {
                                   onClick={() => setPreviewImage(ev.imagen)}
                                   className="group relative inline-block rounded-lg overflow-hidden border border-slate-700/80 cursor-pointer"
                                 >
-                                  <img 
-                                    src={ev.imagen} 
-                                    alt="Evidencia" 
+                                  <img
+                                    src={ev.imagen}
+                                    alt="Evidencia"
                                     className="max-h-24 rounded object-contain group-hover:scale-105 transition-transform"
                                   />
                                   <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-[10px] text-cyan-300 font-bold">
@@ -485,7 +391,7 @@ const AprobarTramites = () => {
 
         {/* Modal Lightbox de Foto Ampliada */}
         {previewImage && (
-          <div 
+          <div
             className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fadeIn"
             onClick={() => setPreviewImage(null)}
           >
@@ -497,9 +403,9 @@ const AprobarTramites = () => {
               >
                 ✕ Cerrar
               </button>
-              <img 
-                src={previewImage} 
-                alt="Evidencia Ampliada" 
+              <img
+                src={previewImage}
+                alt="Evidencia Ampliada"
                 className="max-h-[85vh] max-w-full rounded-xl border border-slate-700 shadow-2xl object-contain"
                 onClick={(e) => e.stopPropagation()}
               />
