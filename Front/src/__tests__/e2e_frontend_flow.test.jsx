@@ -1,5 +1,5 @@
 import React from 'react'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider, useAuth } from '../context/AuthContext'
@@ -98,8 +98,9 @@ describe('Test End-to-End (E2E) - Flujo Completo de Autenticación y Navegación
 
     // 3. Usuario completa el formulario de login
     const emailInput = screen.getByLabelText(/correo electrónico/i)
+    const form = emailInput.closest('form')
     const passwordInput = screen.getByLabelText(/^contraseña$/i)
-    const submitBtn = screen.getByRole('button', { name: /iniciar sesión/i })
+    const submitBtn = within(form).getByRole('button', { name: /iniciar sesión/i })
 
     fireEvent.change(emailInput, { target: { value: 'admin@supergestor.com' } })
     fireEvent.change(passwordInput, { target: { value: 'passwordSuper123' } })
